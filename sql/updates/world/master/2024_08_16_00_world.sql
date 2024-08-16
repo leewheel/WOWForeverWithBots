@@ -91751,7 +91751,7 @@ INSERT INTO `creature_quest_currency` (`CreatureId`, `CurrencyId`, `VerifiedBuil
 (216663, 3066, 56110), -- The Bloodfeaster - 3066
 (216658, 2915, 56110), -- Izo, the Grand Splicer - 2915
 (216658, 2914, 56110), -- Izo, the Grand Splicer - 2914
-(216658, 3008, 56110), -- Izo; the Grand Splicer - 3008
+(216658, 3008, 56110); -- Izo, the Grand Splicer - 3008
 
 INSERT INTO `creature_quest_currency` (`CreatureId`, `CurrencyId`, `VerifiedBuild`) VALUES
 (216648, 3008, 56110), -- Nx - 3008
