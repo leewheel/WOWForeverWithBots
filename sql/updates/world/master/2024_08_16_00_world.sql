@@ -21408,7 +21408,7 @@ INSERT INTO `creature_template` (`entry`, `KillCredit1`, `KillCredit2`, `name`, 
 (212542, 212536, 0, 'Flickerflame Overseer', NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, 0, 7, 0, 0, 56110), -- Flickerflame Overseer
 (212543, 0, 0, 'Glowmite', NULL, 'T2 (2/1.2)', NULL, NULL, 0, 0, 1, 0, 0, 37, 1, 0, 0, 56110), -- Glowmite
 (212545, 0, 0, 'Jawcrawler', NULL, 'T2 (2/1.2)', NULL, NULL, 0, 0, 1, 0, 0, 42, 1, 0, 0, 56110), -- Jawcrawler
-(212546, 0, 0, 'Spider, Underground', NULL, 'T2 (2/1.2)', NULL, NULL, 0, 0, 1, 0, 0, 3, 1, 0, 0, 56110), -- Spider; Underground
+(212546, 0, 0, 'Spider, Underground', NULL, 'T2 (2/1.2)', NULL, NULL, 0, 0, 1, 0, 0, 3, 1, 0, 0, 56110); -- Spider; Underground
 
 INSERT INTO `creature_template` (`entry`, `KillCredit1`, `KillCredit2`, `name`, `femaleName`, `subname`, `TitleAlt`, `IconName`, `RequiredExpansion`, `VignetteID`, `unit_class`, `WidgetSetID`, `WidgetSetUnitConditionID`, `family`, `type`, `RacialLeader`, `movementId`, `VerifiedBuild`) VALUES
 (212547, 0, 0, 'Web Priest', NULL, 'T2 (2/1.2)', NULL, NULL, 0, 0, 2, 0, 0, 0, 7, 0, 0, 56110), -- Web Priest
@@ -49841,7 +49841,7 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 (217295, 0, 116461, 1, 1, 56110), -- Kel'an
 (217294, 3, 116461, 1, 1, 56110), -- Nerubian Skitterling, Fighter, Poison
 (217294, 2, 116460, 1, 1, 56110), -- Nerubian Skitterling, Fighter, Poison
-(217294, 1, 116459, 1, 1, 56110), -- Nerubian Skitterling, Fighter; Poison
+(217294, 1, 116459, 1, 1, 56110); -- Nerubian Skitterling, Fighter, Poison
 
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (217294, 0, 116348, 1, 1, 56110), -- Nerubian Skitterling, Fighter, Poison
@@ -51353,7 +51353,7 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 (215927, 2, 116458, 1, 1, 56110), -- Nerubian Skitterling, Royal Fighter, Poison
 (215927, 1, 116456, 1, 1, 56110), -- Nerubian Skitterling, Royal Fighter, Poison
 (215927, 0, 116457, 1, 1, 56110), -- Nerubian Skitterling, Royal Fighter, Poison
-(215926, 3, 116454, 1, 1, 56110), -- Nerubian Skitterling, Fighter; Poison
+(215926, 3, 116454, 1, 1, 56110); -- Nerubian Skitterling, Fighter, Poison
 
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (215926, 2, 116453, 1, 1, 56110), -- Nerubian Skitterling, Fighter, Poison
@@ -51605,7 +51605,7 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 (215858, 1, 114532, 1, 1, 56110), -- Nerubian Fighter, Web
 (215858, 0, 114531, 1, 1, 56110), -- Nerubian Fighter, Web
 (215857, 3, 116467, 1, 1, 56110), -- Nerubian Caster, Frost
-(215857, 2, 114538, 1, 1, 56110), -- Nerubian Caster; Frost
+(215857, 2, 114538, 1, 1, 56110); -- Nerubian Caster, Frost
 
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (215857, 1, 114537, 1, 1, 56110), -- Nerubian Caster, Frost
