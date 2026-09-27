@@ -9043,7 +9043,9 @@ void Unit::UpdateAdvFlyingSpeed(AdvFlyingRateTypeSingle speedType, bool clientUp
 {
     FlightCapabilityEntry const* flightCapabilityEntry = sFlightCapabilityStore.LookupEntry(GetFlightCapabilityID());
     if (!flightCapabilityEntry)
-        flightCapabilityEntry = sFlightCapabilityStore.AssertEntry(1);
+        flightCapabilityEntry = sFlightCapabilityStore.LookupEntry(1);
+    if (!flightCapabilityEntry) // Classic 1.60 data has no default flight capability (no skyriding)
+        return;
 
     auto [opcode, newValue, rateAura] = [&]
     {
@@ -9104,7 +9106,9 @@ void Unit::UpdateAdvFlyingSpeed(AdvFlyingRateTypeRange speedType, bool clientUpd
 {
     FlightCapabilityEntry const* flightCapabilityEntry = sFlightCapabilityStore.LookupEntry(GetFlightCapabilityID());
     if (!flightCapabilityEntry)
-        flightCapabilityEntry = sFlightCapabilityStore.AssertEntry(1);
+        flightCapabilityEntry = sFlightCapabilityStore.LookupEntry(1);
+    if (!flightCapabilityEntry) // Classic 1.60 data has no default flight capability (no skyriding)
+        return;
 
     auto [opcode, min, max, rateAura] = [&]
     {

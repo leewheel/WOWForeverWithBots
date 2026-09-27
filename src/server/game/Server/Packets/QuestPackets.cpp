@@ -86,7 +86,12 @@ WorldPacket const* QueryQuestInfoResponse::Write()
 
     if (Allow)
     {
+        // Classic 1.60.1.70009: two unknown int32 after QuestID (client QuestInfo reader rva 0x961170 reads 11 int32 before
+        // RewardXPMultiplier, retail 9; without them the client shows QuestPackageID in the title and QuestSortID 0 = "Unsorted",
+        // putting them before QuestID makes the quest disappear from the log)
         _worldPacket << int32(Info.QuestID);
+        _worldPacket << int32(0);
+        _worldPacket << int32(0);
         _worldPacket << int32(Info.QuestType);
         _worldPacket << int32(Info.QuestPackageID);
         _worldPacket << int32(Info.ContentTuningID);

@@ -38,7 +38,7 @@ Battlenet::WorldserverServiceDispatcher::WorldserverServiceDispatcher()
     AddService<WorldserverService<report::v1::ReportService>>();
     AddService<WorldserverService<report::v2::ReportService>>();
     AddService<WorldserverService<report::v3::client::ReportService>>();
-    AddService<WorldserverService<resources::v1::ResourcesService>>();
+    AddService<WorldserverService<resources::v1::ResourcesService>>(); // Classic: Services::ResourcesService (fake content handle) made the client wait on 'Retrieving character list'
     AddService<WorldserverService<whisper::v2::client::WhisperService>>();
 }
 

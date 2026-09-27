@@ -134,7 +134,7 @@ WorldPacket const* FeatureSystemStatus::Write()
     _worldPacket << uint32(RAFSystem.RewardsVersion);
 
     _worldPacket << uint32(CommercePricePollTimeSeconds);
-    _worldPacket << uint32(KioskSessionDurationMinutes);
+    // Classic 1.60.1.70009 (client reader rva 0x7F9200): no KioskSessionDurationMinutes
     _worldPacket << QuickJoinConfig;
     _worldPacket << int64(RedeemForBalanceAmount);
 
@@ -144,6 +144,7 @@ WorldPacket const* FeatureSystemStatus::Write()
     _worldPacket << Squelch;
 
     _worldPacket << int32(ContentSetID);
+    _worldPacket << int32(0);                   // Classic 1.60.1.70009: unknown int32 after ContentSetID
     _worldPacket << Size<uint32>(DisabledGameModes);
     _worldPacket << Size<uint32>(GameRules);
     _worldPacket << int32(ActiveTimerunningSeasonID);
@@ -245,6 +246,41 @@ WorldPacket const* FeatureSystemStatus::Write()
 
 WorldPacket const* FeatureSystemStatusGlueScreen::Write()
 {
+    // WoW Classic 1.60.1.70009 layout, from the client's reader (0x7F9E70): 6 bytes of flags (their order differs from retail and is not
+    // mapped yet, so all flags are sent as off), no KioskSessionDurationMinutes, array elements directly after the counts.
+    // Retail flags misread by the Classic client enabled the Timerunning (Remix) UI and disabled character creation.
+    for (int32 i = 0; i < 6; ++i)
+        _worldPacket << uint8(0);
+
+    _worldPacket << uint32(CommercePricePollTimeSeconds);
+    _worldPacket << int64(RedeemForBalanceAmount);
+    _worldPacket << int32(MaxCharactersOnThisRealm);
+    _worldPacket << uint32(0);                              // LiveRegionCharacterCopySourceRegions
+    _worldPacket << int32(ActiveBoostType);
+    _worldPacket << int32(TrialBoostType);
+    _worldPacket << int32(MinimumExpansionLevel);
+    _worldPacket << int32(MaximumExpansionLevel);
+    _worldPacket << int32(ContentSetID);
+    _worldPacket << uint32(0);                              // DisabledGameModes
+    _worldPacket << uint32(0);                              // GameRules
+    _worldPacket << uint32(0);                              // AvailableGameModeIDs
+    _worldPacket << int32(0);                               // ActiveTimerunningSeasonID
+    _worldPacket << int32(0);                               // RemainingTimerunningSeasonSeconds
+    _worldPacket << TimerunningConversionMinCharacterAge;
+    _worldPacket << int32(TimerunningConversionMaxSeasonID);
+    _worldPacket << int16(MaxPlayerGuidLookupsPerRequest);
+    _worldPacket << int16(NameLookupTelemetryInterval);
+    _worldPacket << NotFoundCacheTimeSeconds;
+    _worldPacket << uint32(0);                              // DebugTimeEvents
+    _worldPacket << int32(MostRecentTimeEventID);
+    _worldPacket << uint32(EventRealmQueues);
+
+    return &_worldPacket;
+}
+
+#if 0 // retail 12.1 layout, kept for reference
+WorldPacket const* FeatureSystemStatusGlueScreen::Write()
+{
     _worldPacket << Bits<1>(BpayStoreAvailable);
     _worldPacket << Bits<1>(CharUndeleteEnabled);
     _worldPacket << Bits<1>(CommerceServerEnabled);
@@ -336,6 +372,7 @@ WorldPacket const* FeatureSystemStatusGlueScreen::Write()
 
     return &_worldPacket;
 }
+#endif
 
 ByteBuffer& operator<<(ByteBuffer& data, MirrorVarSingle const& variable)
 {

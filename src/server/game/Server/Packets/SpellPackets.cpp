@@ -65,6 +65,9 @@ WorldPacket const* SendKnownSpells::Write()
 WorldPacket const* UpdateActionButtons::Write()
 {
     _worldPacket.append(ActionButtons.data(), ActionButtons.size());
+    // Classic 1.60.1.70009 has 360 saved action buttons (decoder asserts datasize == 8 * 360 + 1), pad the unused ones
+    for (std::size_t i = ActionButtons.size(); i < ClassicNumActionButtons; ++i)
+        _worldPacket << uint64(0);
     _worldPacket << Reason;
 
     return &_worldPacket;
@@ -72,8 +75,11 @@ WorldPacket const* UpdateActionButtons::Write()
 
 void SetActionButton::Read()
 {
+    // Classic 1.60.1.70009: uint16 button index (360 buttons); indices past 255 are clamped (the handler ignores >= MAX_ACTION_BUTTONS)
+    uint16 index = 0;
     _worldPacket >> Action;
-    _worldPacket >> Index;
+    _worldPacket >> index;
+    Index = uint8(std::min<uint16>(index, 255));
 }
 
 WorldPacket const* SendUnlearnSpells::Write()

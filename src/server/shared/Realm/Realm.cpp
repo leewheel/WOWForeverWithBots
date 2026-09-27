@@ -64,5 +64,6 @@ std::string Battlenet::RealmHandle::GetAddressString() const
 
 std::string Battlenet::RealmHandle::GetSubRegionAddress() const
 {
-    return Trinity::StringFormat("{}-{}-0", Region, Site);
+    // Classic (1.60+) "super realm" clients use the full realm address as sub-region (hard-coded 70-1-70)
+    return Trinity::StringFormat("{}-{}-{}", Region, Site, Realm);
 }

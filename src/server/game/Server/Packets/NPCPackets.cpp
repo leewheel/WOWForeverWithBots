@@ -172,13 +172,16 @@ WorldPacket const* TrainerList::Write()
     _worldPacket << Size<uint32>(Spells);
     for (TrainerListSpell const& spell : Spells)
     {
+        // Classic 1.60.1.70009 (client decoder rva 0x8162E0, 33 bytes per spell): Usable follows ReqSkillLine, ReqLevel is a uint32
+        // after ReqSkillRank, nothing after ReqAbility
         _worldPacket << int32(spell.SpellID);
         _worldPacket << uint32(spell.MoneyCost);
         _worldPacket << uint32(spell.ReqSkillLine);
+        // Classic uses the vanilla state order: 0 = available (green), 1 = unavailable (red), 2 = known (grey); TC: 0 known, 1 available, 2 unavailable
+        _worldPacket << uint8(spell.Usable == 0 ? 2 : spell.Usable - 1);
         _worldPacket << uint32(spell.ReqSkillRank);
+        _worldPacket << uint32(spell.ReqLevel);
         _worldPacket.append(spell.ReqAbility.data(), spell.ReqAbility.size());
-        _worldPacket << uint8(spell.Usable);
-        _worldPacket << uint8(spell.ReqLevel);
     }
 
     _worldPacket << SizedString::BitsSize<11>(Greeting);

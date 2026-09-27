@@ -3159,6 +3159,15 @@ Network.OutUBuff = 65536
 Network.TcpNodelay = 1
 
 #
+#    Network.SkipBuildAuthKeyCheck
+#        Description: Accept clients whose build auth key is missing from `build_auth_key`
+#                     without verifying the auth session digest. Development only.
+#        Default:     0 - (Disabled)
+#                     1 - (Enabled)
+
+Network.SkipBuildAuthKeyCheck = 0
+
+#
 ###################################################################################################
 
 ###################################################################################################

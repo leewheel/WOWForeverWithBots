@@ -17,6 +17,7 @@
 
 #include "RealmList.h"
 #include "BattlenetRpcErrorCodes.h"
+#include "Config.h"
 #include "CryptoRandom.h"
 #include "DatabaseEnv.h"
 #include "DeadlineTimer.h"
@@ -161,7 +162,7 @@ void RealmList::UpdateRealms()
             UpdateRealm(*newRealms.try_emplace(id, std::make_shared<Realm>()).first->second, id, build, name, std::move(addresses), port, icon,
                 flag, timezone, (allowedSecurityLevel <= SEC_ADMINISTRATOR ? AccountTypes(allowedSecurityLevel) : SEC_ADMINISTRATOR), pop);
 
-            newSubRegions.insert(Battlenet::RealmHandle{ region, battlegroup, 0 }.GetAddressString());
+            newSubRegions.insert(id.GetSubRegionAddress());
 
             auto buildAddressesLogText = [&]
             {
@@ -239,6 +240,15 @@ std::vector<std::string> RealmList::GetSubRegions() const
     return { _subRegions.begin(), _subRegions.end() };
 }
 
+Optional<Battlenet::RealmHandle> RealmList::GetFirstRealmId() const
+{
+    std::shared_lock lock(_realmsMutex);
+    if (_realms.empty())
+        return {};
+
+    return _realms.begin()->first;
+}
+
 void RealmList::FillRealmEntry(Realm const& realm, uint32 clientBuild, AccountTypes accountSecurityLevel, JSON::RealmList::RealmEntry* realmEntry) const
 {
     realmEntry->set_wowrealmaddress(realm.Id.GetAddress());
@@ -275,7 +285,8 @@ void RealmList::FillRealmEntry(Realm const& realm, uint32 clientBuild, AccountTy
     realmEntry->set_name(realm.Name);
     realmEntry->set_cfgconfigsid(realm.GetConfigId());
     realmEntry->set_cfglanguagesid(1);
-    realmEntry->set_cfgcontentsetid(0);
+    // Classic (1.60+) clients only list realms whose content set matches the selected super district (Cfg_SuperDistrict.ContentSetID)
+    realmEntry->set_cfgcontentsetid(sConfigMgr->GetIntDefault("Realm.CfgContentSetID", 0));
     realmEntry->set_usebleepchance(0.0f);
 }
 
@@ -321,6 +332,7 @@ std::vector<uint8> RealmList::GetRealmList(uint32 build, AccountTypes accountSec
     }
 
     std::string json = "JSONRealmListUpdates:" + JSON::Serialize(realmList);
+    TC_LOG_DEBUG("session.rpc", "RealmList::GetRealmList build {} subRegion '{}': {}", build, subRegion, json);
     std::vector<uint8> compressed;
     CompressJson(json, &compressed);
     return compressed;

@@ -67,6 +67,7 @@ public:
     std::shared_ptr<Realm const> GetCurrentRealm() const;
 
     std::vector<std::string> GetSubRegions() const;
+    Optional<Battlenet::RealmHandle> GetFirstRealmId() const;
     std::string GetRealmEntryJSON(Battlenet::RealmHandle const& id, uint32 build, AccountTypes accountSecurityLevel) const;
     std::vector<uint8> GetRealmList(uint32 build, AccountTypes accountSecurityLevel, std::string const& subRegion) const;
     RealmJoinResult JoinRealm(uint32 realmAddress, uint32 build, ClientBuild::VariantId const& buildVariant, boost::asio::ip::address const& clientAddress,

@@ -604,6 +604,41 @@ void ObjectMgr::LoadCreatureTemplateSpells()
     TC_LOG_INFO("server.loading", ">> Loaded {} creature template spells in {} ms", count, GetMSTimeDiffToNow(oldMSTime));
 }
 
+// Classic 1.60.1.70009: fixed vanilla creature levels (imported from VMaNGOS), used instead of ContentTuning level scaling
+void ObjectMgr::LoadCreatureClassicLevels()
+{
+    uint32 oldMSTime = getMSTime();
+
+    _creatureClassicLevelStore.clear();
+
+    //                                               0      1          2
+    QueryResult result = WorldDatabase.Query("SELECT entry, level_min, level_max FROM creature_classic_level");
+    if (!result)
+    {
+        TC_LOG_INFO("server.loading", ">> Loaded 0 classic creature levels. DB table `creature_classic_level` is empty.");
+        return;
+    }
+
+    do
+    {
+        Field* fields = result->Fetch();
+        uint32 entry = fields[0].GetUInt32();
+        uint8 levelMin = std::max<uint8>(fields[1].GetUInt8(), 1);
+        uint8 levelMax = std::max<uint8>(fields[2].GetUInt8(), levelMin);
+        if (!GetCreatureTemplate(entry))
+            continue;
+
+        _creatureClassicLevelStore[entry] = { levelMin, levelMax };
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded {} classic creature levels in {} ms", _creatureClassicLevelStore.size(), GetMSTimeDiffToNow(oldMSTime));
+}
+
+std::pair<uint8, uint8> const* ObjectMgr::GetCreatureClassicLevel(uint32 entry) const
+{
+    return Trinity::Containers::MapGetValuePtr(_creatureClassicLevelStore, entry);
+}
+
 void ObjectMgr::LoadCreatureTemplateModels()
 {
     uint32 oldMSTime = getMSTime();

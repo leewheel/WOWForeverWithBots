@@ -779,6 +779,10 @@ void WorldSession::HandleSetActionButtonOpcode(WorldPackets::Spells::SetActionBu
 
     TC_LOG_DEBUG("network", "CMSG_SET_ACTION_BUTTON Button: {} Action: {} Type: {}", packet.Index, action, uint32(type));
 
+    // Classic 1.60.1.70009 has 360 action buttons, the server stores MAX_ACTION_BUTTONS
+    if (packet.Index >= MAX_ACTION_BUTTONS)
+        return;
+
     if (!packet.Action)
         GetPlayer()->RemoveActionButton(packet.Index);
     else

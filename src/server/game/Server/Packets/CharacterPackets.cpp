@@ -255,11 +255,16 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfoBasi
     data << int32(charInfo.TimerunningSeasonID);
     data << uint32(charInfo.OverrideSelectScreenFileDataID);
     data << uint32(charInfo.RealmQueue);
+    data << int32(1);                           // Classic 1.60.1.70009: unknown int32 (client reader rva 0x7F0669), testing as SuperDistrictID (Normal = 1); 137 (content set) did not show the character
 
     for (ChrCustomizationChoice const& customization : charInfo.Customizations)
         data << customization;
 
+    // Classic 1.60.1.70009: Surname (max 48 chars) follows Name; character select shows it after the name ("Name Surname")
+    std::string surname;
+
     data << SizedString::BitsSize<6>(charInfo.Name);
+    data << SizedString::BitsSize<6>(surname);
     data << Bits<1>(charInfo.FirstLogin);
     data << Bits<1>(charInfo.RealmInfoFound);
     data << Bits<1>(charInfo.IsRealmOffline);
@@ -267,6 +272,7 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfoBasi
     data.FlushBits();
 
     data << SizedString::Data(charInfo.Name);
+    data << SizedString::Data(surname);
 
     return data;
 }
@@ -455,9 +461,16 @@ WorldPacket const* EnumCharactersResult::Write()
 void CheckCharacterNameAvailability::Read()
 {
     _worldPacket >> SequenceIndex;
+    // Classic 1.60.1.70009: 6 bit name length, 3 unknown bits, 6 bit surname length, then name and surname data
+    // (e.g. "gear" + "fd": 10 04 67656172 6664)
+    std::string surname;
     _worldPacket >> SizedString::BitsSize<6>(Name);
+    _worldPacket.ReadBits(3);
+    _worldPacket >> SizedString::BitsSize<6>(surname);
+    _worldPacket.ResetBitPos();
 
     _worldPacket >> SizedString::Data(Name);
+    _worldPacket >> SizedString::Data(surname);
 }
 
 WorldPacket const* CheckCharacterNameAvailabilityResult::Write()
@@ -472,17 +485,25 @@ void CreateCharacter::Read()
 {
     CreateInfo = std::make_shared<CharacterCreateInfo>();
 
+    // Classic 1.60.1.70009: 2 unknown bits and a 6 bit surname length after the flags, an unknown int32 (-1) before
+    // TimerunningSeasonID and the surname after the name (captured: 08 00 80 | 5f 0b 01 | 12000000 ffffffff 00000000 | "Df" "Df")
+    std::string surname;
     _worldPacket >> SizedString::BitsSize<6>(CreateInfo->Name);
     _worldPacket >> OptionalInit(CreateInfo->TemplateSet);
     _worldPacket >> Bits<1>(CreateInfo->IsTrialBoost);
     _worldPacket >> Bits<1>(CreateInfo->UseNPE);
     _worldPacket >> Bits<1>(CreateInfo->HardcoreSelfFound);
+    _worldPacket.ReadBits(2);
+    _worldPacket >> SizedString::BitsSize<6>(surname);
+    _worldPacket.ResetBitPos();
     _worldPacket >> CreateInfo->Race;
     _worldPacket >> CreateInfo->Class;
     _worldPacket >> CreateInfo->Sex;
     _worldPacket >> Size<uint32>(CreateInfo->Customizations);
+    _worldPacket.read_skip<int32>();
     _worldPacket >> CreateInfo->TimerunningSeasonID;
     _worldPacket >> SizedString::Data(CreateInfo->Name);
+    _worldPacket >> SizedString::Data(surname);
     if (CreateInfo->TemplateSet)
         _worldPacket >> *CreateInfo->TemplateSet;
 
@@ -709,7 +730,9 @@ WorldPacket const* CharacterLoginFailed::Write()
 
 void LogoutRequest::Read()
 {
-    _worldPacket >> Bits<1>(IdleLogout);
+    // Classic 1.60.1.70009 sends an empty payload
+    if (_worldPacket.size() > _worldPacket.rpos())
+        _worldPacket >> Bits<1>(IdleLogout);
 }
 
 WorldPacket const* LogoutResponse::Write()

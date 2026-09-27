@@ -63,15 +63,21 @@ namespace WorldPackets::Query
 {
 void QueryCreature::Read()
 {
+    // Classic 1.60.1.70009 sends 5 bytes: an extra leading byte, then the creature id
+    if (_worldPacket.size() - _worldPacket.rpos() == 5)
+        _worldPacket.read_skip<uint8>();
     _worldPacket >> CreatureID;
 }
 
 WorldPacket const* QueryCreatureResponse::Write()
 {
-    _worldPacket << uint32(CreatureID);
-    _worldPacket << Bits<1>(Allow);
-
+    // Classic 1.60.1.70009 batches creature queries: 6-bit entry count (flushed), then per entry the retail layout below
+    // (client decoder rva 0xA0D800; CMSG_QUERY_CREATURE also starts with the count byte, 0x04 = 1 entry)
+    _worldPacket << Bits<6>(1);
     _worldPacket.FlushBits();
+
+    _worldPacket << uint32(CreatureID);
+    _worldPacket << uint8(Allow ? 0 : 1);       // Classic: result byte, stats follow only when it is 0 (retail: Allow bit)
 
     if (Allow)
     {

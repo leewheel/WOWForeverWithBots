@@ -67,10 +67,35 @@ std::vector<uint8> GameUtilities::CompressJson(std::string const& json)
     return compressed;
 }
 
+static void LogClientRequestParams(Session const* session, std::vector<std::pair<std::string_view, Variant>> const& params)
+{
+    if (!sLog->ShouldLog("session.rpc", LOG_LEVEL_DEBUG))
+        return;
+
+    for (auto const& [name, value] : params)
+    {
+        std::string valueText = std::visit([]<typename T>(T const& v) -> std::string
+        {
+            if constexpr (std::is_same_v<T, std::string>)
+                return v;
+            else if constexpr (std::is_same_v<T, std::vector<uint8>>)
+                return ByteArrayToHexStr(v);
+            else if constexpr (std::is_arithmetic_v<T>)
+                return std::to_string(v);
+            else
+                return "<unknown>";
+        }, value);
+
+        TC_LOG_DEBUG("session.rpc", "{} ClientRequest param {} = {}", session->GetClientInfo(), name, valueText);
+    }
+}
+
 uint32 GameUtilities::HandleClientRequest(Session* session,
     std::vector<std::pair<std::string_view, Variant>>& params,
     std::vector<std::pair<std::string_view, Variant>>& responseValues)
 {
+    LogClientRequestParams(session, params);
+
     auto command = std::ranges::find_if(params,
         [](std::string_view paramName) { return paramName.starts_with("Command_"sv); },
         Trinity::Containers::MapKey);
@@ -93,6 +118,8 @@ uint32 GameUtilities::HandleClientRequest(Session* session,
             return JoinRealm(session, params, responseValues);
         case Trinity::HashFnv1a<>::GetHash("Command_FetchBleepProxiesRequest_v1"sv):
             return GetBleepProxies(session, params, responseValues);
+        case Trinity::HashFnv1a<>::GetHash("Command_SuperDistrictListRequest_v1"sv):
+            return GetSuperDistrictList(session, params, responseValues);
         default:
             break;
     }
@@ -105,6 +132,8 @@ uint32 GameUtilities::HandleGetAllValuesForAttribute(Session const* session, std
 {
     if (!session->IsAuthed())
         return ERROR_DENIED;
+
+    TC_LOG_DEBUG("session.rpc", "{} GetAllValuesForAttribute {}", session->GetClientInfo(), command);
 
     switch (Trinity::HashFnv1a<>::GetHash(command))
     {
@@ -147,6 +176,35 @@ uint32 GameUtilities::GetLastCharPlayed(Session const* session,
         responseValues.emplace_back("Param_CharacterGUID"sv, std::move(guidData));
         responseValues.emplace_back("Param_LastPlayedTime"sv, int64(lastPlayerChar->LastPlayedTime));
         responseValues.emplace_back("Param_UtilityInfo"sv, std::move(utilityInfoJson));
+    }
+    else if (Variant const* contentSetFilter = FindParamValue(params, "Param_ContentSetIDFilter"))
+    {
+        // Classic (1.60+) clients pick a realm for the selected super district (gameplay ruleset) this way:
+        // Command_LastCharPlayedRequest_v1 + Param_ContentSetIDFilter = Cfg_SuperDistrict.ContentSetID. Hand them our realm.
+        int64 contentSetId = std::visit([]<typename T>(T const& v) -> int64
+        {
+            if constexpr (std::is_arithmetic_v<T>)
+                return int64(v);
+            else
+                return -1;
+        }, *contentSetFilter);
+
+        Optional<Battlenet::RealmHandle> realmId = sRealmList->GetFirstRealmId();
+        if (contentSetId >= 0 && realmId)
+        {
+            std::string realmEntryJson = sRealmList->GetRealmEntryJSON(*realmId, session->GetBuild(), session->GetGameAccountInfo()->SecurityLevel);
+            TC_LOG_DEBUG("session.rpc", "{} LastCharPlayed for content set {} -> realm entry {}", session->GetClientInfo(), contentSetId, realmEntryJson);
+            if (!realmEntryJson.empty())
+            {
+                ::JSON::RealmList::UtilityInfo utilityInfo;
+                utilityInfo.set_realmpermissions(0x200);
+
+                // the client requires Param_LastPlayedTime (int) right after Param_RealmEntry, otherwise it discards the realm
+                responseValues.emplace_back("Param_RealmEntry"sv, CompressJson("JamJSONRealmEntry:" + realmEntryJson));
+                responseValues.emplace_back("Param_LastPlayedTime"sv, int64(time(nullptr)));
+                responseValues.emplace_back("Param_UtilityInfo"sv, CompressJson("JSONUtilityInfo:" + ::JSON::Serialize(utilityInfo)));
+            }
+        }
     }
 
     return ERROR_OK;
@@ -280,6 +338,34 @@ uint32 GameUtilities::GetBleepProxies(Session const* /*session*/,
         return ERROR_UTIL_SERVER_FAILED_TO_SERIALIZE_RESPONSE;
 
     responseValues.emplace_back("Param_BleepProxyList"sv, std::move(proxyListJson));
+
+    return ERROR_OK;
+}
+
+// Classic (1.60+) clients ask for their "super districts" (gameplay rulesets: Normal, PvP, Roleplay, Hardcore...) before requesting the realm list.
+// JSONSuperDistrictList { superDistricts: [JamJSONSuperDistrictEntry { superDistrictID, disallowLogin, holdDownUntilTime }] }
+// superDistrictID refers to Cfg_SuperDistrict.db2 (IDs 1-5 in 1.60.1.70009).
+uint32 GameUtilities::GetSuperDistrictList(Session const* session,
+    std::vector<std::pair<std::string_view, Variant>>& /*params*/,
+    std::vector<std::pair<std::string_view, Variant>>& responseValues)
+{
+    std::string superDistricts;
+    for (uint32 superDistrictId = 1; superDistrictId <= 5; ++superDistrictId)
+    {
+        if (!superDistricts.empty())
+            superDistricts += ',';
+
+        superDistricts += Trinity::StringFormat(R"({{"superDistrictID":{},"disallowLogin":false,"holdDownUntilTime":0}})", superDistrictId);
+    }
+
+    std::string json = Trinity::StringFormat(R"(JSONSuperDistrictList:{{"superDistricts":[{}]}})", superDistricts);
+    TC_LOG_DEBUG("session.rpc", "{} Param_SuperDistrictList = {}", session->GetClientInfo(), json);
+
+    std::vector<uint8> superDistrictListJson = CompressJson(json);
+    if (superDistrictListJson.empty())
+        return ERROR_UTIL_SERVER_FAILED_TO_SERIALIZE_RESPONSE;
+
+    responseValues.emplace_back("Param_SuperDistrictList"sv, std::move(superDistrictListJson));
 
     return ERROR_OK;
 }

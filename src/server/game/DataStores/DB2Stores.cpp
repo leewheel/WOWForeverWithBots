@@ -1055,9 +1055,11 @@ uint32 DB2Manager::LoadStores(std::string const& dataPath, LocaleConstant defaul
     // error checks
 
     // Check loaded DB2 files proper version
+    // Classic 1.60.x client: bank tab bags are retail-only items and do not exist in its ItemSparse.db2,
+    // so report them as a warning instead of a fatal error (buying a bank tab just fails with ITEM_NOT_FOUND)
     for (uint32 criticalItemId : { ITEM_ACCOUNT_BANK_TAB_BAG, ITEM_CHARACTER_BANK_TAB_BAG })
         if (!sItemSparseStore.LookupEntry(criticalItemId))
-            loadErrors.emplace_back(Trinity::StringFormat("Missing required item {} from ItemSparse.db2 (or its hotfix table)", criticalItemId));
+            TC_LOG_WARN("server.loading", "Missing item {} from ItemSparse.db2 (or its hotfix table) - retail-only item, ignored for Classic client", criticalItemId);
 
     if (!loadErrors.empty())
     {
@@ -1488,8 +1490,13 @@ void DB2Manager::IndexLoadedStores()
 
     for (PowerTypeEntry const* powerType : sPowerTypeStore)
     {
-        ASSERT(powerType->PowerTypeEnum < MAX_POWERS);
-        ASSERT(!_powerTypes[powerType->PowerTypeEnum]);
+        // Classic (1.60+) client data has power types retail does not know about
+        if (powerType->PowerTypeEnum < 0 || powerType->PowerTypeEnum >= MAX_POWERS || _powerTypes[powerType->PowerTypeEnum])
+        {
+            TC_LOG_ERROR("misc", "PowerType.db2: skipping ID {} (PowerTypeEnum {}, NameGlobalStringTag '{}') - unknown or duplicate power type",
+                powerType->ID, int32(powerType->PowerTypeEnum), powerType->NameGlobalStringTag);
+            continue;
+        }
 
         _powerTypes[powerType->PowerTypeEnum] = powerType;
     }
@@ -2181,7 +2188,15 @@ ChrSpecializationEntry const* DB2Manager::GetChrSpecializationByIndex(uint32 cla
 
 ChrSpecializationEntry const* DB2Manager::GetDefaultChrSpecializationForClass(uint32 class_) const
 {
-    return GetChrSpecializationByIndex(class_, INITIAL_SPECIALIZATION_INDEX);
+    if (ChrSpecializationEntry const* initialSpec = GetChrSpecializationByIndex(class_, INITIAL_SPECIALIZATION_INDEX))
+        return initialSpec;
+
+    // Classic 1.60 data has no "initial" (index 4) specializations, fall back to the first specialization of the class
+    for (uint32 i = 0; i < MAX_SPECIALIZATIONS; ++i)
+        if (ChrSpecializationEntry const* spec = GetChrSpecializationByIndex(class_, i))
+            return spec;
+
+    return nullptr;
 }
 
 uint32 DB2Manager::GetRedirectedContentTuningId(uint32 contentTuningId, std::span<uint32 const> redirectFlag) const

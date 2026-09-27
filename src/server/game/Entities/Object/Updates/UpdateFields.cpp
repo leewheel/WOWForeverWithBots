@@ -268,6 +268,8 @@ void ItemData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     {
         Enchantment[i].WriteCreate(data, receiver, owner);
     }
+    // Classic 1.60.1.70009: 14 enchantment slots (client ItemData create reader rva 0xA78B00 loops to 0xE)
+    data << int32(0) << uint32(0) << int16(0) << uint16(0);
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
     {
         data << uint32(Durability);
@@ -843,6 +845,7 @@ void VisibleItem::WriteCreate(ByteBuffer& data, Player const* receiver, Unit con
     data << int32(ItemID);
     data << int32(SecondaryItemModifiedAppearanceID);
     data << int32(ConditionalItemAppearanceID);
+    data << int32(0);                           // Classic 1.60.1.70009: unknown int32 (client VisibleItem create reader rva 0xAD8850, +0xC)
     data << uint16(ItemAppearanceModID);
     data << uint16(ItemVisual);
     data << uint32(ItemModifiedAppearanceID);
@@ -859,7 +862,12 @@ void VisibleItem::WriteUpdate(bool ignoreChangesMask, ByteBuffer& data, Player c
     if (ignoreChangesMask)
         changesMask.SetAll();
 
-    data.WriteBits(changesMask.GetBlock(0), 11);
+    // Classic 1.60.1.70009: 12 bits, bit 6 = unknown int32 after ConditionalItemAppearanceID (client update reader rva 0xAD8970)
+    uint32 block = changesMask.GetBlock(0);
+    uint32 classicBlock = (block & 0x3F) | ((block & ~0x3Fu) << 1);
+    if (ignoreChangesMask)
+        classicBlock |= 1u << 6;
+    data.WriteBits(classicBlock, 12);
 
     if (changesMask[0])
     {
@@ -886,6 +894,10 @@ void VisibleItem::WriteUpdate(bool ignoreChangesMask, ByteBuffer& data, Player c
         if (changesMask[5])
         {
             data << int32(ConditionalItemAppearanceID);
+        }
+        if (ignoreChangesMask)
+        {
+            data << int32(0);
         }
         if (changesMask[6])
         {
@@ -1086,6 +1098,7 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     data << uint8(PetTalentPoints);
     data << uint8(VisFlags);
     data << uint8(AnimTier);
+    data << int8(0);                            // Classic 1.60.1.70009: 5th byte field in this group (client UnitData +0x1A8)
     data << uint32(PetNumber);
     data << uint32(PetNameTimestamp);
     data << uint32(PetExperience);
@@ -1099,6 +1112,8 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     data << float(ModTimeRate);
     data << int32(CreatedBySpell);
     data << int32(EmoteState);
+    data << int16(0);                           // Classic 1.60.1.70009: two unknown int16 (client UnitData +0x1E0, +0x1E2)
+    data << int16(0);
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
     {
         for (uint32 i = 0; i < 5; ++i)
@@ -1145,10 +1160,12 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
         data << int32(RangedAttackPowerModNeg);
         data << float(RangedAttackPowerMultiplier);
         data << int32(RangedAttackPowerModSupport);
+        data << int32(0);                       // Classic 1.60.1.70009: AttackPower block has 22 fields (TC 20), exact positions of the 2 extra unknown
         data << int32(MainHandWeaponAttackPower);
         data << int32(OffHandWeaponAttackPower);
         data << int32(RangedWeaponAttackPower);
         data << int32(SetAttackSpeedAura);
+        data << int32(0);
         data << float(Lifesteal);
         data << float(MinRangedDamage);
         data << float(MaxRangedDamage);
@@ -1180,7 +1197,11 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     data << int32(MaxHealthModifierFlatNeg);
     data << int32(MaxHealthModifierFlatPos);
     data << uint32(SilencedSchoolMask);
+    data << float(0.0f);                        // Classic 1.60.1.70009: unknown float (client UnitData +0x350)
     data << uint32(CurrentAreaID);
+    data << ObjectGuid::Empty;                  // Classic 1.60.1.70009: unknown guid (+0x360)
+    data << int32(0);                           // Classic 1.60.1.70009: unknown int32 (+0x370)
+    data << float(0.0f);                        // Classic 1.60.1.70009: unknown float (+0x374)
     data << float(NameplateDistanceMod);
     data << float(AutoAttackRangeMod);
     data << *NameplateAttachToGUID;
@@ -1234,12 +1255,70 @@ void UnitData::WriteUpdate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     WriteUpdate(_changesMask & allowedMaskForTarget, data, receiver, owner, false);
 }
 
+// Classic 1.60.1.70009 UnitData changes-mask bit numbering (client update reader rva 0x44F47A0, classic_re/upd_bits.py):
+// new bits 72 (byte after AnimTier), 86/87 (int16 after EmoteState), 105 (int32 after RangedAttackPowerModSupport),
+// 110 (int32 after SetAttackSpeedAura), 139 (float after SilencedSchoolMask), 141-143 (guid, int32, float after CurrentAreaID);
+// array group bits 148 (power), 189 (VirtualItems, 32 byte entries from +0x438), 193, 196, 217 (the reader tests each group bit before its first element)
+static uint32 ClassicUnitDataBit(uint32 bit)
+{
+    if (bit <= 71) return bit;
+    if (bit <= 84) return bit + 1;
+    if (bit <= 92) return bit + 3;
+    if (bit <= 95) return bit + 4;
+    if (bit == 96) return 96;
+    if (bit <= 101) return bit + 3;
+    if (bit <= 105) return bit + 4;
+    if (bit <= 122) return bit + 5;
+    if (bit <= 127) return bit + 6;
+    if (bit == 128) return 128;
+    if (bit <= 133) return bit + 5;
+    if (bit == 134) return 140;
+    return bit + 9;                         // 135-138 -> 144-147, arrays (TC 139+) -> 148+
+}
+
+// Classic group bit -> last child bit
+static constexpr std::array<std::pair<uint32, uint32>, 10> ClassicUnitDataGroups =
+{ {
+    { 0, 31 }, { 32, 63 }, { 64, 95 }, { 96, 127 }, { 128, 147 }, { 148, 188 }, { 189, 192 }, { 193, 195 }, { 196, 216 }, { 217, 238 }
+} };
+
+// Renumbers a retail changes mask to Classic bits, recomputes the Classic group bits and writes the blocks header
+template<std::size_t ClassicBlockCount, typename TcMask, std::size_t GroupCount>
+static std::array<uint32, ClassicBlockCount> WriteClassicChangesMaskHeader(ByteBuffer& data, TcMask const& changesMask, uint32(*remap)(uint32),
+    std::array<std::pair<uint32, uint32>, GroupCount> const& groups)
+{
+    std::array<uint32, ClassicBlockCount> classicBlocks = { };
+    for (uint32 bit = 0; bit < TcMask::BlockCount * 32; ++bit)
+        if (changesMask[bit])
+            if (uint32 cb = remap(bit); cb < ClassicBlockCount * 32)
+                classicBlocks[cb / 32] |= 1u << (cb % 32);
+    for (auto [group, last] : groups)
+    {
+        classicBlocks[group / 32] &= ~(1u << (group % 32));
+        for (uint32 cb = group + 1; cb <= last; ++cb)
+        {
+            if (classicBlocks[cb / 32] & (1u << (cb % 32)))
+            {
+                classicBlocks[group / 32] |= 1u << (group % 32);
+                break;
+            }
+        }
+    }
+    uint32 classicBlocksMask = 0;
+    for (uint32 i = 0; i < ClassicBlockCount; ++i)
+        if (classicBlocks[i])
+            classicBlocksMask |= 1u << i;
+    data.WriteBits(classicBlocksMask, ClassicBlockCount);
+    for (uint32 i = 0; i < ClassicBlockCount; ++i)
+        if (classicBlocks[i])
+            data.WriteBits(classicBlocks[i], 32);
+    return classicBlocks;
+}
+
 void UnitData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player const* receiver, Unit const* owner, bool ignoreNestedChangesMask) const
 {
-    data.WriteBits(changesMask.GetBlocksMask(0), 8);
-    for (uint32 i = 0; i < 8; ++i)
-        if (changesMask.GetBlock(i))
-            data.WriteBits(changesMask.GetBlock(i), 32);
+    std::array<uint32, 8> classicBlocks = WriteClassicChangesMaskHeader<8>(data, changesMask, &ClassicUnitDataBit, ClassicUnitDataGroups);
+    bool classicGroup128 = (classicBlocks[4] & 1) != 0;
 
     ViewerDependentValue<StateWorldEffectIDsTag>::value_type stateWorldEffectIDs = {};
 
@@ -1841,8 +1920,9 @@ void UnitData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player con
         {
             data << *NameplateAttachToGUID;
         }
-        data.WriteBit(AssistActionData.has_value());
     }
+    if (classicGroup128)    // Classic group 128 also holds GuildGUID/FlightCapabilityID (TC group 96)
+        data.WriteBit(AssistActionData.has_value());
     data.FlushBits();
     if (changesMask[128])
     {
@@ -2494,6 +2574,8 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     data << uint32(GuildRankID);
     data << uint32(GuildDeleteDate);
     data << int32(GuildLevel);
+    // Classic 1.60.1.70009: unknown struct (4x uint32 + int8, client reader rva 0x92AD60) at PlayerData +0x5C
+    data << uint32(0) << uint32(0) << uint32(0) << uint32(0) << int8(0);
     data << uint32(Customizations.size());
     data << uint32(RandomCustomizations.size());
     for (uint32 i = 0; i < 2; ++i)
@@ -2559,6 +2641,8 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     }
     PersonalTabard->WriteCreate(data, receiver, owner);
     NpcAsPlayerInfo->WriteCreate(data, receiver, owner);
+    // Classic 1.60.1.70009: second instance of the same unknown struct (reader rva 0x92AD60) at PlayerData +0x458
+    data << uint32(0) << uint32(0) << uint32(0) << uint32(0) << int8(0);
     for (uint32 i = 0; i < Customizations.size(); ++i)
     {
         Customizations[i].WriteCreate(data, receiver, owner);
@@ -2587,6 +2671,7 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
         data << int32(VisualItemReplacements[i]);
     }
     data.WriteBits(Name->size(), 6);
+    data.WriteBits(0, 8);                       // Classic 1.60.1.70009: length of a second string read after Name (surname, client PlayerData +0x1D9)
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::PartyMember))
     {
         data.WriteBit(HasQuestSession);
@@ -2626,12 +2711,29 @@ void PlayerData::WriteUpdate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     WriteUpdate(_changesMask & allowedMaskForTarget, data, receiver, owner, false);
 }
 
+// Classic 1.60.1.70009 PlayerData changes-mask bit numbering (client update reader rva 0xACB180, classic_re/upd_bits.py):
+// Classic inserted bit 19 (17-byte struct after GuildLevel), 38 (surname), 50 (unknown) and 53 (17-byte struct after NpcAsPlayerInfo)
+static uint32 ClassicPlayerDataBit(uint32 bit)
+{
+    if (bit <= 18) return bit;
+    if (bit <= 30) return bit + 1;
+    if (bit == 31) return 33;           // TaxiMountAnimKitID moves past the group bit 32
+    if (bit == 32) return 32;
+    if (bit <= 36) return bit + 1;
+    if (bit <= 47) return bit + 2;
+    if (bit <= 49) return bit + 3;
+    return bit + 4;
+}
+
+static constexpr std::array<std::pair<uint32, uint32>, 9> ClassicPlayerDataGroups =
+{ {
+    { 0, 31 }, { 32, 53 }, { 54, 56 }, { 57, 232 }, { 233, 252 }, { 253, 259 }, { 260, 292 }, { 293, 309 }, { 310, 329 }
+} };
+
 void PlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player const* receiver, Player const* owner, bool ignoreNestedChangesMask) const
 {
-    data.WriteBits(changesMask.GetBlocksMask(0), 11);
-    for (uint32 i = 0; i < 11; ++i)
-        if (changesMask.GetBlock(i))
-            data.WriteBits(changesMask.GetBlock(i), 32);
+    std::array<uint32, 11> classicBlocks = WriteClassicChangesMaskHeader<11>(data, changesMask, &ClassicPlayerDataBit, ClassicPlayerDataGroups);
+    bool classicGroup32 = (classicBlocks[1] & 1) != 0;
 
     bool noQuestLogChangesMask = data.WriteBit(IsQuestLogChangesMaskSkipped());
     if (changesMask[0])
@@ -2912,8 +3014,9 @@ void PlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player c
         {
             data.WriteBits(Name->size(), 6);
         }
-        data.WriteBit(DeclinedNames.has_value());
     }
+    if (classicGroup32)     // Classic group 32 also holds TaxiMountAnimKitID (TC group 0)
+        data.WriteBit(DeclinedNames.has_value());
     data.FlushBits();
     if (changesMask[32])
     {
@@ -5157,6 +5260,9 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     {
         data << InvSlots[i];
     }
+    // Classic 1.60.1.70009 has 145 InvSlots (client ActivePlayerData create reader rva 0xA882E0, count at rva 0x4E417E0)
+    for (uint32 i = 105; i < 145; ++i)
+        data << ObjectGuid::Empty;
     data << *FarsightObject;
     data << *SummonedBattlePetGUID;
     data << uint32(KnownTitles.size());
@@ -5226,6 +5332,7 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     data << uint8(LifetimeMaxRank);
     data << uint8(NumRespecs);
     data << uint32(PvpMedals);
+    data << uint32(0);                          // Classic 1.60.1.70009: unknown uint32 (client ActivePlayerData +0x14F8)
     for (uint32 i = 0; i < 12; ++i)
     {
         data << uint32(BuybackPrice[i]);
@@ -5233,6 +5340,7 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     }
     data << uint16(TodayHonorableKills);
     data << uint16(YesterdayHonorableKills);
+    data << float(0.0f);                        // Classic 1.60.1.70009: unknown float (client ActivePlayerData +0x1500)
     data << uint32(LifetimeHonorableKills);
     data << int32(WatchedFactionIndex);
     for (uint32 i = 0; i < 32; ++i)
@@ -5248,13 +5356,14 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     {
         data << uint32(NoReagentCostMask[i]);
     }
-    data << int32(PetSpellPower);
+    // Classic 1.60.1.70009 has no PetSpellPower (client reads NoReagentCostMask[4] then ProfessionSkillLine[2])
     for (uint32 i = 0; i < 2; ++i)
     {
         data << int32(ProfessionSkillLine[i]);
     }
     data << float(UiHitModifier);
     data << float(UiSpellHitModifier);
+    data << float(0.0f);                        // Classic 1.60.1.70009: third float before HomeRealmTimeOffset (client +0x1560)
     data << int32(HomeRealmTimeOffset);
     data << float(ModPetHaste);
     data << int8(JailersTowerLevelMax);
@@ -5335,6 +5444,7 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     data << *DungeonScore;
     WriteMapFieldCreate(TraitConfigs, data, receiver, owner);
     data << uint32(ActiveCombatTraitConfigID);
+    data << uint8(0);                           // Classic 1.60.1.70009: unknown uint8 (client ActivePlayerData, read after ActiveCombatTraitConfigID)
     data << uint32(CraftingOrders.size());
     data << uint32(PersonalCraftingOrderCounts.size());
     data << uint32(NpcCraftingOrders.size());
@@ -5350,6 +5460,7 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     data << int32(ItemUpgradeHighTrinketItemID);
     data << float(ItemUpgradeHighTrinketWatermark);
     data << uint64(LootHistoryInstanceID);
+    data << uint8(0);                           // Classic 1.60.1.70009: unknown uint8 (client ActivePlayerData +0x1EA0)
     data << uint32(TrackedCollectableSources.size());
     data << uint8(RequiredMountCapabilityFlags);
     WriteMapFieldCreate(DelveData, data, receiver, owner);
@@ -5561,12 +5672,43 @@ void ActivePlayerData::WriteUpdate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     WriteUpdate(_changesMask, data, receiver, owner, false);
 }
 
+// Classic 1.60.1.70009 ActivePlayerData changes-mask bit numbering (client update reader rva 0xA91D90, 14 blocks, classic_re/upd_bits.py):
+// - group bits 0, 32, 70, 102, 134 like retail; new fields 108 (uint32 after PvpMedals), 111 (float after YesterdayHonorableKills),
+//   120 (float before HomeRealmTimeOffset), 151 (uint8 after ActiveCombatTraitConfigID), 158 (uint8 after LootHistoryInstanceID);
+//   PetSpellPower (TC 116) removed, so NumBankSlots/NumCharacterBankTabs (TC 132/133) move into group 134
+// - TransmogMetadata has its own group: bit 166 (group) + 167 (client rva 0xA9BFF2 reads it only when both are set)
+// - InvSlots has 145 entries (group 168, entries 169..313), every array after it is shifted by 45
+static uint32 ClassicActivePlayerDataBit(uint32 bit)
+{
+    if (bit <= 107) return bit;
+    if (bit <= 109) return bit + 1;
+    if (bit <= 115) return bit + 2;
+    if (bit == 116) return ~0u;         // PetSpellPower
+    if (bit <= 118) return bit + 1;
+    if (bit <= 131) return bit + 2;
+    if (bit == 132) return 135;         // NumBankSlots
+    if (bit == 133) return 136;         // NumCharacterBankTabs
+    if (bit == 134) return 134;
+    if (bit == 135) return 137;         // NumAccountBankTabs
+    if (bit <= 148) return bit + 2;
+    if (bit <= 154) return bit + 3;
+    if (bit <= 161) return bit + 4;     // ..., ViewedOutfit (165)
+    if (bit <= 268) return bit + 5;     // TransmogMetadata (167), InvSlots group (168) + InvSlots[0..104] (169..273)
+    return bit + 45;                    // arrays after InvSlots
+}
+
+// Classic group bit -> last child bit
+static constexpr std::array<std::pair<uint32, uint32>, 16> ClassicActivePlayerDataGroups =
+{ {
+    { 0, 31 }, { 32, 69 }, { 70, 101 }, { 102, 133 }, { 134, 165 }, { 166, 167 }, { 168, 313 }, { 314, 316 }, { 317, 345 },
+    { 346, 352 }, { 353, 377 }, { 378, 410 }, { 411, 415 }, { 416, 418 }, { 419, 424 }, { 425, 442 }
+} };
+
 void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player const* receiver, Player const* owner, bool ignoreNestedChangesMask) const
 {
-    data.WriteBits(changesMask.GetBlocksMask(0), 13);
-    for (uint32 i = 0; i < 13; ++i)
-        if (changesMask.GetBlock(i))
-            data.WriteBits(changesMask.GetBlock(i), 32);
+
+    std::array<uint32, 14> classicBlocks = WriteClassicChangesMaskHeader<14>(data, changesMask, &ClassicActivePlayerDataBit, ClassicActivePlayerDataGroups);
+    bool classicGroup134 = (classicBlocks[4] & (1u << (134 % 32))) != 0;
 
     if (changesMask[0])
     {
@@ -6823,7 +6965,7 @@ void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Pl
             TransmogMetadata->WriteUpdate(ignoreNestedChangesMask, data, receiver, owner);
         }
     }
-    if (changesMask[134])
+    if (classicGroup134)    // Classic group 134 also holds NumBankSlots/NumCharacterBankTabs (TC group 102)
     {
         data.WriteBit(QuestSession.has_value());
         data.WriteBit(PetStable.has_value());
@@ -7203,6 +7345,7 @@ void GameObjectData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags,
     data << float(ParentRotation->z);
     data << float(ParentRotation->w);
     data << int32(FactionTemplate);
+    data << int32(0);                           // Classic 1.60.1.70009: unknown int32 (client GameObjectData reader rva 0x4506180, +0x74)
     data << int8(ViewerDependentValue<StateTag>::GetValue(this, receiver, owner));
     data << int8(TypeID);
     data << uint8(PercentHealth);

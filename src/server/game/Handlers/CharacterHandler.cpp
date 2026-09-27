@@ -504,6 +504,17 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
 
     SendPacket(charEnum.Write());
 
+    // Classic 1.60.1.70009: character select keeps the enum result pending (never shows the characters) until it receives
+    // Classic opcode 0x460362 (retail numbering: SMSG_RECENT_ALLY_DATA_RESPONSE), whose handler (rva 0x24F1E50) releases it.
+    // Layout: uint32, uint8 (handler only uses the list when this is 7), uint32 count, entries - send it empty.
+    {
+        WorldPacket release(SMSG_RECENT_ALLY_DATA_RESPONSE, 9);
+        release << uint32(0);
+        release << uint8(0);
+        release << uint32(0);
+        SendPacket(&release, true);
+    }
+
     if (!charEnum.IsDeletedCharacters)
         _collectionMgr->SendWarbandSceneCollectionData();
 }
@@ -1295,6 +1306,14 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
         // send new char string if not empty
         if (!sWorld->GetNewCharString().empty())
             chH.PSendSysMessage("%s", sWorld->GetNewCharString().c_str());
+    }
+
+    // Classic 1.60.1.70009: start positions imported from client recordings have no height (-15000); use the ground below
+    if (pCurrChar->GetPositionZ() <= -14999.0f)
+    {
+        float z = pCurrChar->GetMap()->GetClassicSpawnHeight(pCurrChar->GetPhaseShift(), pCurrChar->GetPositionX(), pCurrChar->GetPositionY());
+        if (z > INVALID_HEIGHT)
+            pCurrChar->Relocate(pCurrChar->GetPositionX(), pCurrChar->GetPositionY(), z + 0.5f, pCurrChar->GetOrientation());
     }
 
     if (!pCurrChar->GetMap()->AddPlayerToMap(pCurrChar))

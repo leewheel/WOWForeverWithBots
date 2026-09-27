@@ -19,6 +19,8 @@
 #include "AuthenticationPackets.h"
 #include "BattlenetRpcErrorCodes.h"
 #include "CharacterPackets.h"
+#include "ClassicOpcodes.h"
+#include "Config.h"
 #include "CryptoHash.h"
 #include "CryptoRandom.h"
 #include "DatabaseEnv.h"
@@ -370,13 +372,19 @@ WorldSocket::ReadDataHandlerResult WorldSocket::ReadDataHandler()
     }
 
     WorldPacket packet(std::move(_packetBuffer).Release(), GetConnectionType());
-    OpcodeClient opcode = packet.read<OpcodeClient>();
+    uint32 rawOpcode = packet.read<uint32>();
+    OpcodeClient opcode = OpcodeClient(ClassicOpcodes::TranslateClientOpcode(rawOpcode));
     if (!opcodeTable.IsValid(opcode))
     {
-        TC_LOG_ERROR("network", "WorldSocket::ReadHeaderHandler(): client {} sent wrong opcode (opcode: {})",
-            GetRemoteIpAddress(), uint32(opcode));
-        return ReadDataHandlerResult::Error;
+        TC_LOG_ERROR("network", "WorldSocket::ReadHeaderHandler(): client {} sent wrong opcode (opcode: 0x{:06X} = {}, size: {}) data: {}",
+            GetRemoteIpAddress(), rawOpcode, rawOpcode, packet.size() - packet.rpos(),
+            Trinity::Impl::ByteArrayToHexStr(packet.data() + packet.rpos(), std::min<std::size_t>(packet.size() - packet.rpos(), 256)));
+        // Classic 1.60.1.70009: many client opcodes are not mapped yet, skip them instead of dropping the connection
+        return ReadDataHandlerResult::Ok;
     }
+
+    if (rawOpcode != uint32(opcode))
+        TC_LOG_DEBUG("network.opcode", "C->S: classic opcode 0x{:06X} translated to {}", rawOpcode, GetOpcodeNameForLogging(opcode));
 
     packet.SetOpcode(opcode);
 
@@ -465,6 +473,25 @@ void WorldSocket::SendPacket(WorldPacket const& packet)
     if (!IsOpen())
         return;
 
+    if (ClassicOpcodes::IsServerOpcodeBlocked(packet.GetOpcode()))
+    {
+        TC_LOG_DEBUG("network.opcode", "S->C: {} {} not sent (blocked for Classic client)", GetRemoteIpAddress(), GetOpcodeNameForLogging(static_cast<OpcodeServer>(packet.GetOpcode())));
+        return;
+    }
+
+    if (std::vector<uint8> const* stub = ClassicOpcodes::GetServerStubPayload(packet.GetOpcode()))
+    {
+        WorldPacket stubPacket(OpcodeServer(packet.GetOpcode()), stub->size(), packet.GetConnection());
+        if (!stub->empty())
+            stubPacket.append(stub->data(), stub->size());
+
+        if (sPacketLog->CanLogPacket())
+            sPacketLog->LogPacket(stubPacket, SERVER_TO_CLIENT, GetRemoteIpAddress(), GetRemotePort(), GetConnectionType());
+
+        _bufferQueue.Enqueue(new EncryptablePacket(stubPacket, _authCrypt.IsInitialized()));
+        return;
+    }
+
     if (sPacketLog->CanLogPacket())
         sPacketLog->LogPacket(packet, SERVER_TO_CLIENT, GetRemoteIpAddress(), GetRemotePort(), GetConnectionType());
 
@@ -473,7 +500,7 @@ void WorldSocket::SendPacket(WorldPacket const& packet)
 
 void WorldSocket::WritePacketToBuffer(EncryptablePacket const& packet, MessageBuffer& buffer)
 {
-    uint32 opcode = packet.GetOpcode();
+    uint32 opcode = ClassicOpcodes::TranslateServerOpcode(packet.GetOpcode());
     uint32 packetSize = packet.size();
 
     // Reserve space for buffer
@@ -500,7 +527,7 @@ void WorldSocket::WritePacketToBuffer(EncryptablePacket const& packet, MessageBu
         buffer.WriteCompleted(compressedSize);
         packetSize = compressedSize + sizeof(CompressedWorldPacket);
 
-        opcode = SMSG_COMPRESSED_PACKET;
+        opcode = ClassicOpcodes::TranslateServerOpcode(SMSG_COMPRESSED_PACKET);
     }
     else if (!packet.empty())
         buffer.Write(packet.data(), packet.size());
@@ -517,7 +544,7 @@ void WorldSocket::WritePacketToBuffer(EncryptablePacket const& packet, MessageBu
 
 uint32 WorldSocket::CompressPacket(uint8* buffer, WorldPacket const& packet)
 {
-    uint32 opcode = packet.GetOpcode();
+    uint32 opcode = ClassicOpcodes::TranslateServerOpcode(packet.GetOpcode());
     uint32 bufferSize = deflateBound(_compressionStream, packet.size() + sizeof(opcode));
 
     _compressionStream->next_out = buffer;
@@ -678,34 +705,46 @@ void WorldSocket::HandleAuthSessionCallback(WorldPackets::Auth::AuthSession cons
         .Arch = ClientBuild::Arch::Id(joinTicket->clientarch()),
         .Type = ClientBuild::Type::Id(joinTicket->type())
     };
+    // Development aid for clients whose per-build auth key is not known yet (e.g. Classic beta)
+    // Session key derivation below does not depend on the build auth key, so skipping the digest check is enough
+    bool const skipBuildAuthKeyCheck = sConfigMgr->GetBoolDefault("Network.SkipBuildAuthKeyCheck", false);
+
     auto clientBuildAuthKey = std::ranges::find(buildInfo->AuthKeys, buildVariant, &ClientBuild::AuthKey::Variant);
     if (clientBuildAuthKey == buildInfo->AuthKeys.end())
     {
-        SendAuthResponseError(ERROR_BAD_VERSION);
-        TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Missing client build auth key for build {} variant {}-{}-{} ({}).", account.Game.Build,
-            buildVariant.Platform, buildVariant.Arch, buildVariant.Type, address);
-        DelayedCloseSocket();
-        return;
+        if (!skipBuildAuthKeyCheck)
+        {
+            SendAuthResponseError(ERROR_BAD_VERSION);
+            TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Missing client build auth key for build {} variant {}-{}-{} ({}).", account.Game.Build,
+                buildVariant.Platform, buildVariant.Arch, buildVariant.Type, address);
+            DelayedCloseSocket();
+            return;
+        }
+
+        TC_LOG_WARN("network", "WorldSocket::HandleAuthSession: Missing client build auth key for build {} variant {}-{}-{} ({}), digest check skipped (Network.SkipBuildAuthKeyCheck).",
+            account.Game.Build, buildVariant.Platform, buildVariant.Arch, buildVariant.Type, address);
     }
-
-    Trinity::Crypto::SHA512 digestKeyHash;
-    digestKeyHash.UpdateData(account.Game.KeyData.data(), account.Game.KeyData.size());
-    digestKeyHash.UpdateData(clientBuildAuthKey->Key.data(), clientBuildAuthKey->Key.size());
-    digestKeyHash.Finalize();
-
-    Trinity::Crypto::HMAC_SHA512 hmac(digestKeyHash.GetDigest());
-    hmac.UpdateData(authSession->LocalChallenge);
-    hmac.UpdateData(_serverChallenge);
-    hmac.UpdateData(AuthCheckSeed);
-    hmac.Finalize();
-
-    // Check that Key and account name are the same on client and server
-    if (memcmp(hmac.GetDigest().data(), authSession->Digest.data(), authSession->Digest.size()) != 0)
+    else
     {
-        SendAuthResponseError(ERROR_DENIED);
-        TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Authentication failed for account: {} ('{}') address: {}", account.Game.Id, joinTicket->gameaccount(), address);
-        DelayedCloseSocket();
-        return;
+        Trinity::Crypto::SHA512 digestKeyHash;
+        digestKeyHash.UpdateData(account.Game.KeyData.data(), account.Game.KeyData.size());
+        digestKeyHash.UpdateData(clientBuildAuthKey->Key.data(), clientBuildAuthKey->Key.size());
+        digestKeyHash.Finalize();
+
+        Trinity::Crypto::HMAC_SHA512 hmac(digestKeyHash.GetDigest());
+        hmac.UpdateData(authSession->LocalChallenge);
+        hmac.UpdateData(_serverChallenge);
+        hmac.UpdateData(AuthCheckSeed);
+        hmac.Finalize();
+
+        // Check that Key and account name are the same on client and server
+        if (memcmp(hmac.GetDigest().data(), authSession->Digest.data(), authSession->Digest.size()) != 0)
+        {
+            SendAuthResponseError(ERROR_DENIED);
+            TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Authentication failed for account: {} ('{}') address: {}", account.Game.Id, joinTicket->gameaccount(), address);
+            DelayedCloseSocket();
+            return;
+        }
     }
 
     Trinity::Crypto::SHA512 keyData;
@@ -861,7 +900,10 @@ void WorldSocket::LoadSessionPermissionsCallback(PreparedQueryResult result)
     // RBAC must be loaded before adding session to check for skip queue permission
     _worldSession->GetRBACData()->LoadFromDBCallback(std::move(result));
 
-    SendPacketAndLogOpcode(*WorldPackets::Auth::EnterEncryptedMode(_encryptKey, true).Write());
+    WorldPackets::Auth::EnterEncryptedMode enterEncryptedMode(_encryptKey, true);
+    // Classic (1.60+) clients pick the Ed25519 public key used to verify this packet by RegionGroup
+    enterEncryptedMode.RegionGroup = sConfigMgr->GetIntDefault("Network.EnterEncryptedModeRegionGroup", 0);
+    SendPacketAndLogOpcode(*enterEncryptedMode.Write());
 }
 
 WorldSocket::ReadDataHandlerResult WorldSocket::HandleAuthContinuedSession(WorldPacket&& packet)
@@ -944,7 +986,10 @@ void WorldSocket::HandleAuthContinuedSessionCallback(WorldPackets::Auth::AuthCon
     // only first 32 bytes of the hmac are used
     memcpy(_encryptKey.data(), encryptKeyGen.GetDigest().data(), 32);
 
-    SendPacketAndLogOpcode(*WorldPackets::Auth::EnterEncryptedMode(_encryptKey, true).Write());
+    WorldPackets::Auth::EnterEncryptedMode enterEncryptedMode(_encryptKey, true);
+    // Classic (1.60+) clients pick the Ed25519 public key used to verify this packet by RegionGroup
+    enterEncryptedMode.RegionGroup = sConfigMgr->GetIntDefault("Network.EnterEncryptedModeRegionGroup", 0);
+    SendPacketAndLogOpcode(*enterEncryptedMode.Write());
     AsyncRead(Trinity::Net::InvokeReadHandlerCallback<WorldSocket>{ .Socket = this });
 }
 

@@ -121,8 +121,9 @@ namespace WorldPackets
         {
         public:
             static std::size_t constexpr NumActionButtons = 180;
+            static std::size_t constexpr ClassicNumActionButtons = 360;
 
-            explicit UpdateActionButtons() : ServerPacket(SMSG_UPDATE_ACTION_BUTTONS, NumActionButtons * 8 + 1) { }
+            explicit UpdateActionButtons() : ServerPacket(SMSG_UPDATE_ACTION_BUTTONS, ClassicNumActionButtons * 8 + 1) { }
 
             WorldPacket const* Write() override;
 

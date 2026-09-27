@@ -2014,6 +2014,14 @@ bool GameObject::LoadFromDB(ObjectGuid::LowType spawnId, Map* map, bool addToMap
     GOState go_state = data->goState;
     uint32 artKit = data->artKit;
 
+    // Classic 1.60.1.70009: spawns imported from client recordings have no height (position_z = -15000); use the ground below
+    if (data->spawnPoint.GetPositionZ() <= -14999.0f)
+    {
+        float z = map->GetClassicSpawnHeight(PhaseShift(), data->spawnPoint.GetPositionX(), data->spawnPoint.GetPositionY());
+        if (z > INVALID_HEIGHT)
+            const_cast<GameObjectData*>(data)->spawnPoint.m_positionZ = z;
+    }
+
     m_spawnId = spawnId;
     m_respawnCompatibilityMode = ((data->spawnGroupData->flags & SPAWNGROUP_FLAG_COMPATIBILITY_MODE) != 0);
     if (!Create(entry, map, data->spawnPoint, data->rotation, animprogress, go_state, artKit, !m_respawnCompatibilityMode, spawnId))
