@@ -115,11 +115,13 @@ void BaseEntity::BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* targe
     }
 
     ByteBuffer& buf = data->GetBuffer();
+    std::size_t classicDebugStart = buf.wpos();   // CLASSIC_CREATE_DEBUG (temporary)
     buf << uint8(updateType);
     buf << GetGUID();
     buf << uint8(objectType);
 
     BuildMovementUpdate(buf, flags, target);
+    std::size_t classicDebugMove = buf.wpos();
 
     UF::UpdateFieldFlag fieldFlags = GetUpdateFieldFlagsFor(target);
     std::size_t sizePos = buf.wpos();
@@ -138,6 +140,15 @@ void BaseEntity::BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* targe
     }
 
     buf.put<uint32>(sizePos, buf.wpos() - sizePos - 4);
+
+    if (GetGUID().IsCreature() && GetGUID().GetEntry() == 598)   // CLASSIC_CREATE_DEBUG (temporary)
+    {
+        std::string hex;
+        for (std::size_t i = classicDebugStart; i < buf.wpos(); ++i)
+            hex += Trinity::StringFormat("{:02x}", uint32(buf.data()[i]));
+        TC_LOG_INFO("misc", "CLASSIC_CREATE_DEBUG {} movebytes {} total {} bytes {}", GetGUID().ToString(), classicDebugMove - classicDebugStart,
+            buf.wpos() - classicDebugStart, hex);
+    }
 
     data->AddUpdateBlock();
 }

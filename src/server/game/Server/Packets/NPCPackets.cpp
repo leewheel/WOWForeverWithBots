@@ -177,8 +177,8 @@ WorldPacket const* TrainerList::Write()
         _worldPacket << int32(spell.SpellID);
         _worldPacket << uint32(spell.MoneyCost);
         _worldPacket << uint32(spell.ReqSkillLine);
-        // Classic uses the vanilla state order: 0 = available (green), 1 = unavailable (red), 2 = known (grey); TC: 0 known, 1 available, 2 unavailable
-        _worldPacket << uint8(spell.Usable == 0 ? 2 : spell.Usable - 1);
+        // same state order as TC: 0 = known ("used"), 1 = available, 2 = unavailable (SetTrainerServiceTypeFilter, client rva 0x2F6CE41)
+        _worldPacket << uint8(spell.Usable);
         _worldPacket << uint32(spell.ReqSkillRank);
         _worldPacket << uint32(spell.ReqLevel);
         _worldPacket.append(spell.ReqAbility.data(), spell.ReqAbility.size());

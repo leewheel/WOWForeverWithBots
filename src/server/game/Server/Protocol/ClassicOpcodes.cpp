@@ -47,13 +47,14 @@ std::unordered_map<uint32, uint32> const ServerOpcodes =
     { SMSG_GAME_TIME_SET,           0x4601B7 },
     { SMSG_LOGIN_SET_TIME_SPEED,    0x4601B8 },
     { SMSG_SERVER_TIME_OFFSET,      0x4601BF },  // decoder asserts datasize == 8; 0x1BD = CORPSE_TRANSPORT_QUERY, 0x1BE = ENCHANTMENT_LOG (both retail - 1)
+    { SMSG_MIRROR_VARS,             0x460371 },  // decoder 0x83E330: count, then 1 bit + 2 x 24-bit sized strings (0x46036F reads 16-byte records)
 };
 
 // sent with the shifted number these hit a different Classic message (client JamClient size asserts)
 std::unordered_set<uint32> const BlockedServerOpcodes =
 {
     SMSG_HEALTH_UPDATE,     // does not exist in Classic (health is sent through UnitData)
-    SMSG_CHANNEL_LIST,      // Classic chat group index 0x1B is a different message (guid + strings, client rva 0xA12965): crashes on string length
+    SMSG_CHANNEL_LIST,      // Classic chat index 0x1D (reader rva 0xA10E70), layout not verified yet
 };
 
 // Classic layout differs; the client waits for the message, so send a placeholder of the expected size
@@ -71,6 +72,7 @@ constexpr uint32 FirstRetailClientGroup = 0x2A;
 constexpr uint32 LastRetailClientGroup = RetailClientConnectionGroup;
 constexpr uint32 FirstRetailServerGroup = 0x45;
 constexpr uint32 LastRetailServerGroup = 0x6A;
+constexpr uint32 ChatRetailServerGroup = 0x4A;
 
 uint32 ClassicOpcodes::TranslateClientOpcode(uint32 classicOpcode)
 {
@@ -98,6 +100,11 @@ uint32 ClassicOpcodes::TranslateServerOpcode(uint32 coreOpcode)
         // mirror timers, SERVER_TIME_OFFSET 0x1BF; MINIMAP_PING 0x17A and FISH_* 0x17B/0x17C keep their index)
         if (group == FirstRetailServerGroup && index >= 0x17E && index <= 0x1C0)
             --index;
+        // Chat (retail 0x4A, Classic 0x4B, client switch rva 0xA11168, 39 cases): Classic has two extra messages at indices 4-5, so
+        // Classic index = retail + 2 from retail 4 on (CHAT_PLAYER_NOTFOUND/AMBIGUOUS name readers at 6/15, USERLIST_* 17-19,
+        // CHANNEL_NOTIFY_JOINED 0x1B, CHANNEL_NOTIFY_LEFT 0x1C, CHAT_SERVER_MESSAGE 0x1E; CHAT and MOTD keep 1 and 3)
+        if (group == ChatRetailServerGroup && index >= 4)
+            index += 2;
         return ((group + 1) << 16) | index;
     }
 

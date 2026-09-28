@@ -669,7 +669,11 @@ bool Creature::UpdateEntry(uint32 entry, CreatureData const* data /*= nullptr*/,
     // checked and error show at loading templates
     if (FactionTemplateEntry const* factionTemplate = sFactionTemplateStore.LookupEntry(cInfo->faction))
     {
-        SetPvP((factionTemplate->Flags & FACTION_TEMPLATE_FLAG_PVP) != 0);
+        // Classic 1.60: the client refuses spells on PvP-flagged units while the player is not flagged, so monster factions
+        // (e.g. Defias, 17) that carry FACTION_TEMPLATE_FLAG_PVP could only be meleed; like vanilla, only Alliance / Horde
+        // aligned NPCs (guards) are PvP flagged
+        SetPvP((factionTemplate->Flags & FACTION_TEMPLATE_FLAG_PVP) != 0
+            && (factionTemplate->FactionGroup & (FACTION_MASK_ALLIANCE | FACTION_MASK_HORDE)) != 0);
         if (IsTaxi())
         {
             uint32 taxiNodesId = sObjectMgr->GetNearestTaxiNode(GetPositionX(), GetPositionY(), GetPositionZ(), GetMapId(),

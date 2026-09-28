@@ -108,8 +108,9 @@ void WorldSession::SendSetTimeZoneInformation()
 void WorldSession::SendFeatureSystemStatusGlueScreen()
 {
     WorldPackets::System::FeatureSystemStatusGlueScreen features;
-    features.BpayStoreAvailable = false;
+    features.BpayStoreAvailable = true;             // Classic 1.60: custom shop2 catalog shop (classic_re/shop_server.py)
     features.BpayStoreDisabledByParentalControls = false;
+    features.CommerceServerEnabled = true;
     features.CharUndeleteEnabled = sWorld->getBoolConfig(CONFIG_FEATURE_SYSTEM_CHARACTER_UNDELETE_ENABLED);
     features.MaxCharactersOnThisRealm = sWorld->getIntConfig(CONFIG_CHARACTERS_PER_REALM);
     features.MinimumExpansionLevel = EXPANSION_CLASSIC;
@@ -147,7 +148,10 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
         { "raidLockoutExtendEnabled"sv, "1"sv },
         { "sellAllJunkEnabled"sv, "1"sv },
         { "bypassItemLevelScalingCode"sv, "0"sv },
-        { "shop2Enabled"sv, "0"sv },
+        // Classic 1.60: custom shop - the client's shop2 REST calls go to classic_re/shop_server.py
+        { "shop2Enabled"sv, "1"sv },
+        { "shop2HostUrlRequests"sv, "https://trinity.actual.battle.net:8443"sv },
+        { "shop2HostUrlAuth"sv, "https://trinity.actual.battle.net:8443"sv },
         { "bpayStoreEnable"sv, "0"sv },
         { "recentAlliesEnabledClient"sv, "0"sv },
         { "browserEnabled"sv, "0"sv },

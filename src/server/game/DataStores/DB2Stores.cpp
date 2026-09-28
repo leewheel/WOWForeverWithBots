@@ -2798,7 +2798,7 @@ MapDifficultyEntry const* DB2Manager::GetDownscaledMapDifficultyData(uint32 mapI
     {
         mapDiff = GetMapDifficultyData(mapId, currentDifficulty);
         DifficultyEntry const* difficultyEntry = sDifficultyStore.LookupEntry(currentDifficulty);
-        if (!currentDifficulty)
+        if (!currentDifficulty || !difficultyEntry) // Classic 1.60 data lacks some retail difficulties
             break;
 
         currentDifficulty = Difficulty(difficultyEntry->FallbackDifficultyID);

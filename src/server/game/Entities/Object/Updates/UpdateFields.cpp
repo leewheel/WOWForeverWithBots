@@ -1105,7 +1105,10 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     data << uint32(PetNextLevelExperience);
     data << float(ModCastingSpeed);
     data << float(ModCastingSpeedNeg);
-    data << float(ModSpellHaste);
+    if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
+    {
+        data << float(ModSpellHaste);           // Classic 1.60.1.70009: owner only (client UnitData +0x1C8, reader rva 0x44F01CB)
+    }
     data << float(ModHaste);
     data << float(ModRangedHaste);
     data << float(ModHasteRegen);
@@ -1229,7 +1232,7 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
 static constexpr void UnitDataAppendAllowedFieldsMaskForFlag(UnitData::Mask& allowedMaskForTarget, EnumFlag<UpdateFieldFlag> fieldVisibilityFlags)
 {
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
-        allowedMaskForTarget |= std::array<uint32, 8>{ 0x00010000u, 0x80200000u, 0xF840000Eu, 0x00003FFEu, 0x00000800u, 0xF80FFFFFu, 0xFFFFFFFFu, 0x0000003Fu };
+        allowedMaskForTarget |= std::array<uint32, 8>{ 0x00010000u, 0x80200000u, 0xF840400Eu, 0x00003FFEu, 0x00000800u, 0xF80FFFFFu, 0xFFFFFFFFu, 0x0000003Fu };
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::UnitAll))
         allowedMaskForTarget |= std::array<uint32, 8>{ 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000800u, 0x000FFFFFu, 0x00000000u, 0x00000000u };
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Empath))
@@ -1243,14 +1246,14 @@ void UnitData::AppendAllowedFieldsMaskForFlag(Mask& allowedMaskForTarget, EnumFl
 
 void UnitData::FilterDisallowedFieldsMaskForFlag(Mask& changesMask, EnumFlag<UpdateFieldFlag> fieldVisibilityFlags)
 {
-    Mask allowedMaskForTarget({ 0xFFFEFFFFu, 0x7FDFFFFFu, 0x07BFFFF1u, 0xFFFFC001u, 0xFFFFFFFFu, 0x07F00000u, 0x00000000u, 0x00000000u });
+    Mask allowedMaskForTarget({ 0xFFFEFFFFu, 0x7FDFFFFFu, 0x07BFBFF1u, 0xFFFFC001u, 0xFFFFFFFFu, 0x07F00000u, 0x00000000u, 0x00000000u });
     UnitDataAppendAllowedFieldsMaskForFlag(allowedMaskForTarget, fieldVisibilityFlags);
     changesMask &= allowedMaskForTarget;
 }
 
 void UnitData::WriteUpdate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteBuffer& data, Player const* receiver, Unit const* owner) const
 {
-    Mask allowedMaskForTarget({ 0xFFFEFFFFu, 0x7FDFFFFFu, 0x07BFFFF1u, 0xFFFFC001u, 0xFFFFFFFFu, 0x07F00000u, 0x00000000u, 0x00000000u });
+    Mask allowedMaskForTarget({ 0xFFFEFFFFu, 0x7FDFFFFFu, 0x07BFBFF1u, 0xFFFFC001u, 0xFFFFFFFFu, 0x07F00000u, 0x00000000u, 0x00000000u });
     UnitDataAppendAllowedFieldsMaskForFlag(allowedMaskForTarget, fieldVisibilityFlags);
     WriteUpdate(_changesMask & allowedMaskForTarget, data, receiver, owner, false);
 }

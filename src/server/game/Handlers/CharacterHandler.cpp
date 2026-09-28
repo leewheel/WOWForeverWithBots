@@ -1548,6 +1548,8 @@ void WorldSession::SendFeatureSystemStatus()
     features.CfgRealmRecID = sRealmList->GetCurrentRealmId().Realm;
     features.CommercePricePollTimeSeconds = 300;
     features.VoiceEnabled = false;
+    features.BpayStoreAvailable = true;             // Classic 1.60: custom shop2 catalog shop (classic_re/shop_server.py)
+    features.CommerceServerEnabled = true;
 
     // Enable guilds only.
     // This is required to restore old guild channel behavior for GMs.

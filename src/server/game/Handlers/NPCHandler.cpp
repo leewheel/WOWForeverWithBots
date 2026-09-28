@@ -343,6 +343,16 @@ void WorldSession::SendBindPoint(Creature* npc)
     // send spell for homebinding (3286)
     npc->CastSpell(_player, bindspell, true);
 
+    // binding at an inn hands out a Hearthstone when the player has none (an existing one simply follows the new home)
+    constexpr uint32 ITEM_HEARTHSTONE = 6948;
+    if (!_player->HasItemCount(ITEM_HEARTHSTONE, 1, true))
+    {
+        ItemPosCountVec dest;
+        if (_player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, ITEM_HEARTHSTONE, 1) == EQUIP_ERR_OK)
+            if (Item* item = _player->StoreNewItem(dest, ITEM_HEARTHSTONE, true))
+                _player->SendNewItem(item, 1, true, false);
+    }
+
     _player->PlayerTalkClass->SendCloseGossip();
 }
 
