@@ -6627,6 +6627,17 @@ SpellCastResult Spell::CheckCast(bool strict, int32* param1 /*= nullptr*/, int32
                 if (!player)
                     return SPELL_FAILED_TARGET_NOT_PLAYER;
 
+                // Classic 1.60 dual spec: Activate Secondary Spec (63644) / Activate Primary Spec (63645) switch spec groups
+                if (m_spellInfo->Id == 63644 || m_spellInfo->Id == 63645)
+                {
+                    if (!player->GetClassicSpecGroupConfig(m_spellInfo->Id == 63644))
+                        return SPELL_FAILED_NO_SPEC;
+                    if (Battleground const* bg = player->GetBattleground())
+                        if (bg->GetStatus() == STATUS_IN_PROGRESS)
+                            return SPELL_FAILED_NOT_IN_BATTLEGROUND;
+                    break;
+                }
+
                 if (!spec || (spec->ClassID != player->GetClass() && !spec->IsPetSpecialization()))
                     return SPELL_FAILED_NO_SPEC;
 

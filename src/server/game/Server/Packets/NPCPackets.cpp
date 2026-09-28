@@ -172,15 +172,16 @@ WorldPacket const* TrainerList::Write()
     _worldPacket << Size<uint32>(Spells);
     for (TrainerListSpell const& spell : Spells)
     {
-        // Classic 1.60.1.70009 (client decoder rva 0x8162E0, 33 bytes per spell): Usable follows ReqSkillLine, ReqLevel is a uint32
-        // after ReqSkillRank, nothing after ReqAbility
+        // Classic 1.60.1.70009 (client decoder rva 0x8162E0, 33 bytes per spell), verified with marker values in game:
+        // +8 = cost (GetTrainerServiceCost), +0xC byte = required level (GetTrainerServiceLevelReq). The client derives the
+        // available/used state itself (used = spell known); the int32 at +4 and the two uint32 after the level had no visible
+        // effect, so +4 stays 0 and the skill requirement goes in the retail order.
         _worldPacket << int32(spell.SpellID);
+        _worldPacket << int32(0);
         _worldPacket << uint32(spell.MoneyCost);
+        _worldPacket << uint8(spell.ReqLevel);
         _worldPacket << uint32(spell.ReqSkillLine);
-        // same state order as TC: 0 = known ("used"), 1 = available, 2 = unavailable (SetTrainerServiceTypeFilter, client rva 0x2F6CE41)
-        _worldPacket << uint8(spell.Usable);
         _worldPacket << uint32(spell.ReqSkillRank);
-        _worldPacket << uint32(spell.ReqLevel);
         _worldPacket.append(spell.ReqAbility.data(), spell.ReqAbility.size());
     }
 

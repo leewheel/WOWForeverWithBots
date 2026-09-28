@@ -181,6 +181,7 @@
     { 0x3E0188, 0x3D0186 }, // CMSG_TABARD_VENDOR_ACTIVATE (0.0)
     { 0x3E018A, 0x3D0188 }, // CMSG_TOGGLE_PVP (0.0)
 { 0x3E008A, 0x3D0089 }, // CMSG_AREA_TRIGGER (payload-verified: int32 id + entered/from-client bits; signature score was -0.7)
+{ 0x3E02C0, 0x3D02BC }, // CMSG_TRAITS_COMMIT_CONFIG (payload-verified: TraitConfig id/type/entries/subtrees + combat fields, 9-bit name, SavedConfigID, SavedLocalIdentifier)
     { 0x3E0191, 0x3D018F }, // CMSG_BATTLEMASTER_HELLO (3.8)
     { 0x3E0194, 0x3D0192 }, // CMSG_REQUEST_INSTANCE_ENCOUNTER_EVENT_SYNC (0.0)
     { 0x3E019D, 0x3D019B }, // CMSG_UPGRADE_GARRISON (0.0)

@@ -1351,7 +1351,7 @@ bool Creature::isCanInteractWithBattleMaster(Player* player, bool msg) const
 
 bool Creature::CanResetTalents(Player* player) const
 {
-    return player->GetLevel() >= 15
+    return player->GetLevel() >= 10                 // Classic 1.60: vanilla talents start at level 10 (retail: 15)
         && player->GetClass() == GetCreatureTemplate()->trainer_class;
 }
 

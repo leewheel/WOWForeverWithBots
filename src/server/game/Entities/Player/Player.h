@@ -2018,6 +2018,10 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         void IncreaseResetTalentsCostAndCounters(uint32 lastResetTalentsCost);
         void InitTalentForLevel();
         void SendTalentsInfoData();
+        UF::TraitConfig const* GetClassicSpecGroupConfig(bool secondary) const;   // Classic 1.60 dual spec
+        bool ActivateClassicSpecGroup(bool secondary);
+        bool PurchaseClassicDualSpec();
+        static bool IsClassicDualSpecGossipOption(int32 gossipOptionId);
         TalentLearnResult LearnTalent(uint32 talentId, int32* spellOnCooldown);
         bool AddTalent(TalentEntry const* talent, uint8 spec, bool learning);
         bool HasTalent(uint32 spell_id, uint8 spec) const;

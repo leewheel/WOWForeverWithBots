@@ -3901,7 +3901,7 @@ bool TraitSubTreeCache::operator==(TraitSubTreeCache const& right) const
 void TraitConfig::WriteCreate(ByteBuffer& data, Player const* receiver, Player const* owner) const
 {
     data << int32(ID);
-    data << int32(Type);
+    data << int32(Type == 1 ? 4 : *Type);       // Classic 1.60: combat configs are TraitConfigType::CamelotCombat (4) on the client
     data << uint32(Entries.size());
     data << uint32(SubTrees.size());
     if (Type == 2)
@@ -3989,7 +3989,7 @@ void TraitConfig::WriteUpdate(bool ignoreChangesMask, ByteBuffer& data, Player c
     {
         if (changesMask[6])
         {
-            data << int32(Type);
+            data << int32(Type == 1 ? 4 : *Type);   // Classic 1.60: CamelotCombat
         }
         if (changesMask[7])
         {

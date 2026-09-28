@@ -3493,6 +3493,17 @@ bool Player::ResetTalents(bool involuntarily /*= false*/)
         RemoveTalent(talentInfo);
     }
 
+    // Classic 1.60: talents are a trait config (C_ClassTalents); drop every purchased rank of the active combat config
+    // and keep only ranks the tree grants for free
+    if (UF::TraitConfig const* activeConfig = GetTraitConfig(m_activePlayerData->ActiveCombatTraitConfigID))
+    {
+        WorldPackets::Traits::TraitConfig resetConfig(*activeConfig);
+        std::erase_if(resetConfig.Entries, [](WorldPackets::Traits::TraitEntry const& entry) { return entry.GrantedRanks == 0; });
+        for (WorldPackets::Traits::TraitEntry& entry : resetConfig.Entries)
+            entry.Rank = 0;
+        UpdateTraitConfig(std::move(resetConfig), 0, false);
+    }
+
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
     _SaveTalents(trans);
     _SaveSpells(trans);
@@ -13999,6 +14010,14 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId, bool showQues
             }
         }
 
+        // Classic 1.60 dual spec purchase: class trainers of the player's class, from level 10, until bought
+        if (IsClassicDualSpecGossipOption(gossipMenuItem.GossipOptionID))
+        {
+            Creature* creature = source->ToCreature();
+            if (!creature || !creature->CanResetTalents(this) || GetClassicSpecGroupConfig(true))
+                canTalk = false;
+        }
+
         if (canTalk)
             PlayerTalkClass->GetGossipMenu().AddMenuItem(gossipMenuItem, gossipMenuItem.MenuID, gossipMenuItem.OrderIndex);
     }
@@ -14077,6 +14096,13 @@ void Player::OnGossipSelect(WorldObject* source, int32 gossipOptionId, uint32 me
     switch (gossipOptionNpc)
     {
         case GossipOptionNpc::None:
+            if (IsClassicDualSpecGossipOption(item->GossipOptionID))
+            {
+                PlayerTalkClass->SendCloseGossip();
+                Creature* creature = source->ToCreature();
+                if (!creature || !creature->CanResetTalents(this) || !PurchaseClassicDualSpec())
+                    return;                                 // not charged
+            }
             break;
         case GossipOptionNpc::Vendor:
             GetSession()->SendListInventory(guid);
@@ -28142,7 +28168,101 @@ void Player::SendTalentsInfoData()
             packet.Info.TalentGroups.push_back(groupInfoPkt);
     }
 
+    // Classic 1.60 dual spec: the client's spec group count (GetNumSpecGroups) is the number of talent groups sent here.
+    // Classic classes have a single specialization; a second group exists once the character owns a combat trait config
+    // flagged SecondarySpec (bought from a class trainer). Talents themselves live in the trait configs.
+    if (ChrSpecializationEntry const* spec = sDB2Manager.GetChrSpecializationByIndex(GetClass(), 0);
+        spec && !sDB2Manager.GetChrSpecializationByIndex(GetClass(), 1))
+    {
+        if (packet.Info.TalentGroups.empty())
+        {
+            packet.Info.TalentGroups.emplace_back();
+            packet.Info.TalentGroups.back().SpecID = spec->ID;
+        }
+        packet.Info.TalentGroups.resize(1);
+        packet.Info.ActiveGroup = 0;
+        if (GetClassicSpecGroupConfig(true))
+        {
+            WorldPackets::Talent::TalentGroupInfo secondaryGroup;
+            secondaryGroup.SpecID = spec->ID;
+            packet.Info.TalentGroups.push_back(secondaryGroup);
+            packet.Info.ActiveGroup = GetActiveTalentGroup() == 1 ? 1 : 0;
+        }
+    }
+
     SendDirectMessage(packet.Write());
+}
+
+// Classic 1.60 dual spec: combat trait config of spec group 0 (ActiveForSpec) or 1 (SecondarySpec) for the current spec
+UF::TraitConfig const* Player::GetClassicSpecGroupConfig(bool secondary) const
+{
+    TraitCombatConfigFlags flag = secondary ? TraitCombatConfigFlags::SecondarySpec : TraitCombatConfigFlags::ActiveForSpec;
+    return m_activePlayerData->TraitConfigs.FindIf([&](UF::TraitConfig const& traitConfig)
+    {
+        return traitConfig.Type == AsUnderlyingType(TraitConfigType::Combat)
+            && traitConfig.ChrSpecializationID == int32(GetPrimarySpecialization())
+            && traitConfig.CombatConfigFlags & AsUnderlyingType(flag);
+    }).second;
+}
+
+// Classic 1.60 dual spec: bought from class trainers (gossip options 95000000 + menu, sql/custom/world 2026_09_28_20)
+bool Player::IsClassicDualSpecGossipOption(int32 gossipOptionId)
+{
+    return gossipOptionId >= 95000000 && gossipOptionId < 96000000;
+}
+
+bool Player::PurchaseClassicDualSpec()
+{
+    if (GetClassicSpecGroupConfig(true))
+        return false;
+
+    UF::TraitConfig const* primary = GetClassicSpecGroupConfig(false);
+    if (!primary)
+        return false;
+
+    int32 localIdentifier = 1;
+    while (m_activePlayerData->TraitConfigs.FindIf([&](UF::TraitConfig const& traitConfig)
+    {
+        return traitConfig.Type == AsUnderlyingType(TraitConfigType::Combat) && traitConfig.LocalIdentifier == localIdentifier;
+    }).first)
+        ++localIdentifier;
+
+    WorldPackets::Traits::TraitConfig traitConfig;
+    traitConfig.Type = TraitConfigType::Combat;
+    traitConfig.ChrSpecializationID = primary->ChrSpecializationID;
+    traitConfig.CombatConfigFlags = TraitCombatConfigFlags::SecondarySpec;
+    traitConfig.LocalIdentifier = localIdentifier;
+    traitConfig.Name = *primary->Name;
+    CreateTraitConfig(traitConfig);
+
+    SendTalentsInfoData();
+    return true;
+}
+
+// Classic 1.60 dual spec: "Activate Primary/Secondary Spec" (spells 63645/63644). Swaps the applied talents, the action bars
+// (stored per talent group) and tells the client the new active group.
+bool Player::ActivateClassicSpecGroup(bool secondary)
+{
+    UF::TraitConfig const* target = GetClassicSpecGroupConfig(secondary);
+    if (!target)
+        return false;
+
+    int32 targetId = target->ID;
+    int32 currentId = *m_activePlayerData->ActiveCombatTraitConfigID;
+    if (targetId == currentId)
+        return true;
+
+    CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
+    _SaveActions(trans);
+    CharacterDatabase.CommitTransaction(trans);
+
+    ApplyTraitConfig(currentId, false);
+    SetActiveTalentGroup(secondary ? 1 : 0);
+    SetActiveCombatTraitConfigID(targetId);
+    ApplyTraitConfig(targetId, true);
+
+    StartLoadingActionButtons([this]() { SendTalentsInfoData(); });
+    return true;
 }
 
 void Player::SendEquipmentSetList()
@@ -28635,6 +28755,15 @@ void Player::_LoadTraits(PreparedQueryResult configsResult, PreparedQueryResult 
             && traitConfig.ChrSpecializationID == int32(GetPrimarySpecialization())
             && traitConfig.CombatConfigFlags & AsUnderlyingType(TraitCombatConfigFlags::ActiveForSpec);
     }).second;
+
+    // Classic 1.60 dual spec: talent group 1 is the config flagged SecondarySpec
+    if (GetActiveTalentGroup() == 1)
+    {
+        if (UF::TraitConfig const* secondaryConfig = GetClassicSpecGroupConfig(true))
+            activeTraitConfig = secondaryConfig;
+        else
+            SetActiveTalentGroup(0);
+    }
 
     if (activeTraitConfig)
     {
