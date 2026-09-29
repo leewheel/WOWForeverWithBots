@@ -16,6 +16,7 @@
  */
 
 #include "WorldSession.h"
+#include "DeathRecap.h"
 #include "Common.h"
 #include "Corpse.h"
 #include "DatabaseEnv.h"
@@ -71,6 +72,15 @@ void WorldSession::SendQueryTimeResponse()
 /// Only _static_ data is sent in this packet !!!
 void WorldSession::HandleCreatureQuery(WorldPackets::Query::QueryCreature& packet)
 {
+    {
+        WorldPackets::Query::QueryCreatureResponse recapActor;
+        if (DeathRecap::BuildCreatureQuery(packet.CreatureID, recapActor))
+        {
+            SendPacket(recapActor.Write());
+            return;
+        }
+    }
+
     if (CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(packet.CreatureID))
     {
         TC_LOG_DEBUG("network", "WORLD: CMSG_QUERY_CREATURE '{}' - Entry: {}.", ci->Name, packet.CreatureID);

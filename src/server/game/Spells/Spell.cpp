@@ -16,6 +16,7 @@
  */
 
 #include "Spell.h"
+#include "DeathRecap.h"
 #include "AzeriteEmpoweredItem.h"
 #include "Battlefield.h"
 #include "BattlefieldMgr.h"
@@ -4771,6 +4772,9 @@ void Spell::SendSpellStart()
         UpdateSpellHealPrediction(castData.Predict, false);
 
     m_caster->SendMessageToSet(packet.Write(), true);
+
+    DeathRecap::RecordCast(m_caster, true, m_spellInfo->Id, m_SpellVisual.SpellXSpellVisualID, m_SpellVisual.ScriptVisualID, m_casttime, castFlags,
+        m_targets.GetUnitTargetGUID());
 }
 
 void Spell::SendSpellGo()
@@ -4862,6 +4866,9 @@ void Spell::SendSpellGo()
     packet.LogData.Initialize(this);
 
     m_caster->SendCombatLogMessage(&packet);
+
+    DeathRecap::RecordCast(m_caster, false, m_spellInfo->Id, m_SpellVisual.SpellXSpellVisualID, m_SpellVisual.ScriptVisualID, 0, castFlags,
+        !castData.HitTargets.empty() ? castData.HitTargets.front() : m_targets.GetUnitTargetGUID());
 }
 
 /// Writes miss and hit targets for a SMSG_SPELL_GO packet

@@ -4412,3 +4412,49 @@ Load.Locales = 1
 
 #
 ###################################################################################################
+
+###################################################################################################
+# DEATH RECAP (deathcam)
+#
+#    Recap.Enable
+#        Description: Record the last seconds around players and let anyone watch a death again
+#                     (".recap <number>", or click [Recap] with the ForeverRecap addon).
+#        Default:     1 - (Enabled)
+#                     0 - (Disabled)
+
+Recap.Enable = 1
+
+#    Recap.MinLevel
+#        Description: Deaths of characters below this level get no recap.
+#        Default:     10
+
+Recap.MinLevel = 10
+
+#    Recap.Seconds
+#        Description: How many seconds before the death are replayed (5-60).
+#        Default:     20
+
+Recap.Seconds = 20
+
+#    Recap.Interval
+#        Description: Milliseconds between two recorded positions (100-1000). Lower is smoother, uses more memory.
+#        Default:     200
+
+Recap.Interval = 200
+
+#    Recap.Range
+#        Description: Units within this many yards of the player are recorded (10-100).
+#        Default:     40
+
+Recap.Range = 40
+
+#    Recap.Announce
+#        Description: Who sees the "[Recap #n] ... was slain by ..." line.
+#        Default:     3 - (Everyone on the realm; players on other continents are taken there to watch)
+#                     0 - (Nobody)
+#                     1 - (Only the player who died)
+#                     2 - (Everyone on the same map)
+
+Recap.Announce = 3
+#
+###################################################################################################

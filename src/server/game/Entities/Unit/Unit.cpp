@@ -16,6 +16,7 @@
  */
 
 #include "Unit.h"
+#include "DeathRecap.h"
 #include "AbstractFollower.h"
 #include "Battlefield.h"
 #include "BattlefieldMgr.h"
@@ -5556,6 +5557,8 @@ void Unit::ExitAllAreaTriggers()
 
 void Unit::SendSpellNonMeleeDamageLog(SpellNonMeleeDamage const* log)
 {
+    DeathRecap::RecordSpellDamage(log);
+
     WorldPackets::CombatLog::SpellNonMeleeDamageLog packet;
     packet.Me = log->target->GetGUID();
     packet.CasterGUID = Object::GetGUID(log->attacker);
@@ -5692,6 +5695,8 @@ void Unit::SendAttackStateUpdate(CalcDamageInfo* damageInfo)
         packet.ContentTuning = contentTuningParams;
 
     SendCombatLogMessage(&packet);
+
+    DeathRecap::RecordMelee(damageInfo);
 }
 
 void Unit::SendAttackStateUpdate(uint32 HitInfo, Unit* target, uint8 /*SwingType*/, SpellSchoolMask damageSchoolMask, uint32 Damage, uint32 AbsorbDamage, uint32 Resist, VictimState TargetState, uint32 BlockedAmount, uint32 RageGained)

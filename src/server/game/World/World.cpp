@@ -20,6 +20,7 @@
 */
 
 #include "World.h"
+#include "DeathRecap.h"
 #include "AccountMgr.h"
 #include "AchievementMgr.h"
 #include "AreaTriggerDataStore.h"
@@ -1210,6 +1211,8 @@ void World::LoadConfigSettings(bool reload)
     // Classic 1.60 Hardcore ruleset realm: C_GameRules.IsHardcoreActive() drives the client's Hardcore UI
     if (sConfigMgr->GetBoolDefault("Classic.Hardcore", false))
         _gameRules.push_back({ .Rule = ::GameRule::HardcoreRuleset, .Value = true });
+
+    DeathRecap::LoadConfig();
 
     if (reload)
     {

@@ -2345,6 +2345,12 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         void SetHardcoreReviveAllowed(bool allowed) { m_hardcoreReviveAllowed = allowed; }
         bool RefuseHardcoreResurrect();     // true (and tells the player) when a resurrection is not allowed
         bool m_hardcoreReviveAllowed = false;
+        // death recap (DeathRecap.cpp): while watching, the live units around are hidden
+        bool IsWatchingDeathRecap() const { return m_watchingDeathRecap; }
+        void SetWatchingDeathRecap(bool watching) { m_watchingDeathRecap = watching; }
+        bool m_watchingDeathRecap = false;
+        // set while taken to another map to watch a recap: where the character goes back to (and is saved at)
+        Optional<WorldLocation> m_deathRecapReturn;
         void BuildPlayerRepop();
         void RepopAtGraveyard();
 

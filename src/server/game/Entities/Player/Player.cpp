@@ -16,6 +16,7 @@
  */
 
 #include "Player.h"
+#include "DeathRecap.h"
 #include "AreaTrigger.h"
 #include "Account.h"
 #include "AccountMgr.h"
@@ -947,6 +948,9 @@ void Player::Update(uint32 p_time)
     Unit::Update(p_time);
     SetCanDelayTeleport(false);
 
+    DeathRecap::RecordFrame(this, p_time);
+    DeathRecap::UpdateViewer(this);
+
     // Unit::Update updates the spell history and spell states. We can now check if we can launch another pending cast.
     if (CanExecutePendingSpellCastRequest())
         ExecutePendingSpellCastRequest();
@@ -1170,6 +1174,12 @@ void Player::setDeathState(DeathState s)
     }
 
     Unit::setDeathState(s);
+
+    if (s == JUST_DIED && oldIsAlive)
+    {
+        DeathRecap::Stop(this, nullptr);
+        DeathRecap::OnPlayerDeath(this);
+    }
 
     if (IsAlive() && !oldIsAlive)
         //clear aura case after resurrection by another way (spells will be applied before next death)
@@ -1537,6 +1547,8 @@ void Player::RemoveFromWorld()
     // cleanup
     if (IsInWorld())
     {
+        DeathRecap::OnRemoveFromWorld(this);
+
         ///- Release charmed creatures, unsummon totems and remove pets/guardians
         StopCastingCharm();
         StopCastingBindSight();
@@ -20769,7 +20781,19 @@ void Player::SaveToDB(LoginDatabaseTransaction loginTransaction, CharacterDataba
         stmt->setUInt32(index++, m_playerData->PlayerFlags);
         stmt->setUInt32(index++, m_playerData->PlayerFlagsEx);
 
-        if (!IsBeingTeleported())
+        if (m_deathRecapReturn)
+        {
+            stmt->setUInt16(index++, (uint16)m_deathRecapReturn->GetMapId());
+            stmt->setUInt32(index++, (uint32)0);
+            stmt->setUInt8(index++, uint8(GetDungeonDifficultyID()));
+            stmt->setUInt8(index++, uint8(GetRaidDifficultyID()));
+            stmt->setUInt8(index++, uint8(GetLegacyRaidDifficultyID()));
+            stmt->setFloat(index++, finiteAlways(m_deathRecapReturn->GetPositionX()));
+            stmt->setFloat(index++, finiteAlways(m_deathRecapReturn->GetPositionY()));
+            stmt->setFloat(index++, finiteAlways(m_deathRecapReturn->GetPositionZ()));
+            stmt->setFloat(index++, finiteAlways(m_deathRecapReturn->GetOrientation()));
+        }
+        else if (!IsBeingTeleported())
         {
             stmt->setUInt16(index++, (uint16)GetMapId());
             stmt->setUInt32(index++, (uint32)GetInstanceId());

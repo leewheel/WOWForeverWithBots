@@ -21,6 +21,8 @@
 #include "CellImpl.h"
 #include "CharacterCache.h"
 #include "Chat.h"
+#include "DeathRecap.h"
+#include "StringConvert.h"
 #include "ChatCommand.h"
 #include "DatabaseEnv.h"
 #include "DB2Stores.h"
@@ -74,6 +76,7 @@ public:
             { "combatstop",       HandleCombatStopCommand,       rbac::RBAC_PERM_COMMAND_COMBATSTOP,       Console::Yes },
             { "cometome",         HandleComeToMeCommand,         rbac::RBAC_PERM_COMMAND_COMETOME,         Console::No },
             { "commands",         HandleCommandsCommand,         rbac::RBAC_PERM_COMMAND_COMMANDS,         Console::Yes },
+            { "recap",            HandleRecapCommand,            rbac::RBAC_PERM_COMMAND_COMMANDS,         Console::No  }, // every player, like .commands
             { "cooldown",         HandleCooldownCommand,         rbac::RBAC_PERM_COMMAND_COOLDOWN,         Console::No },
             { "damage",           HandleDamageCommand,           rbac::RBAC_PERM_COMMAND_DAMAGE,           Console::No },
             { "damage go",        HandleDamageGoCommand,         rbac::RBAC_PERM_COMMAND_DAMAGE,           Console::No },
@@ -587,6 +590,33 @@ public:
                 targetGuid, nullptr);
         }
 
+        return true;
+    }
+
+    // .recap <id> watches a death recap (DeathRecap.cpp), .recap stop ends it
+    // (answers go to the player's chat even when the command came through the addon channel, as the ForeverRecap
+    // addon sends it: dead players can't use /say)
+    static bool HandleRecapCommand(ChatHandler* handler, Tail args)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+        ChatHandler chat(handler->GetSession());
+        std::string_view arg = args;
+        if (arg == "stop")
+        {
+            DeathRecap::Stop(player, "Recap stopped.");
+            return true;
+        }
+
+        Optional<uint32> id = Trinity::StringTo<uint32>(arg.starts_with('#') ? arg.substr(1) : arg);
+        if (!id)
+        {
+            chat.SendSysMessage("Usage: .recap <number> to watch a death, .recap stop to stop watching.");
+            return true;
+        }
+
+        std::string const error = DeathRecap::Watch(player, *id);
+        if (!error.empty())
+            chat.SendSysMessage(error);
         return true;
     }
 
