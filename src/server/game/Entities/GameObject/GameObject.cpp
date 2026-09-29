@@ -186,6 +186,10 @@ public:
             _stateChangeProgress = 0;
         }
 
+        // Classic 1.60: the client elevator constructor asserts when the create block has no PathProgress (GameObject_C.cpp, type 11),
+        // so send it from the start, also for elevators without animation data or that have not moved yet
+        _owner.SetPathProgressForClient(float(_pathProgress) / float(GetTransportPeriod()));
+
         _positionUpdateTimer.Reset(PositionUpdateInterval);
     }
 

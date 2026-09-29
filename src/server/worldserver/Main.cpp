@@ -16,11 +16,13 @@
  */
 
 #include "Common.h"
+#include "AccountMgr.h"
 #include "AppenderDB.h"
 #include "AsyncAcceptor.h"
 #include "AuthenticationPackets.h"
 #include "Banner.h"
 #include "BattlegroundMgr.h"
+#include "BattlenetAccountMgr.h"
 #include "BigNumber.h"
 #include "CliRunnable.h"
 #include "Configuration/Config.h"
@@ -119,6 +121,7 @@ private:
 void SignalHandler(boost::system::error_code const& error, int signalNumber);
 std::unique_ptr<Trinity::Net::AsyncAcceptor> StartRaSocketAcceptor(Trinity::Asio::IoContext& ioContext);
 bool StartDB();
+int CreateAccountFromCommandLine(variables_map const& vm);
 void StopDB();
 void WorldUpdateLoop();
 void ClearOnlineAccounts(uint32 realmId);
@@ -297,6 +300,9 @@ int main(int argc, char** argv)
 
     if (vm.count("update-databases-only"))
         return 0;
+
+    if (vm.count("create-account"))
+        return CreateAccountFromCommandLine(vm);
 
     Trinity::Net::ScanLocalNetworks();
 
@@ -691,6 +697,42 @@ void ClearOnlineAccounts(uint32 realmId)
     CharacterDatabase.DirectExecute("UPDATE character_battleground_data SET instanceId = 0");
 }
 
+// Repack setup: the Windows console reader cannot take piped commands, so accounts are created from the command line
+int CreateAccountFromCommandLine(variables_map const& vm)
+{
+    std::string email = vm["create-account"].as<std::string>();
+    if (!vm.count("account-password"))
+    {
+        TC_LOG_ERROR("server.worldserver", "--create-account needs --account-password");
+        return 1;
+    }
+
+    std::string gameAccountName;
+    switch (Battlenet::AccountMgr::CreateBattlenetAccount(email, vm["account-password"].as<std::string>(), true, &gameAccountName))
+    {
+        case AccountOpResult::AOR_OK:
+            break;
+        case AccountOpResult::AOR_NAME_TOO_LONG:
+            TC_LOG_ERROR("server.worldserver", "Account {} not created: e-mail too long", email);
+            return 2;
+        case AccountOpResult::AOR_PASS_TOO_LONG:
+            TC_LOG_ERROR("server.worldserver", "Account {} not created: password too long", email);
+            return 2;
+        case AccountOpResult::AOR_NAME_ALREADY_EXIST:
+            TC_LOG_ERROR("server.worldserver", "Account {} not created: it already exists", email);
+            return 3;
+        default:
+            TC_LOG_ERROR("server.worldserver", "Account {} not created", email);
+            return 2;
+    }
+
+    if (uint32 gmLevel = std::min(vm["account-gm-level"].as<uint32>(), uint32(SEC_ADMINISTRATOR)))
+        sAccountMgr->UpdateAccountAccess(nullptr, AccountMgr::GetId(gameAccountName), uint8(gmLevel), -1);
+
+    TC_LOG_INFO("server.worldserver", "Account {} created (game account {})", email, gameAccountName);
+    return 0;
+}
+
 variables_map GetConsoleArguments(int argc, char** argv, fs::path& configFile, fs::path& configDir, [[maybe_unused]] std::string& winServiceAction)
 {
     options_description all("Allowed options");
@@ -702,6 +744,9 @@ variables_map GetConsoleArguments(int argc, char** argv, fs::path& configFile, f
         ("config-dir,cd", value<fs::path>(&configDir)->default_value(fs::absolute(_TRINITY_CORE_CONFIG_DIR)),
                      "use <arg> as directory with additional config files")
         ("update-databases-only,u", "updates databases only")
+        ("create-account", value<std::string>(), "creates Battle.net account <arg> (e-mail) with a game account, then exits")
+        ("account-password", value<std::string>(), "password for --create-account")
+        ("account-gm-level", value<uint32>()->default_value(0), "GM level (0-3) for --create-account")
         ;
 #ifdef _WIN32
     options_description win("Windows platform specific options");
