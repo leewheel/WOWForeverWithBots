@@ -18,10 +18,12 @@
 #include "UpdateFields.h"
 #include "AreaTrigger.h"
 #include "ByteBuffer.h"
+#include "CharacterCache.h"
 #include "Corpse.h"
 #include "DynamicObject.h"
 #include "PacketOperators.h"
 #include "Player.h"
+#include "RealmList.h"
 #include "UpdateFieldImpl.h"
 #include "ViewerDependentValues.h"
 
@@ -39,7 +41,7 @@ namespace UF
 {
 // Classic 1.60: every character's super district (ruleset): Cfg_SuperDistrict 1 PvP, 2 Normal, 3 RP, 4 Hardcore.
 // Must match the realm entry's superDistrictID (Realm.SuperDistrictID) and the character list (CharacterPackets.cpp).
-constexpr uint32 ClassicCharacterSuperDistrictID = 2;
+static uint32 ClassicCharacterSuperDistrictID() { return sRealmList->GetCurrentRealmSuperDistrict(); }
 
 void ObjectData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteBuffer& data, Player const* receiver, Object const* owner) const
 {
@@ -2584,7 +2586,7 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     // Classic 1.60.1.70009: struct (4x uint32 + int8, client reader rva 0x92AD60) at PlayerData +0x5C; the first uint32 is the character's
     // super district (ruleset, Cfg_SuperDistrict). The client uses this one when the int32 before it (+0x58) is set, otherwise the second
     // copy after NpcAsPlayerInfo (client 0x2BC1590; "player isn't assigned to a super district" -> Legacy Points sources give 0)
-    data << uint32(ClassicCharacterSuperDistrictID) << uint32(0) << uint32(0) << uint32(0) << int8(0);
+    data << uint32(ClassicCharacterSuperDistrictID()) << uint32(0) << uint32(0) << uint32(0) << int8(0);
     data << uint32(Customizations.size());
     data << uint32(RandomCustomizations.size());
     for (uint32 i = 0; i < 2; ++i)
@@ -2651,7 +2653,7 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     PersonalTabard->WriteCreate(data, receiver, owner);
     NpcAsPlayerInfo->WriteCreate(data, receiver, owner);
     // Classic 1.60.1.70009: second instance of the same struct (reader rva 0x92AD60) at PlayerData +0x458, first uint32 = super district
-    data << uint32(ClassicCharacterSuperDistrictID) << uint32(0) << uint32(0) << uint32(0) << int8(0);
+    data << uint32(ClassicCharacterSuperDistrictID()) << uint32(0) << uint32(0) << uint32(0) << int8(0);
     for (uint32 i = 0; i < Customizations.size(); ++i)
     {
         Customizations[i].WriteCreate(data, receiver, owner);
@@ -2679,8 +2681,10 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     {
         data << int32(VisualItemReplacements[i]);
     }
+    // Classic 1.60.1.70009: the surname (client PlayerData +0x1D9) follows the name: 9 bit length here (reader 0x841920), data after Name
+    std::string const surname = sCharacterCache->GetCharacterSurnameByGuid(owner->GetGUID());
     data.WriteBits(Name->size(), 6);
-    data.WriteBits(0, 8);                       // Classic 1.60.1.70009: length of a second string read after Name (surname, client PlayerData +0x1D9)
+    data.WriteBits(surname.size(), 9);
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::PartyMember))
     {
         data.WriteBit(HasQuestSession);
@@ -2689,6 +2693,7 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     data.WriteBit(DeclinedNames.has_value());
     data.FlushBits();
     data << WorldPackets::SizedString::Data(*Name);
+    data << WorldPackets::SizedString::Data(surname);
     if (DeclinedNames.has_value())
     {
         DeclinedNames->WriteCreate(data, receiver, owner);

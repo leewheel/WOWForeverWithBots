@@ -289,6 +289,10 @@ void WorldSession::HandleSpiritHealerActivate(WorldPackets::NPC::SpiritHealerAct
 
 void WorldSession::SendSpiritResurrect()
 {
+    // Classic 1.60 Hardcore: refuse before the durability loss and before the corpse turns into bones
+    if (_player->RefuseHardcoreResurrect())
+        return;
+
     _player->ResurrectPlayer(0.5f, true);
     _player->DurabilityLossAll(0.25f, true);
 

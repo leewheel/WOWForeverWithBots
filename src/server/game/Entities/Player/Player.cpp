@@ -41,6 +41,7 @@
 #include "CharacterPackets.h"
 #include "CharmInfo.h"
 #include "Chat.h"
+#include "Config.h"
 #include "ChatPackets.h"
 #include "ChatTextBuilder.h"
 #include "CinematicMgr.h"
@@ -4365,8 +4366,22 @@ void Player::BuildPlayerRepop()
     sScriptMgr->OnPlayerRepop(this);
 }
 
+bool Player::RefuseHardcoreResurrect()
+{
+    // Classic 1.60 Hardcore ruleset realm (Classic.Hardcore = 1): death is permanent, no spirit healer, corpse run or resurrection spell
+    // brings the character back, also not on game master accounts. Only staff using the .revive command can (SetHardcoreReviveAllowed).
+    if (IsAlive() || m_hardcoreReviveAllowed || !sConfigMgr->GetBoolDefault("Classic.Hardcore", false))
+        return false;
+
+    ChatHandler(GetSession()).SendSysMessage("Hardcore: this character has fallen. Death is permanent on this realm.");
+    return true;
+}
+
 void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 {
+    if (RefuseHardcoreResurrect())
+        return;
+
     SetAreaSpiritHealer(nullptr);
 
     WorldPackets::Misc::DeathReleaseLoc packet;

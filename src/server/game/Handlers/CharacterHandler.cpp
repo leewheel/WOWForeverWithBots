@@ -1015,13 +1015,24 @@ void WorldSession::HandleCharCreateOpcode(WorldPackets::Character::CreateCharact
             newChar->SaveToDB(trans, characterTransaction, true);
             createInfo->CharCount += 1;
 
+            // Classic 1.60: surname chosen in character creation ("Name Surname"), up to 48 characters
+            std::string surname = createInfo->Surname;
+            if (utf8length(surname) > 48)
+                surname.clear();
+            if (!surname.empty())
+            {
+                std::string escapedSurname = surname;
+                CharacterDatabase.EscapeString(escapedSurname);
+                characterTransaction->Append(Trinity::StringFormat("UPDATE characters SET surname = '{}' WHERE guid = {}", escapedSurname, newChar->GetGUID().GetCounter()).c_str());
+            }
+
             LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_REP_REALM_CHARACTERS);
             stmt->setUInt32(0, createInfo->CharCount);
             stmt->setUInt32(1, GetAccountId());
             stmt->setUInt32(2, sRealmList->GetCurrentRealmId().Realm);
             trans->Append(stmt);
 
-            AddTransactionCallback(CharacterDatabase.AsyncCommitTransaction(characterTransaction)).AfterComplete([this, newChar = std::move(newChar), trans](bool success)
+            AddTransactionCallback(CharacterDatabase.AsyncCommitTransaction(characterTransaction)).AfterComplete([this, newChar = std::move(newChar), trans, surname](bool success)
             {
                 if (success)
                 {
@@ -1030,6 +1041,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPackets::Character::CreateCharact
                     TC_LOG_INFO("entities.player.character", "Account: {} (IP: {}) Create Character: {} {}", GetAccountId(), GetRemoteAddress(), newChar->GetName(), newChar->GetGUID().ToString());
                     sScriptMgr->OnPlayerCreate(newChar.get());
                     sCharacterCache->AddCharacterCacheEntry(newChar->GetGUID(), GetAccountId(), newChar->GetName(), newChar->GetNativeGender(), newChar->GetRace(), newChar->GetClass(), newChar->GetLevel(), false);
+                    sCharacterCache->UpdateCharacterSurname(newChar->GetGUID(), surname);
 
                     SendCharCreate(CHAR_CREATE_SUCCESS, newChar->GetGUID());
                 }
@@ -1555,7 +1567,7 @@ void WorldSession::SendFeatureSystemStatus()
     features.CommerceServerEnabled = true;
 
     // Classic 1.60: the realm's season. Content set 137 = Cfg_SuperDistrict 2 "Normal" (bnetserver Realm.CfgContentSetID).
-    features.ContentSetID = 137;
+    features.ContentSetID = int32(sRealmList->GetCurrentRealmContentSet());
 
     // Enable guilds only.
     // This is required to restore old guild channel behavior for GMs.

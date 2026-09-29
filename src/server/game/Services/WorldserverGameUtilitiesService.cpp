@@ -150,14 +150,7 @@ uint32 GameUtilities::GetSuperDistrictList(WorldSession const* /*session*/,
     std::vector<std::pair<std::string_view, Variant>>& /*params*/,
     std::vector<std::pair<std::string_view, Variant>>& responseValues)
 {
-    std::string superDistricts;
-    for (uint32 superDistrictId = 1; superDistrictId <= 5; ++superDistrictId)
-    {
-        if (!superDistricts.empty())
-            superDistricts += ',';
-
-        superDistricts += Trinity::StringFormat(R"({{"superDistrictID":{},"disallowLogin":false,"holdDownUntilTime":0}})", superDistrictId);
-    }
+    std::string superDistricts = sRealmList->GetClassicSuperDistrictListEntries();
 
     std::vector<uint8> json = CompressClassicJson(Trinity::StringFormat(R"(JSONSuperDistrictList:{{"superDistricts":[{}]}})", superDistricts));
     if (json.empty())
@@ -182,7 +175,9 @@ uint32 GameUtilities::GetLastCharPlayed(WorldSession const* session,
             return -1;
     }, *contentSetFilter) : -1;
 
-    Optional<Battlenet::RealmHandle> realmId = sRealmList->GetFirstRealmId();
+    Optional<Battlenet::RealmHandle> realmId = contentSetId >= 0 ? sRealmList->GetRealmIdForContentSet(uint32(contentSetId)) : Optional<Battlenet::RealmHandle>();
+    if (!realmId)
+        realmId = sRealmList->GetFirstRealmId();   // no realm for that ruleset: fall back to the first one
     if (contentSetId < 0 || !realmId)
         return ERROR_OK;
 

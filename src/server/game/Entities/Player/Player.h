@@ -2341,6 +2341,10 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         WorldLocation const& GetCorpseLocation() const { return _corpseLocation; }
         void InitializeSelfResurrectionSpells();
         void ResurrectPlayer(float restore_percent, bool applySickness = false);
+        // Classic 1.60 Hardcore realms: only the .revive command may bring a character back
+        void SetHardcoreReviveAllowed(bool allowed) { m_hardcoreReviveAllowed = allowed; }
+        bool RefuseHardcoreResurrect();     // true (and tells the player) when a resurrection is not allowed
+        bool m_hardcoreReviveAllowed = false;
         void BuildPlayerRepop();
         void RepopAtGraveyard();
 

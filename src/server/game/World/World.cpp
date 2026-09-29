@@ -1207,6 +1207,10 @@ void World::LoadConfigSettings(bool reload)
         { .Rule = ::GameRule::HousingEnabled, .Value = true }
     };
 
+    // Classic 1.60 Hardcore ruleset realm: C_GameRules.IsHardcoreActive() drives the client's Hardcore UI
+    if (sConfigMgr->GetBoolDefault("Classic.Hardcore", false))
+        _gameRules.push_back({ .Rule = ::GameRule::HardcoreRuleset, .Value = true });
+
     if (reload)
     {
         sSupportMgr->SetSupportSystemStatus(m_bool_configs[CONFIG_SUPPORT_ENABLED]);

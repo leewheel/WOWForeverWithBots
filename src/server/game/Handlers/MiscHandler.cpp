@@ -438,6 +438,10 @@ void WorldSession::HandleReclaimCorpse(WorldPackets::Misc::ReclaimCorpse& /*pack
     if (!corpse->IsWithinDistInMap(_player, CORPSE_RECLAIM_RADIUS, true))
         return;
 
+    // Classic 1.60 Hardcore: refuse before the corpse turns into bones
+    if (_player->RefuseHardcoreResurrect())
+        return;
+
     // resurrect
     _player->ResurrectPlayer(_player->InBattleground() ? 1.0f : 0.5f);
 

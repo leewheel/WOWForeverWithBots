@@ -25,6 +25,7 @@
 #include "MapUtils.h"
 #include "ProtobufJSON.h"
 #include "Resolver.h"
+#include "StringConvert.h"
 #include "Util.h"
 #include "RealmList.pb.h"
 #include "advstd.h"
@@ -161,6 +162,7 @@ void RealmList::UpdateRealms()
 
             UpdateRealm(*newRealms.try_emplace(id, std::make_shared<Realm>()).first->second, id, build, name, std::move(addresses), port, icon,
                 flag, timezone, (allowedSecurityLevel <= SEC_ADMINISTRATOR ? AccountTypes(allowedSecurityLevel) : SEC_ADMINISTRATOR), pop);
+            newRealms[id]->ContentSetId = fields[15].GetUInt32();
 
             newSubRegions.insert(id.GetSubRegionAddress());
 
@@ -286,7 +288,7 @@ void RealmList::FillRealmEntry(Realm const& realm, uint32 clientBuild, AccountTy
     realmEntry->set_cfgconfigsid(realm.GetConfigId());
     realmEntry->set_cfglanguagesid(1);
     // Classic (1.60+) clients only list realms whose content set matches the selected super district (Cfg_SuperDistrict.ContentSetID)
-    realmEntry->set_cfgcontentsetid(sConfigMgr->GetIntDefault("Realm.CfgContentSetID", 0));
+    realmEntry->set_cfgcontentsetid(realm.ContentSetId ? realm.ContentSetId : sConfigMgr->GetIntDefault("Realm.CfgContentSetID", 0));
     realmEntry->set_usebleepchance(0.0f);
 }
 
@@ -295,18 +297,73 @@ void RealmList::FillRealmEntry(Realm const& realm, uint32 clientBuild, AccountTy
 // (TraitCurrencySource.SuperDistrictSetID) only count on PvP/Normal/Roleplay; with no value every source gives 0.
 static std::string AddClassicRealmEntryFields(std::string json)
 {
-    std::string const superDistrict = Trinity::StringFormat(R"(,"superDistrictID":{})", sConfigMgr->GetIntDefault("Realm.SuperDistrictID", 2));
     constexpr std::string_view key = R"("cfgContentSetID":)";
     for (std::size_t pos = json.find(key); pos != std::string::npos; pos = json.find(key, pos))
     {
-        std::size_t end = json.find_first_not_of("0123456789", pos + key.size());
+        std::size_t start = pos + key.size();
+        std::size_t end = json.find_first_not_of("0123456789", start);
         if (end == std::string::npos)
             break;
 
+        // the ruleset follows from the realm's season (realmlist.contentSetId)
+        uint32 superDistrictId = GetClassicSuperDistrictForContentSet(Trinity::StringTo<uint32>(std::string_view(json).substr(start, end - start)).value_or(0));
+        if (!superDistrictId)
+            superDistrictId = sConfigMgr->GetIntDefault("Realm.SuperDistrictID", 2);
+
+        std::string const superDistrict = Trinity::StringFormat(R"(,"superDistrictID":{})", superDistrictId);
         json.insert(end, superDistrict);
         pos = end + superDistrict.size();
     }
     return json;
+}
+
+Optional<Battlenet::RealmHandle> RealmList::GetRealmIdForContentSet(uint32 contentSetId) const
+{
+    std::shared_lock lock(_realmsMutex);
+    for (auto const& [id, realm] : _realms)
+        if (realm->ContentSetId == contentSetId && realm->PopulationLevel != RealmPopulationState::Offline)
+            return id;
+
+    return {};
+}
+
+uint32 RealmList::GetCurrentRealmSuperDistrict() const
+{
+    uint32 contentSetId = 0;
+    if (std::shared_ptr<Realm const> realm = GetCurrentRealm())
+        contentSetId = realm->ContentSetId;
+    if (!contentSetId)
+        contentSetId = sConfigMgr->GetIntDefault("Realm.CfgContentSetID", 137);
+
+    if (uint32 superDistrictId = GetClassicSuperDistrictForContentSet(contentSetId))
+        return superDistrictId;
+
+    return sConfigMgr->GetIntDefault("Realm.SuperDistrictID", 2);
+}
+
+std::string RealmList::GetClassicSuperDistrictListEntries() const
+{
+    std::string entries, allEntries;
+    for (uint32 superDistrictId = 1; superDistrictId <= 5; ++superDistrictId)
+    {
+        std::string entry = Trinity::StringFormat(R"({{"superDistrictID":{},"disallowLogin":false,"holdDownUntilTime":0}})", superDistrictId);
+        allEntries += (allEntries.empty() ? "" : ",") + entry;
+
+        // only offer rulesets with a realm, like the real Classic realm list
+        if (uint32 contentSetId = GetClassicContentSetForSuperDistrict(superDistrictId))
+            if (GetRealmIdForContentSet(contentSetId))
+                entries += (entries.empty() ? "" : ",") + entry;
+    }
+    return entries.empty() ? allEntries : entries;
+}
+
+uint32 RealmList::GetCurrentRealmContentSet() const
+{
+    if (std::shared_ptr<Realm const> realm = GetCurrentRealm())
+        if (realm->ContentSetId)
+            return realm->ContentSetId;
+
+    return sConfigMgr->GetIntDefault("Realm.CfgContentSetID", 137);
 }
 
 std::string RealmList::GetRealmEntryJSON(Battlenet::RealmHandle const& id, uint32 build, AccountTypes accountSecurityLevel) const

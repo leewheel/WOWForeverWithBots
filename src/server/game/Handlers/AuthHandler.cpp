@@ -115,7 +115,7 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
     features.MaxCharactersOnThisRealm = sWorld->getIntConfig(CONFIG_CHARACTERS_PER_REALM);
     features.MinimumExpansionLevel = EXPANSION_CLASSIC;
     features.MaximumExpansionLevel = sWorld->getIntConfig(CONFIG_EXPANSION);
-    features.ContentSetID = 137;                    // Classic 1.60: season of the Normal ruleset (Cfg_SuperDistrict 2)
+    features.ContentSetID = int32(sRealmList->GetCurrentRealmContentSet()); // Classic 1.60: season of this realm's ruleset
 
     features.EuropaTicketSystemStatus.emplace();
     features.EuropaTicketSystemStatus->ThrottleState.MaxTries = 10;

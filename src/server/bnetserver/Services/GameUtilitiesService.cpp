@@ -157,7 +157,25 @@ uint32 GameUtilities::GetLastCharPlayed(Session const* session,
     if (!subRegion || !std::holds_alternative<std::string>(*subRegion))
         return ERROR_UTIL_SERVER_UNKNOWN_REALM;
 
-    if (LastPlayedCharacterInfo const* lastPlayerChar = session->GetLastPlayedCharacter(std::get<std::string>(*subRegion)))
+    // Classic (1.60+): with a ruleset picked (Param_ContentSetIDFilter = its season) the answer must be that ruleset's realm, and the last
+    // character played there. The client always asks for the super realm sub-region (70-1-70), so look the character up by that realm.
+    LastPlayedCharacterInfo const* lastPlayerChar = session->GetLastPlayedCharacter(std::get<std::string>(*subRegion));
+    if (Variant const* filter = FindParamValue(params, "Param_ContentSetIDFilter"))
+    {
+        int64 filterContentSet = std::visit([]<typename T>(T const& v) -> int64
+        {
+            if constexpr (std::is_arithmetic_v<T>)
+                return int64(v);
+            else
+                return -1;
+        }, *filter);
+
+        if (filterContentSet >= 0)
+            if (Optional<Battlenet::RealmHandle> rulesetRealm = sRealmList->GetRealmIdForContentSet(uint32(filterContentSet)))
+                lastPlayerChar = session->GetLastPlayedCharacter(rulesetRealm->GetSubRegionAddress());
+    }
+
+    if (lastPlayerChar)
     {
         std::string realmEntryJson = sRealmList->GetRealmEntryJSON(lastPlayerChar->RealmId, session->GetBuild(), session->GetGameAccountInfo()->SecurityLevel);
         if (realmEntryJson.empty())
@@ -189,7 +207,9 @@ uint32 GameUtilities::GetLastCharPlayed(Session const* session,
                 return -1;
         }, *contentSetFilter);
 
-        Optional<Battlenet::RealmHandle> realmId = sRealmList->GetFirstRealmId();
+        Optional<Battlenet::RealmHandle> realmId = contentSetId >= 0 ? sRealmList->GetRealmIdForContentSet(uint32(contentSetId)) : Optional<Battlenet::RealmHandle>();
+        if (!realmId)
+            realmId = sRealmList->GetFirstRealmId();   // no realm for that ruleset: fall back to the first one
         if (contentSetId >= 0 && realmId)
         {
             std::string realmEntryJson = sRealmList->GetRealmEntryJSON(*realmId, session->GetBuild(), session->GetGameAccountInfo()->SecurityLevel);
@@ -349,14 +369,7 @@ uint32 GameUtilities::GetSuperDistrictList(Session const* session,
     std::vector<std::pair<std::string_view, Variant>>& /*params*/,
     std::vector<std::pair<std::string_view, Variant>>& responseValues)
 {
-    std::string superDistricts;
-    for (uint32 superDistrictId = 1; superDistrictId <= 5; ++superDistrictId)
-    {
-        if (!superDistricts.empty())
-            superDistricts += ',';
-
-        superDistricts += Trinity::StringFormat(R"({{"superDistrictID":{},"disallowLogin":false,"holdDownUntilTime":0}})", superDistrictId);
-    }
+    std::string superDistricts = sRealmList->GetClassicSuperDistrictListEntries();
 
     std::string json = Trinity::StringFormat(R"(JSONSuperDistrictList:{{"superDistricts":[{}]}})", superDistricts);
     TC_LOG_DEBUG("session.rpc", "{} Param_SuperDistrictList = {}", session->GetClientInfo(), json);

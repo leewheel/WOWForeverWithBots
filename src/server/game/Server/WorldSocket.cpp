@@ -888,6 +888,13 @@ void WorldSocket::HandleAuthSessionCallback(WorldPackets::Auth::AuthSession cons
         account.Game.Expansion, mutetime, std::move(account.Game.OS), account.Game.TimezoneOffset, account.Game.Build, buildVariant,
         account.Game.Locale, account.Game.Recruiter, account.Game.IsRecruiter);
 
+    // Classic 1.60: switching ruleset (super district) joins a realm through the world server without a CMSG_CHANGE_REALM_TICKET, so the
+    // realm list secret would stay zero and the new connection's session key would not match the client's (it drops the connection at
+    // SMSG_ENTER_ENCRYPTED_MODE, CMSG_LOG_DISCONNECT reason 24). The key data stored by the last realm join starts with the client secret.
+    std::array<uint8, 32> clientSecret;
+    std::copy_n(account.Game.KeyData.begin(), clientSecret.size(), clientSecret.begin());
+    _worldSession->SetRealmListSecret(clientSecret);
+
     QueueQuery(_worldSession->LoadPermissionsAsync().WithPreparedCallback([this](PreparedQueryResult result)
     {
         LoadSessionPermissionsCallback(std::move(result));

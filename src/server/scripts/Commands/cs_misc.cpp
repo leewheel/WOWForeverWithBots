@@ -631,7 +631,9 @@ public:
 
         if (target)
         {
+            target->SetHardcoreReviveAllowed(true);     // Classic 1.60 Hardcore realms: staff revive is the one allowed resurrection
             target->ResurrectPlayer(target->GetSession()->HasPermission(rbac::RBAC_PERM_RESURRECT_WITH_FULL_HPS) ? 1.0f : 0.5f);
+            target->SetHardcoreReviveAllowed(false);
             target->SpawnCorpseBones();
             target->SaveToDB();
         }

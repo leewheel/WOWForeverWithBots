@@ -16,12 +16,14 @@
  */
 
 #include "CharacterPackets.h"
+#include "CharacterCache.h"
 #include "ClubUtils.h"
 #include "DB2Stores.h"
 #include "Field.h"
 #include "ObjectMgr.h"
 #include "PacketOperators.h"
 #include "Player.h"
+#include "RealmList.h"
 #include "World.h"
 
 namespace UF
@@ -255,14 +257,14 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfoBasi
     data << int32(charInfo.TimerunningSeasonID);
     data << uint32(charInfo.OverrideSelectScreenFileDataID);
     data << uint32(charInfo.RealmQueue);
-    data << int32(2);                           // Classic 1.60.1.70009: character's SuperDistrictID (client reader rva 0x7F0669): Cfg_SuperDistrict 1 PvP, 2 Normal, 3 RP,
+    data << int32(sRealmList->GetCurrentRealmSuperDistrict()); // Classic 1.60.1.70009: character's SuperDistrictID (client reader rva 0x7F0669): Cfg_SuperDistrict 1 PvP, 2 Normal, 3 RP,
                                                 // 4 Hardcore; must match the realm entry's superDistrictID (Realm.SuperDistrictID). 137 (content set) did not show the character
 
     for (ChrCustomizationChoice const& customization : charInfo.Customizations)
         data << customization;
 
     // Classic 1.60.1.70009: Surname (max 48 chars) follows Name; character select shows it after the name ("Name Surname")
-    std::string surname;
+    std::string surname = sCharacterCache->GetCharacterSurnameByGuid(charInfo.Guid);
 
     data << SizedString::BitsSize<6>(charInfo.Name);
     data << SizedString::BitsSize<6>(surname);
@@ -488,14 +490,13 @@ void CreateCharacter::Read()
 
     // Classic 1.60.1.70009: 2 unknown bits and a 6 bit surname length after the flags, an unknown int32 (-1) before
     // TimerunningSeasonID and the surname after the name (captured: 08 00 80 | 5f 0b 01 | 12000000 ffffffff 00000000 | "Df" "Df")
-    std::string surname;
     _worldPacket >> SizedString::BitsSize<6>(CreateInfo->Name);
     _worldPacket >> OptionalInit(CreateInfo->TemplateSet);
     _worldPacket >> Bits<1>(CreateInfo->IsTrialBoost);
     _worldPacket >> Bits<1>(CreateInfo->UseNPE);
     _worldPacket >> Bits<1>(CreateInfo->HardcoreSelfFound);
     _worldPacket.ReadBits(2);
-    _worldPacket >> SizedString::BitsSize<6>(surname);
+    _worldPacket >> SizedString::BitsSize<6>(CreateInfo->Surname);
     _worldPacket.ResetBitPos();
     _worldPacket >> CreateInfo->Race;
     _worldPacket >> CreateInfo->Class;
@@ -504,7 +505,7 @@ void CreateCharacter::Read()
     _worldPacket.read_skip<int32>();
     _worldPacket >> CreateInfo->TimerunningSeasonID;
     _worldPacket >> SizedString::Data(CreateInfo->Name);
-    _worldPacket >> SizedString::Data(surname);
+    _worldPacket >> SizedString::Data(CreateInfo->Surname);
     if (CreateInfo->TemplateSet)
         _worldPacket >> *CreateInfo->TemplateSet;
 
