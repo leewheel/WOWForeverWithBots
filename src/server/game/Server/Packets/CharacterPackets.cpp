@@ -255,7 +255,8 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfoBasi
     data << int32(charInfo.TimerunningSeasonID);
     data << uint32(charInfo.OverrideSelectScreenFileDataID);
     data << uint32(charInfo.RealmQueue);
-    data << int32(1);                           // Classic 1.60.1.70009: unknown int32 (client reader rva 0x7F0669), testing as SuperDistrictID (Normal = 1); 137 (content set) did not show the character
+    data << int32(2);                           // Classic 1.60.1.70009: character's SuperDistrictID (client reader rva 0x7F0669): Cfg_SuperDistrict 1 PvP, 2 Normal, 3 RP,
+                                                // 4 Hardcore; must match the realm entry's superDistrictID (Realm.SuperDistrictID). 137 (content set) did not show the character
 
     for (ChrCustomizationChoice const& customization : charInfo.Customizations)
         data << customization;

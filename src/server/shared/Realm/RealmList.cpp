@@ -290,6 +290,25 @@ void RealmList::FillRealmEntry(Realm const& realm, uint32 clientBuild, AccountTy
     realmEntry->set_usebleepchance(0.0f);
 }
 
+// Classic (1.60+) JamJSONRealmEntry has a superDistrictID (Cfg_SuperDistrict, the realm's ruleset) after cfgContentSetID, which
+// TrinityCore's RealmList.proto does not have. The client uses it as the player's super district, e.g. Legacy Points
+// (TraitCurrencySource.SuperDistrictSetID) only count on PvP/Normal/Roleplay; with no value every source gives 0.
+static std::string AddClassicRealmEntryFields(std::string json)
+{
+    std::string const superDistrict = Trinity::StringFormat(R"(,"superDistrictID":{})", sConfigMgr->GetIntDefault("Realm.SuperDistrictID", 2));
+    constexpr std::string_view key = R"("cfgContentSetID":)";
+    for (std::size_t pos = json.find(key); pos != std::string::npos; pos = json.find(key, pos))
+    {
+        std::size_t end = json.find_first_not_of("0123456789", pos + key.size());
+        if (end == std::string::npos)
+            break;
+
+        json.insert(end, superDistrict);
+        pos = end + superDistrict.size();
+    }
+    return json;
+}
+
 std::string RealmList::GetRealmEntryJSON(Battlenet::RealmHandle const& id, uint32 build, AccountTypes accountSecurityLevel) const
 {
     if (std::shared_ptr<Realm const> realm = GetRealm(id))
@@ -298,7 +317,7 @@ std::string RealmList::GetRealmEntryJSON(Battlenet::RealmHandle const& id, uint3
         {
             JSON::RealmList::RealmEntry realmEntry;
             FillRealmEntry(*realm, build, accountSecurityLevel, &realmEntry);
-            return JSON::Serialize(realmEntry);
+            return AddClassicRealmEntryFields(JSON::Serialize(realmEntry));
         }
     }
 
@@ -331,7 +350,7 @@ std::vector<uint8> RealmList::GetRealmList(uint32 build, AccountTypes accountSec
         }
     }
 
-    std::string json = "JSONRealmListUpdates:" + JSON::Serialize(realmList);
+    std::string json = "JSONRealmListUpdates:" + AddClassicRealmEntryFields(JSON::Serialize(realmList));
     TC_LOG_DEBUG("session.rpc", "RealmList::GetRealmList build {} subRegion '{}': {}", build, subRegion, json);
     std::vector<uint8> compressed;
     CompressJson(json, &compressed);

@@ -139,6 +139,7 @@ namespace WorldPackets
             uint32 ClubPresenceUnsubscribeDelay          = 0; ///< Timer for updating club presence when communities ui frame is hidden
             uint32 KioskSessionDurationMinutes           = 0;
             int32 ContentSetID                           = 0; ///< Currently active Classic season
+            int32 SocialRestriction                      = 0; ///< Classic 1.60: int32 after ContentSetID; 2 shows "Age Verification Required" and blocks chat
             int16 MaxPlayerGuidLookupsPerRequest         = 50;
             int16 NameLookupTelemetryInterval            = 600;
             Duration<Seconds, uint32> NotFoundCacheTimeSeconds = 10s;

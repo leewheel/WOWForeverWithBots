@@ -144,7 +144,7 @@ WorldPacket const* FeatureSystemStatus::Write()
     _worldPacket << Squelch;
 
     _worldPacket << int32(ContentSetID);
-    _worldPacket << int32(0);                   // Classic 1.60.1.70009: unknown int32 after ContentSetID
+    _worldPacket << int32(SocialRestriction);   // Classic 1.60.1.70009: int32 after ContentSetID, not the ruleset (2 = age verification popup)
     _worldPacket << Size<uint32>(DisabledGameModes);
     _worldPacket << Size<uint32>(GameRules);
     _worldPacket << int32(ActiveTimerunningSeasonID);

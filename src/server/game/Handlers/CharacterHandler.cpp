@@ -1343,6 +1343,9 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
 
     pCurrChar->SendInitialPacketsAfterAddToMap();
 
+    // Classic 1.60: characters that were already level 25+ get the Legacy unlock on login
+    pCurrChar->UpdateClassicLegacyUnlock();
+
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_ONLINE);
     stmt->setUInt64(0, pCurrChar->GetGUID().GetCounter());
     CharacterDatabase.Execute(stmt);
@@ -1550,6 +1553,9 @@ void WorldSession::SendFeatureSystemStatus()
     features.VoiceEnabled = false;
     features.BpayStoreAvailable = true;             // Classic 1.60: custom shop2 catalog shop (classic_re/shop_server.py)
     features.CommerceServerEnabled = true;
+
+    // Classic 1.60: the realm's season. Content set 137 = Cfg_SuperDistrict 2 "Normal" (bnetserver Realm.CfgContentSetID).
+    features.ContentSetID = 137;
 
     // Enable guilds only.
     // This is required to restore old guild channel behavior for GMs.

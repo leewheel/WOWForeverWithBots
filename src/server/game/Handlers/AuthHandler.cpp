@@ -115,6 +115,7 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
     features.MaxCharactersOnThisRealm = sWorld->getIntConfig(CONFIG_CHARACTERS_PER_REALM);
     features.MinimumExpansionLevel = EXPANSION_CLASSIC;
     features.MaximumExpansionLevel = sWorld->getIntConfig(CONFIG_EXPANSION);
+    features.ContentSetID = 137;                    // Classic 1.60: season of the Normal ruleset (Cfg_SuperDistrict 2)
 
     features.EuropaTicketSystemStatus.emplace();
     features.EuropaTicketSystemStatus->ThrottleState.MaxTries = 10;
@@ -152,9 +153,10 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
         { "shop2Enabled"sv, "1"sv },
         { "shop2HostUrlRequests"sv, "https://trinity.actual.battle.net:8443"sv },
         { "shop2HostUrlAuth"sv, "https://trinity.actual.battle.net:8443"sv },
-        { "bpayStoreEnable"sv, "0"sv },
+        { "shop2UseConnectedRealmGameServiceRegionId"sv, "0"sv },   // realm region is the fake 70 of the Classic super realm; use the account region (1)
+        { "bpayStoreEnable"sv, "1"sv },
         { "recentAlliesEnabledClient"sv, "0"sv },
-        { "browserEnabled"sv, "0"sv },
+        { "browserEnabled"sv, "1"sv },         // Classic 1.60: support and shop windows use the in-game browser
         { "housingEnableCreateGuildNeighborhood"sv, "0"sv },
         { "housingEnableDeleteHouse"sv, "0"sv },
         { "housingServiceEnabled"sv, "0"sv },

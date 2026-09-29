@@ -48,6 +48,7 @@ std::unordered_map<uint32, uint32> const ServerOpcodes =
     { SMSG_LOGIN_SET_TIME_SPEED,    0x4601B8 },
     { SMSG_SERVER_TIME_OFFSET,      0x4601BF },  // decoder asserts datasize == 8; 0x1BD = CORPSE_TRANSPORT_QUERY, 0x1BE = ENCHANTMENT_LOG (both retail - 1)
     { SMSG_MIRROR_VARS,             0x460371 },  // decoder 0x83E330: count, then 1 bit + 2 x 24-bit sized strings (0x46036F reads 16-byte records)
+    { SMSG_LAST_CATALOG_FETCH_RESPONSE, 0x460382 },  // +2 region like MIRROR_VARS (decoder 0x83FCC0)
 };
 
 // sent with the shifted number these hit a different Classic message (client JamClient size asserts)

@@ -37,6 +37,10 @@
 
 namespace UF
 {
+// Classic 1.60: every character's super district (ruleset): Cfg_SuperDistrict 1 PvP, 2 Normal, 3 RP, 4 Hardcore.
+// Must match the realm entry's superDistrictID (Realm.SuperDistrictID) and the character list (CharacterPackets.cpp).
+constexpr uint32 ClassicCharacterSuperDistrictID = 2;
+
 void ObjectData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteBuffer& data, Player const* receiver, Object const* owner) const
 {
     data << int32(ViewerDependentValue<EntryIDTag>::GetValue(this, receiver, owner));
@@ -2577,8 +2581,10 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     data << uint32(GuildRankID);
     data << uint32(GuildDeleteDate);
     data << int32(GuildLevel);
-    // Classic 1.60.1.70009: unknown struct (4x uint32 + int8, client reader rva 0x92AD60) at PlayerData +0x5C
-    data << uint32(0) << uint32(0) << uint32(0) << uint32(0) << int8(0);
+    // Classic 1.60.1.70009: struct (4x uint32 + int8, client reader rva 0x92AD60) at PlayerData +0x5C; the first uint32 is the character's
+    // super district (ruleset, Cfg_SuperDistrict). The client uses this one when the int32 before it (+0x58) is set, otherwise the second
+    // copy after NpcAsPlayerInfo (client 0x2BC1590; "player isn't assigned to a super district" -> Legacy Points sources give 0)
+    data << uint32(ClassicCharacterSuperDistrictID) << uint32(0) << uint32(0) << uint32(0) << int8(0);
     data << uint32(Customizations.size());
     data << uint32(RandomCustomizations.size());
     for (uint32 i = 0; i < 2; ++i)
@@ -2644,8 +2650,8 @@ void PlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, Byt
     }
     PersonalTabard->WriteCreate(data, receiver, owner);
     NpcAsPlayerInfo->WriteCreate(data, receiver, owner);
-    // Classic 1.60.1.70009: second instance of the same unknown struct (reader rva 0x92AD60) at PlayerData +0x458
-    data << uint32(0) << uint32(0) << uint32(0) << uint32(0) << int8(0);
+    // Classic 1.60.1.70009: second instance of the same struct (reader rva 0x92AD60) at PlayerData +0x458, first uint32 = super district
+    data << uint32(ClassicCharacterSuperDistrictID) << uint32(0) << uint32(0) << uint32(0) << int8(0);
     for (uint32 i = 0; i < Customizations.size(); ++i)
     {
         Customizations[i].WriteCreate(data, receiver, owner);

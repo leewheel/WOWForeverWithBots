@@ -2378,6 +2378,11 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         int16 GetSkillTempBonusValue(uint32 skill) const;
         uint16 GetSkillStep(uint32 skill) const;            // 0...6
         uint32 GetProfessionSkillForExp(uint32 skill, int32 expansion) const;
+        // Classic 1.60: professions use only their main skill line; the retail expansion child lines (First Aid 129 -> 2942) stay empty
+        static bool IsClassicProfessionChildSkill(SkillLineEntry const* skillEntry);
+        static uint32 GetClassicProfessionSkill(uint32 skill);
+        void SyncClassicProfessionChildSkills(uint32 skill);
+        void UpdateClassicLegacyUnlock();
         bool HasSkill(uint32 skill) const;
         void LearnSkillRewardedSpells(uint32 skillId, uint32 skillValue, Races race);
         int32 GetProfessionSlotFor(uint32 skillId) const;

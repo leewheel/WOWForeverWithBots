@@ -204,6 +204,7 @@ uint32 Authentication::HandleVerifyAuthToken(Session* session, std::string_view 
 
 uint32 Authentication::HandleGenerateAuthToken(Session* session, std::function<void(std::string_view)> sendResponse)
 {
+    TC_LOG_DEBUG("session", "{} requested a web auth token (GenerateAuthToken)", session->GetClientInfo());
     LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_BNET_EXISTING_AUTHENTICATION_BY_ID);
     stmt->setUInt32(0, session->GetAccountId());
 

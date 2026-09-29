@@ -89,6 +89,7 @@
 #include "MailPackets.h"
 #include "MapManager.h"
 #include "MapUtils.h"
+#include "Memory.h"
 #include "MiscPackets.h"
 #include "MotionMaster.h"
 #include "MovementPackets.h"
@@ -2295,7 +2296,47 @@ void Player::GiveLevel(uint8 level)
 
     PushQuests();
 
+    UpdateClassicLegacyUnlock();
+
     sScriptMgr->OnPlayerLevelChanged(this, oldLevel);
+}
+
+void Player::UpdateClassicLegacyUnlock()
+{
+    // Classic 1.60: the Legacy system (micro menu "Legacy", LegacyMicroButtonMixin:IsLegacySystemUnlocked) opens with renown level 1
+    // of the Legacy reward track faction 2802; renown level = quantity of its renown currency 3485. The client says it unlocks at level 25.
+    static constexpr uint32 LegacyRenownCurrencyID = 3485;
+    static constexpr uint32 LegacyRewardTrackFactionID = 2802;
+    static constexpr uint32 LegacyPointsTraitCurrencyID = 4225;
+    static constexpr uint32 LegacyTraitSystemID = 45;               // Legacy trees 1187 Professions, 1188 Adventure, 1189 Progression
+    static constexpr uint32 SpellCreateLegacyTraitConfig = 1282612; // SPELL_EFFECT_CREATE_TRAIT_TREE_CONFIG, tree 1188
+    static constexpr uint8 LegacyUnlockLevel = 25;
+
+    // every Legacy page asks for the trait config of the Legacy trees (C_Traits.GetConfigIDByTreeID); without it the window errors
+    if (!m_activePlayerData->TraitConfigs.FindIf([](UF::TraitConfig const& config)
+    {
+        return static_cast<TraitConfigType>(*config.Type) == TraitConfigType::Generic && config.TraitSystemID == int32(LegacyTraitSystemID);
+    }).first)
+        CastSpell(this, SpellCreateLegacyTraitConfig, true);
+
+    // Renown on the Legacy reward track = Legacy Points earned: the challenges ("Reach level 25/45/60 for the first time on <class>")
+    // are TraitCurrencySource rows of currency 4225. Rows still tied to another ruleset (SuperDistrictSetID != 0 after the
+    // 2026_09_30_00 hotfix) belong to the other copy of each challenge and are not counted. The first point comes at level 25.
+    int32 earnedLegacyPoints = 0;
+    for (TraitCurrencySourceEntry const* source : sTraitCurrencySourceStore)
+        if (source->TraitCurrencyID == LegacyPointsTraitCurrencyID && !source->SuperDistrictSetID && source->AchievementID && HasAchieved(source->AchievementID))
+            earnedLegacyPoints += source->Amount;
+
+    int32 renown = int32(GetCurrencyQuantity(LegacyRenownCurrencyID));
+    if (earnedLegacyPoints > renown)
+        ModifyCurrency(LegacyRenownCurrencyID, earnedLegacyPoints - renown);
+
+    if (!earnedLegacyPoints && GetLevel() < LegacyUnlockLevel)
+        return;
+
+    // the reward track shows the progress towards the next renown level from the faction's reputation, so the client must know it
+    if (FactionEntry const* legacyFaction = sFactionStore.LookupEntry(LegacyRewardTrackFactionID))
+        GetReputationMgr().SetVisible(legacyFaction);
 }
 
 bool Player::IsMaxLevel() const
@@ -2972,6 +3013,11 @@ bool Player::AddSpell(uint32 spellId, bool active, bool learning, bool dependent
 
             if (skill_value < spellLearnSkill->value)
                 skill_value = spellLearnSkill->value;
+
+            // Classic 1.60: vanilla trainers teach profession ranks (e.g. First Aid 3273) directly instead of casting them, so
+            // the skill starts here; value 0 would mean "no skill" (Spell::EffectSkill uses at least 1 too)
+            if (!skill_value)
+                skill_value = 1;
 
             uint16 new_skill_max_value = spellLearnSkill->maxvalue;
 
@@ -5453,18 +5499,20 @@ bool Player::UpdateCraftSkill(SpellInfo const* spellInfo)
     {
         if (_spell_idx->second->SkillupSkillLineID)
         {
-            uint32 SkillValue = GetPureSkillValue(_spell_idx->second->SkillupSkillLineID);
+            // Classic 1.60: skill-ups go to the profession itself (the recipe data points at the expansion child line)
+            uint32 skillupSkill = GetClassicProfessionSkill(_spell_idx->second->SkillupSkillLineID);
+            uint32 SkillValue = GetPureSkillValue(skillupSkill);
 
             // Alchemy Discoveries here
             if (spellInfo->Mechanic == MECHANIC_DISCOVERY)
             {
-                if (uint32 discoveredSpell = GetSkillDiscoverySpell(_spell_idx->second->SkillupSkillLineID, spellInfo->Id, this))
+                if (uint32 discoveredSpell = GetSkillDiscoverySpell(skillupSkill, spellInfo->Id, this))
                     LearnSpell(discoveredSpell, false);
             }
 
             uint32 craft_skill_gain = _spell_idx->second->NumSkillUps * sWorld->getIntConfig(CONFIG_SKILL_GAIN_CRAFTING);
 
-            return UpdateSkillPro(_spell_idx->second->SkillupSkillLineID, SkillGainChance(SkillValue,
+            return UpdateSkillPro(skillupSkill, SkillGainChance(SkillValue,
                 _spell_idx->second->TrivialSkillLineRankHigh,
                 (_spell_idx->second->TrivialSkillLineRankHigh + _spell_idx->second->TrivialSkillLineRankLow)/2,
                 _spell_idx->second->TrivialSkillLineRankLow),
@@ -5603,6 +5651,8 @@ bool Player::UpdateSkillPro(uint16 skillId, int32 chance, uint32 step)
     if (itr->second.uState != SKILL_NEW)
         itr->second.uState = SKILL_CHANGED;
 
+    SyncClassicProfessionChildSkills(skillId);
+
     for (uint32 bsl : bonusSkillLevels)
     {
         if (value < bsl && new_value >= bsl)
@@ -5651,6 +5701,10 @@ void Player::UpdateSkillsForLevel()
         if (!rcEntry)
             continue;
 
+        // Classic 1.60: profession child lines copy their profession, their cap does not follow the character level
+        if (IsClassicProfessionChildSkill(sSkillLineStore.LookupEntry(pskill)))
+            continue;
+
         if (GetSkillRangeType(rcEntry) == SKILL_RANGE_LEVEL)
         {
             if (rcEntry->Flags & SKILL_FLAG_ALWAYS_MAX_VALUE)
@@ -5686,6 +5740,7 @@ void Player::InitializeSkillFields()
 // To "remove" a skill line, set it's values to zero
 void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
 {
+
     SkillLineEntry const* skillEntry = sSkillLineStore.LookupEntry(id);
     if (!skillEntry)
     {
@@ -5693,6 +5748,28 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
             id, GetName(), GetGUID().ToString());
         return;
     }
+
+    // Classic 1.60: profession child lines copy the profession (SyncClassicProfessionChildSkills), they never change it
+    bool const classicProfessionChild = IsClassicProfessionChildSkill(skillEntry);
+    if (classicProfessionChild && newVal)
+    {
+        SkillStatusMap::const_iterator parent = mSkillStatus.find(skillEntry->ParentSkillLineID);
+        if (parent == mSkillStatus.end() || parent->second.uState == SKILL_DELETED || !GetSkillRankByPos(parent->second.pos))
+            step = newVal = maxVal = 0;
+        else
+        {
+            step = GetSkillStepByPos(parent->second.pos);
+            newVal = GetSkillRankByPos(parent->second.pos);
+            maxVal = GetSkillMaxRankByPos(parent->second.pos);
+        }
+    }
+
+    // after the profession itself changed, its child lines are updated to match (see the end of this function)
+    auto syncChildren = Trinity::make_unique_ptr_with_deleter(this, [id, classicProfessionChild](Player* player)
+    {
+        if (!classicProfessionChild)
+            player->SyncClassicProfessionChildSkills(id);
+    });
 
     uint16 currVal;
     SkillStatusMap::iterator itr = mSkillStatus.find(id);
@@ -5723,7 +5800,8 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
         if (newVal)
         {
             // enable parent skill line if missing
-            if (skillEntry->ParentSkillLineID && skillEntry->ParentTierIndex > 0 && GetSkillStep(skillEntry->ParentSkillLineID) < skillEntry->ParentTierIndex)
+            // Classic 1.60: profession child lines must not set the parent's rank, Classic ranks come from the rank spells
+            if (skillEntry->ParentSkillLineID && !classicProfessionChild && skillEntry->ParentTierIndex > 0 && GetSkillStep(skillEntry->ParentSkillLineID) < skillEntry->ParentTierIndex)
                 if (SkillRaceClassInfoEntry const* rcEntry = sDB2Manager.GetSkillRaceClassInfo(skillEntry->ParentSkillLineID, GetRace(), GetClass()))
                     if (SkillTiersEntry const* tier = sObjectMgr->GetSkillTier(rcEntry->SkillTierID))
                         SetSkill(skillEntry->ParentSkillLineID, skillEntry->ParentTierIndex, std::max<uint16>(GetPureSkillValue(skillEntry->ParentSkillLineID), 1), tier->GetValueForTierIndex(skillEntry->ParentTierIndex - 1));
@@ -5850,7 +5928,9 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
 
         if (skillEntry->ParentSkillLineID)
         {
-            if (skillEntry->ParentTierIndex > 0)
+            // Classic 1.60: profession child lines (e.g. First Aid 129 -> 2942) must not set the parent's rank,
+            // Classic ranks come from the rank spells (First Aid became 1/300 instead of 1/75)
+            if (skillEntry->ParentTierIndex > 0 && !classicProfessionChild)
             {
                 if (SkillRaceClassInfoEntry const* rcEntry = sDB2Manager.GetSkillRaceClassInfo(skillEntry->ParentSkillLineID, GetRace(), GetClass()))
                 {
@@ -5903,11 +5983,49 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
     }
 }
 
+bool Player::IsClassicProfessionChildSkill(SkillLineEntry const* skillEntry)
+{
+    if (!skillEntry || !skillEntry->ParentSkillLineID)
+        return false;
+
+    SkillLineEntry const* parent = sSkillLineStore.LookupEntry(skillEntry->ParentSkillLineID);
+    return parent && (parent->CategoryID == SKILL_CATEGORY_PROFESSION || parent->CategoryID == SKILL_CATEGORY_SECONDARY);
+}
+
+void Player::SyncClassicProfessionChildSkills(uint32 skill)
+{
+    SkillLineEntry const* skillEntry = sSkillLineStore.LookupEntry(skill);
+    if (!skillEntry || skillEntry->ParentSkillLineID || (skillEntry->CategoryID != SKILL_CATEGORY_PROFESSION && skillEntry->CategoryID != SKILL_CATEGORY_SECONDARY))
+        return;
+
+    std::vector<SkillLineEntry const*> const* childSkillLines = sDB2Manager.GetSkillLinesForParentSkill(skill);
+    if (!childSkillLines)
+        return;
+
+    // the profession window lists recipes and shows the rank of the child line, so it must equal the profession itself
+    uint16 value = GetPureSkillValue(skill);
+    uint16 maxValue = GetPureMaxSkillValue(skill);
+    uint16 step = GetSkillStep(skill);
+    for (SkillLineEntry const* childSkillLine : *childSkillLines)
+        if (GetPureSkillValue(childSkillLine->ID) != value || GetPureMaxSkillValue(childSkillLine->ID) != maxValue || GetSkillStep(childSkillLine->ID) != step)
+            SetSkill(childSkillLine->ID, step, value, maxValue);
+}
+
+uint32 Player::GetClassicProfessionSkill(uint32 skill)
+{
+    SkillLineEntry const* skillEntry = sSkillLineStore.LookupEntry(skill);
+    return IsClassicProfessionChildSkill(skillEntry) ? skillEntry->ParentSkillLineID : skill;
+}
+
 uint32 Player::GetProfessionSkillForExp(uint32 skill, int32 expansion) const
 {
     SkillLineEntry const* skillEntry = sSkillLineStore.LookupEntry(skill);
     if (!skillEntry)
         return 0;
+
+    // Classic 1.60: fishing, gathering etc. level the profession itself, not an expansion child line
+    if (!skillEntry->ParentSkillLineID && (skillEntry->CategoryID == SKILL_CATEGORY_PROFESSION || skillEntry->CategoryID == SKILL_CATEGORY_SECONDARY))
+        return skillEntry->ID;
 
     if (skillEntry->ParentSkillLineID || (skillEntry->CategoryID != SKILL_CATEGORY_PROFESSION && skillEntry->CategoryID != SKILL_CATEGORY_SECONDARY))
         return 0;
