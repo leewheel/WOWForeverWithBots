@@ -27,10 +27,12 @@
 #include "Guild.h"
 #include "GuildMgr.h"
 #include "GuildPackets.h"
+#include "LFGPacketsCommon.h"
 #include "Log.h"
 #include "ObjectMgr.h"
 #include "ObjectAccessor.h"
 #include "Player.h"
+#include "World.h"
 
 void WorldSession::HandleGuildQueryOpcode(WorldPackets::Guild::QueryGuildInfo& query)
 {
@@ -985,33 +987,200 @@ void WorldSession::HandleClubFinderProbe(WorldPackets::Null& packet)
     }
 }
 
-// Classic 1.60 Group Finder (premade groups, CMSG_LFG_LIST_*), first step: log what the client sends and answer with empty
-// replies, so the client's readers run once and their layouts can be read from the client code.
+// Classic 1.60 Group Finder (vanilla style premade groups, CMSG_LFG_LIST_*). Listings live in memory only.
+namespace
+{
+    // One posted listing. Request = the client's LFGListJoinRequest bytes as sent (writer rva 0xA4D640); the client reads a
+    // request with the mirrored reader (rva 0xA4D0A0), so it is echoed back unchanged in the status and the search results.
+    struct LfgListing
+    {
+        uint32 Id = 0;
+        uint32 CategoryId = 0;
+        std::vector<uint32> Activities;
+        std::vector<uint8> Request;
+        time_t Created = 0;
+    };
+
+    std::unordered_map<ObjectGuid, LfgListing> LfgListings;
+    uint32 NextLfgListingId = 1;
+
+    // LFGListJoinRequest: bits activity count 5, name 10, comment 11, voice chat 8, 9 flags (4 bools, has int32 x3, has uint8,
+    // bool); uint32 category, float item level, {float, float, uint32 n, n x 16 bytes}, int8, n x uint32 activity ids, name,
+    // comment, voice chat, the optional int32 x3 and uint8
+    bool ReadLfgListRequest(ByteBuffer& data, LfgListing& listing)
+    {
+        size_t const start = data.rpos();
+        uint32 const activityCount = data.ReadBits(5);
+        uint32 const nameLength = data.ReadBits(10);
+        uint32 const commentLength = data.ReadBits(11);
+        uint32 const voiceChatLength = data.ReadBits(8);
+        std::array<bool, 9> bits;
+        for (bool& bit : bits)
+            bit = data.ReadBit();
+        data.ResetBitPos();
+
+        listing.CategoryId = data.read<uint32>();
+        data.read_skip<float>();                    // required item level
+        data.read_skip<float>();
+        data.read_skip<float>();
+        uint32 const extraCount = data.read<uint32>();
+        data.read_skip(extraCount * 16);
+        data.read_skip<int8>();
+        listing.Activities.clear();
+        for (uint32 i = 0; i < activityCount; ++i)
+            listing.Activities.push_back(data.read<uint32>());
+        data.read_skip(nameLength + commentLength + voiceChatLength);
+        for (uint8 i = 4; i < 7; ++i)
+            if (bits[i])
+                data.read_skip<int32>();
+        if (bits[7])
+            data.read_skip<uint8>();
+
+        listing.Request.assign(data.data() + start, data.data() + data.rpos());
+        return data.rpos() == data.size();
+    }
+
+    WorldPackets::LFG::RideTicket LfgListTicket(ObjectGuid const& leader, LfgListing const& listing)
+    {
+        WorldPackets::LFG::RideTicket ticket;
+        ticket.RequesterGuid = leader;
+        ticket.Id = listing.Id;
+        ticket.Type = WorldPackets::LFG::RideType::Lfg;
+        ticket.Time = listing.Created;
+        return ticket;
+    }
+
+    // SMSG_LFG_LIST_UPDATE_STATUS (Classic 0x5B000A): ticket, uint32 remaining time, uint8 result, request, bit listed
+    void SendLfgListStatus(WorldSession* session, LfgListing const* listing, bool listed)
+    {
+        WorldPacket data(SMSG_LFG_LIST_UPDATE_STATUS, 64);
+        if (listing)
+            data << LfgListTicket(session->GetPlayer()->GetGUID(), *listing);
+        else
+            data << WorldPackets::LFG::RideTicket();
+        data << uint32(listed ? 1800 : 0);
+        data << uint8(0);
+        if (listing)
+            data.append(listing->Request.data(), listing->Request.size());
+        data.WriteBit(listed);
+        data.FlushBits();
+        session->SendPacket(&data);
+    }
+
+    // one LFGListSearchResult (Classic reader rva 0xA4EC70)
+    void WriteLfgListSearchResult(WorldPacket& data, ObjectGuid const& leader, LfgListing const& listing)
+    {
+        data << LfgListTicket(leader, listing);
+        data << uint32(listing.Id);                 // sequence
+        data.append(listing.Request.data(), listing.Request.size());
+        data << uint8(0);
+        data << leader;                             // leader
+        data << leader;                             // last touched: any, name, comment
+        data << leader;
+        data << leader;
+        data << ObjectGuid::Empty;                  // last touched voice chat
+        data << uint32(GetVirtualRealmAddress());
+        data << uint32(0);
+        data << uint32(0);
+        data << uint32(0);                          // battle.net friends
+        data << uint32(0);                          // character friends
+        data << uint32(0);                          // guild mates
+        data << uint32(0);                          // members (member reader not captured yet)
+        data << uint32(0);                          // completed encounters
+        data << uint64(listing.Created);
+        data << uint8(0);                           // application status
+        data << ObjectGuid::Empty;                  // party
+        data << float(0.0f);
+        data << float(0.0f);
+        data << uint32(0);
+        for (uint8 i = 0; i < 9; ++i)
+        {
+            data << int32(0);
+            data << int8(0);
+        }
+        data << uint8(0);
+        data << uint8(0);
+    }
+}
+
 void WorldSession::HandleLfgListProbe(WorldPackets::Null& packet)
 {
     WorldPacket const* raw = packet.GetRawPacket();
     std::string const hex = Trinity::Impl::ByteArrayToHexStr(raw->data(), std::min<size_t>(raw->size(), 256));
     TC_LOG_INFO("network.opcode", "GroupFinder: {} size {} data {} from {}", GetOpcodeNameForLogging(packet.GetOpcode()), raw->size(), hex, GetPlayerInfo());
 
-    auto sendEmpty = [this](OpcodeServer opcode, size_t zeroBytes)
-    {
-        WorldPacket response(opcode, zeroBytes);
-        for (size_t i = 0; i < zeroBytes; ++i)
-            response << uint8(0);
-        SendPacket(&response);
-    };
+    WorldPacket data(*raw);
+    data.rpos(4);   // skip the opcode
 
-    switch (packet.GetOpcode())
+    try
     {
-        case CMSG_LFG_LIST_SEARCH:
-            sendEmpty(SMSG_LFG_LIST_SEARCH_RESULTS, 8);
-            break;
-        case CMSG_REQUEST_LFG_LIST_BLACKLIST:     // login: empty blacklist (uint32 count), the category list may wait for it
-            sendEmpty(SMSG_LFG_LIST_UPDATE_BLACKLIST, 4);
-            break;
-        // (no replies to the rest yet: an empty 'apply result' answering the empty message the client sends at login -
-        // mapped to CMSG_LFG_LIST_APPLY_TO_GROUP, probably wrongly - crashed the client)
-        default:
-            break;
+        switch (packet.GetOpcode())
+        {
+            case CMSG_LFG_LIST_JOIN:            // create or re-post the player's listing
+            {
+                LfgListing listing;
+                if (!ReadLfgListRequest(data, listing))
+                    TC_LOG_ERROR("network.opcode", "GroupFinder: join request has {} unread bytes", data.size() - data.rpos());
+                auto itr = LfgListings.find(_player->GetGUID());
+                listing.Id = itr != LfgListings.end() ? itr->second.Id : NextLfgListingId++;
+                listing.Created = GameTime::GetGameTime();
+                LfgListing const& stored = LfgListings[_player->GetGUID()] = std::move(listing);
+
+                // SMSG_LFG_LIST_JOIN_RESULT (Classic 0x5B0001, case 0xA4A958): ticket, int32, uint8 result, uint8 detail
+                WorldPacket result(SMSG_LFG_LIST_JOIN_RESULT, 40);
+                result << LfgListTicket(_player->GetGUID(), stored);
+                result << int32(0);
+                result << uint8(0);
+                result << uint8(0);
+                SendPacket(&result);
+                SendLfgListStatus(this, &stored, true);
+                break;
+            }
+            case CMSG_LFG_LIST_GET_STATUS:      // login
+            {
+                auto itr = LfgListings.find(_player->GetGUID());
+                if (itr != LfgListings.end())
+                    SendLfgListStatus(this, &itr->second, true);
+                break;
+            }
+            case CMSG_LFG_LIST_SEARCH:          // (writer rva 0xA4E3B0) flags byte, uint32 category, ..., activity ids at the end
+            {
+                data.read_skip<uint8>();
+                uint32 const categoryId = data.read<uint32>();
+
+                WorldPacket results(SMSG_LFG_LIST_SEARCH_RESULTS, 256);
+                std::vector<std::pair<ObjectGuid, LfgListing const*>> found;
+                for (auto itr = LfgListings.begin(); itr != LfgListings.end();)
+                {
+                    if (!ObjectAccessor::FindConnectedPlayer(itr->first))
+                    {
+                        itr = LfgListings.erase(itr);   // leader logged out
+                        continue;
+                    }
+                    if (itr->second.CategoryId == categoryId)
+                        found.emplace_back(itr->first, &itr->second);
+                    ++itr;
+                }
+                results << uint16(found.size());
+                results << uint32(found.size());
+                for (auto const& [leader, listing] : found)
+                    WriteLfgListSearchResult(results, leader, *listing);
+                SendPacket(&results);
+                break;
+            }
+            case CMSG_REQUEST_LFG_LIST_BLACKLIST:     // login: empty blacklist (uint32 count), the category list waits for it
+            {
+                WorldPacket blacklist(SMSG_LFG_LIST_UPDATE_BLACKLIST, 4);
+                blacklist << uint32(0);
+                SendPacket(&blacklist);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    catch (ByteBufferException const& e)
+    {
+        TC_LOG_ERROR("network.opcode", "GroupFinder: {} could not be read: {}", GetOpcodeNameForLogging(packet.GetOpcode()), e.what());
     }
 }

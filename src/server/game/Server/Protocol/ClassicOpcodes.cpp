@@ -63,6 +63,7 @@ std::unordered_set<uint32> const BlockedServerOpcodes =
 std::unordered_map<uint32, std::vector<uint8>> const StubServerPayloads =
 {
     { SMSG_ACCOUNT_ITEM_COLLECTION_DATA, std::vector<uint8>(4, 0) },  // retail 10 bytes, Classic 0x460360 expects 4 (JamClient.cpp:167052)
+    { SMSG_DAILY_QUESTS_RESET, {} },  // retail int32 count; Classic expects no data (JamClientQuest.cpp:3723 asserts datasize == 0 at the daily reset)
 };
 
 constexpr uint32 OpcodeGroup(uint32 opcode) { return opcode >> 16; }

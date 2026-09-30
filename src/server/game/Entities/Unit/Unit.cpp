@@ -373,6 +373,8 @@ Unit::Unit(bool isWorldObject) :
     m_baseSpellCritChance = 5.0f;
 
     m_speed_rate.fill(1.0f);
+    m_advFlyingSpeed.fill(0.0f);   // Classic 1.60 has no default flight capability, so UpdateAdvFlyingSpeed never sets these; uninitialized values
+                                   // (sometimes inf/NaN) sent in the create movement block made the client reject the object (disconnect)
     SetFlightCapabilityID(0, false);
 
     // remove aurastates allowing special moves

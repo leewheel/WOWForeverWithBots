@@ -274,10 +274,7 @@ void BaseEntity::BuildMovementUpdate(ByteBuffer& data, CreateObjectBits flags, P
         Unit const* unit = static_cast<Unit const*>(this);
         bool HasFallDirection = unit->HasUnitMovementFlag(MOVEMENTFLAG_FALLING);
         bool HasFall = HasFallDirection || unit->m_movementInfo.jump.fallTime != 0;
-        // Classic 1.60: units created while moving on a spline intermittently failed the client's object create validation
-        // ("Failed to validate JamCliObjCreate", disconnect reason 7). Until the Classic spline block layout is verified, send
-        // them without it: they show at their current position until their next movement update.
-        bool HasSpline = false;
+        bool HasSpline = unit->IsSplineEnabled();
         bool HasInertia = unit->m_movementInfo.inertia.has_value();
         bool HasAdvFlying = unit->m_movementInfo.advFlying.has_value();
         bool HasDriveStatus = unit->m_movementInfo.driveStatus.has_value();
