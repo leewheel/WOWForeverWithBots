@@ -1212,6 +1212,10 @@ void World::LoadConfigSettings(bool reload)
     if (sConfigMgr->GetBoolDefault("Classic.Hardcore", false))
         _gameRules.push_back({ .Rule = ::GameRule::HardcoreRuleset, .Value = true });
 
+    // Classic 1.60 (WoW Forever): the retail Group Finder addon is excluded for this game type; the client loads its
+    // "Vanilla style" group finder (Blizzard_GroupFinder_VanillaStyle) when PremadeGroupFinderStyle = Enum.PremadeGroupFinderStyle.Vanilla
+    _gameRules.push_back({ .Rule = ::GameRule::PremadeGroupFinderStyle, .Value = int32(2) });
+
     DeathRecap::LoadConfig();
 
     if (reload)

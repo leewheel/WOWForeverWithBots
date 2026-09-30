@@ -1585,6 +1585,10 @@ void WorldSession::SendFeatureSystemStatus()
     features.RedeemForBalanceAvailable = true;
     // Same two-bit shift for Club Finder: C_ClubFinder.IsEnabled() reads the bit the retail order calls QuestSessionEnabled
     features.QuestSessionEnabled = features.ClubFinderEnabled;
+    // and for the group finder: Classic LfdEnabled / LfrEnabled are the bits the retail order calls PlayerIdentityOptionsEnabled /
+    // IsPlayerContentTrackingEnabled (C_LFGInfo.CanPlayerUseGroupFinder() was false: the Group Finder window never opened)
+    features.PlayerIdentityOptionsEnabled = true;
+    features.IsPlayerContentTrackingEnabled = true;
 
     features.EuropaTicketSystemStatus.emplace();
     features.EuropaTicketSystemStatus->ThrottleState.MaxTries = 10;

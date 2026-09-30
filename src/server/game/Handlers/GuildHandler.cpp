@@ -18,6 +18,9 @@
 #include "WorldSession.h"
 #include "AchievementPackets.h"
 #include "Common.h"
+#include "StringFormat.h"
+#include "DatabaseEnv.h"
+#include "CharacterCache.h"
 #include "Config.h"
 #include "GameTime.h"
 #include "GossipDef.h"
@@ -26,6 +29,7 @@
 #include "GuildPackets.h"
 #include "Log.h"
 #include "ObjectMgr.h"
+#include "ObjectAccessor.h"
 #include "Player.h"
 
 void WorldSession::HandleGuildQueryOpcode(WorldPackets::Guild::QueryGuildInfo& query)
@@ -609,18 +613,386 @@ void WorldSession::HandleGuildGetAchievementMembers(WorldPackets::Achievement::G
         guild->HandleGetAchievementMembers(this, uint32(getAchievementMembers.AchievementID));
 }
 
-// Classic 1.60 Guild Finder, first step: log what the client sends (the realms have packet logging off) and answer the
-// login-time subscription request with an empty list, so the client's reader for it runs and its layout can be read.
+// Classic 1.60 Guild Finder (Club Finder, guilds only). Layouts read from the 70058 client (classic_re/readseq58.py):
+//   CMSG_CLUB_FINDER_POST (writer rva 0x8C4520): bits name 7, description 12, type 3, crossFaction 1; uint64 clubId (guild id),
+//     uint64 specs, int32 recruitment flags (1 << ClubFinderSettingFlags), int32 min item level, uint32 avatar; name, description
+//   SMSG_CLUB_FINDER_RESPONSE_POST_RECRUITMENT_MESSAGE (0x4602E6): guid clubFinderGUID, bits type 3 + 3
+//   SMSG_CLUB_FINDER_LOOKUP_CLUB_POSTINGS_LIST (0x4602E5): uint32 count, postings (reader 0xA46BC0), bits type 3 + last 1
+// Requests not understood yet are logged with their bytes and answered with an empty reply.
+namespace
+{
+    constexpr uint8 CLUB_FINDER_TYPE_GUILD = 1;
+
+    struct GuildFinderPosting
+    {
+        ObjectGuid::LowType GuildId = 0;
+        ObjectGuid::LowType Poster = 0;
+        std::string Description;
+        uint64 Specs = 0;
+        int32 Flags = 0;
+        int32 MinItemLevel = 0;
+        uint32 Avatar = 0;
+        int64 Updated = 0;
+    };
+
+    std::vector<GuildFinderPosting> LoadGuildFinderPostings(Optional<ObjectGuid::LowType> guildId = {})
+    {
+        std::vector<GuildFinderPosting> postings;
+        std::string query = "SELECT guildId, poster, description, specs, flags, minItemLevel, avatar, updated FROM guild_finder_posting";
+        if (guildId)
+            query += Trinity::StringFormat(" WHERE guildId = {}", *guildId);
+        if (QueryResult result = CharacterDatabase.Query(query.c_str()))
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                GuildFinderPosting& posting = postings.emplace_back();
+                posting.GuildId = fields[0].GetUInt64();
+                posting.Poster = fields[1].GetUInt64();
+                posting.Description = fields[2].GetString();
+                posting.Specs = fields[3].GetUInt64();
+                posting.Flags = fields[4].GetInt32();
+                posting.MinItemLevel = fields[5].GetInt32();
+                posting.Avatar = fields[6].GetUInt32();
+                posting.Updated = fields[7].GetInt64();
+            } while (result->NextRow());
+        }
+        return postings;
+    }
+
+    ObjectGuid GuildFinderGuid(ObjectGuid::LowType guildId)
+    {
+        return ObjectGuid::Create<HighGuid::ClubFinder>(CLUB_FINDER_TYPE_GUILD, uint32(guildId), guildId);
+    }
+
+    // one entry of SMSG_CLUB_FINDER_LOOKUP_CLUB_POSTINGS_LIST (client reader rva 0xA46BC0)
+    void WriteGuildFinderPosting(WorldPacket& data, GuildFinderPosting const& posting, Guild const* guild)
+    {
+        std::string leaderName;
+        sCharacterCache->GetCharacterNameByGuid(guild->GetLeaderGUID(), leaderName);
+        std::string const& name = guild->GetName();
+
+        data.WriteBits(name.size(), 7);
+        data.WriteBits(posting.Description.size(), 12);
+        data.WriteBits(leaderName.size(), 6);
+        data.FlushBits();
+
+        data << GuildFinderGuid(posting.GuildId);
+        data << uint32(guild->GetMembersCount());               // numActiveMembers
+        data << int64(posting.GuildId);                          // clubId
+        data << int32(posting.MinItemLevel);
+        data << int32(posting.Avatar);                           // emblemInfo
+        data << uint32(posting.Flags);                           // recruitmentFlags
+        data << ObjectGuid::Create<HighGuid::Player>(posting.Poster); // lastPosterGUID
+        data << int64(posting.Updated);                          // lastUpdatedTime
+        data << uint64(posting.Specs);                           // recruitingSpecIds
+        data.WriteString(name);
+        data.WriteString(posting.Description);
+        data.WriteString(leaderName);
+    }
+
+    void SendGuildFinderPostings(WorldSession* session, std::vector<GuildFinderPosting> const& postings, bool listedOnly)
+    {
+        WorldPacket data(SMSG_CLUB_FINDER_LOOKUP_CLUB_POSTINGS_LIST, 64);
+        size_t countPos = data.wpos();
+        data << uint32(0);
+        uint32 count = 0;
+        for (GuildFinderPosting const& posting : postings)
+        {
+            Guild const* guild = sGuildMgr->GetGuildById(posting.GuildId);
+            if (!guild || (listedOnly && !(posting.Flags & (1 << 12))))  // ClubFinderSettingFlags::EnableListing
+                continue;
+            WriteGuildFinderPosting(data, posting, guild);
+            ++count;
+        }
+        data.put<uint32>(countPos, count);
+        data.WriteBits(CLUB_FINDER_TYPE_GUILD, 3);
+        data.WriteBit(true);                                     // last part of the list
+        data.FlushBits();
+        session->SendPacket(&data);
+    }
+
+    // ---- applications (guild_finder_application.status = PlayerClubRequestStatus: 1 Pending, 3 Declined, 4 Approved, 5 Joined,
+    // 6 JoinedAnother)
+    struct GuildFinderApplication
+    {
+        ObjectGuid::LowType GuildId = 0;
+        ObjectGuid::LowType Player = 0;
+        std::string Comment;
+        uint64 Specs = 0;
+        uint8 Status = 1;
+        int64 Created = 0;
+    };
+
+    std::vector<GuildFinderApplication> LoadGuildFinderApplications(char const* column, ObjectGuid::LowType id)
+    {
+        std::vector<GuildFinderApplication> applications;
+        if (QueryResult result = CharacterDatabase.Query(Trinity::StringFormat(
+            "SELECT guildId, player, comment, specs, status, created FROM guild_finder_application WHERE {} = {}", column, id).c_str()))
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                GuildFinderApplication& application = applications.emplace_back();
+                application.GuildId = fields[0].GetUInt64();
+                application.Player = fields[1].GetUInt64();
+                application.Comment = fields[2].GetString();
+                application.Specs = fields[3].GetUInt64();
+                application.Status = fields[4].GetUInt8();
+                application.Created = fields[5].GetInt64();
+            } while (result->NextRow());
+        }
+        return applications;
+    }
+
+    // SMSG_RETURN_APPLICANT_LIST (client reader rva 0x8304F0): the applicants the guild's officers see
+    void SendGuildFinderApplicants(WorldSession* session, ObjectGuid::LowType guildId)
+    {
+        std::vector<GuildFinderApplication> applications = LoadGuildFinderApplications("guildId", guildId);
+        std::erase_if(applications, [](GuildFinderApplication const& application) { return application.Status != 1; });
+
+        WorldPacket data(SMSG_RETURN_APPLICANT_LIST, 64);
+        data << GuildFinderGuid(guildId);
+        data << uint32(applications.size());
+        for (GuildFinderApplication const& application : applications)
+        {
+            ObjectGuid playerGuid = ObjectGuid::Create<HighGuid::Player>(application.Player);
+            CharacterCacheEntry const* info = sCharacterCache->GetCharacterCacheByGuid(playerGuid);
+            Player const* online = ObjectAccessor::FindConnectedPlayer(playerGuid);
+            std::string const name = info ? info->Name : "";
+            data << GuildFinderGuid(guildId);
+            data << playerGuid;
+            data << uint32(0);                                               // closed
+            data << int8(info ? info->Level : 1);                            // level
+            data << int8(info ? info->Class : 0);                            // classID
+            data << int32(online ? int32(online->GetAverageItemLevel()) : 0); // ilvl
+            data << int32(0);
+            data << int64(application.Created);                              // lastUpdatedTime
+            data << uint64(application.Specs);                               // specIds
+            data << int8(info && Player::TeamForRace(info->Race) == HORDE ? 1 : 0); // faction
+            data.WriteBits(name.size(), 6);
+            data.WriteBits(application.Comment.size(), 10);
+            data.WriteBits(application.Status, 4);                           // requestStatus
+            data.WriteBit(true);                                             // lookupSuccess
+            data.FlushBits();
+            data.WriteString(name);
+            data.WriteString(application.Comment);
+        }
+        data.WriteBits(CLUB_FINDER_TYPE_GUILD, 3);
+        data.FlushBits();
+        session->SendPacket(&data);
+    }
+
+    // SMSG_CLUB_FINDER_RESPONSE_CHARACTER_APPLICATION_LIST (reader rva 0x830870): the applications of the player
+    void SendGuildFinderPlayerApplications(WorldSession* session, ObjectGuid const& playerGuid)
+    {
+        std::vector<GuildFinderApplication> applications = LoadGuildFinderApplications("player", playerGuid.GetCounter());
+
+        WorldPacket data(SMSG_CLUB_FINDER_RESPONSE_CHARACTER_APPLICATION_LIST, 32);
+        data << uint32(applications.size());
+        for (GuildFinderApplication const& application : applications)
+        {
+            data << GuildFinderGuid(application.GuildId);
+            data << playerGuid;
+            data << uint32(0);
+            data << uint64(application.Created);
+            data.WriteBits(application.Status, 4);
+            data.FlushBits();
+        }
+        data.WriteBits(CLUB_FINDER_TYPE_GUILD, 3);
+        data.FlushBits();
+        session->SendPacket(&data);
+    }
+
+    // refreshes the applicant list of the online officers (guild master and the rank below)
+    void NotifyGuildFinderOfficers(ObjectGuid::LowType guildId)
+    {
+        Guild* guild = sGuildMgr->GetGuildById(guildId);
+        if (!guild)
+            return;
+        for (auto const& [guid, member] : guild->GetMembers())
+            if (uint8(member.GetRankId()) <= 1)
+                if (Player* officer = ObjectAccessor::FindConnectedPlayer(guid))
+                    SendGuildFinderApplicants(officer->GetSession(), guildId);
+    }
+}
+
 void WorldSession::HandleClubFinderProbe(WorldPackets::Null& packet)
 {
     WorldPacket const* raw = packet.GetRawPacket();
     std::string const hex = Trinity::Impl::ByteArrayToHexStr(raw->data(), std::min<size_t>(raw->size(), 256));
-    TC_LOG_INFO("network.opcode", "ClubFinder probe: {} size {} data {} from {}", GetOpcodeNameForLogging(packet.GetOpcode()), raw->size(), hex, GetPlayerInfo());
+    TC_LOG_INFO("network.opcode", "ClubFinder: {} size {} data {} from {}", GetOpcodeNameForLogging(packet.GetOpcode()), raw->size(), hex, GetPlayerInfo());
 
     if (!sConfigMgr->GetBoolDefault("Classic.GuildFinder", false))
         return;
 
-    // empty answers, so the client's reader for each answer runs once (layouts are read from the client code)
+    WorldPacket data(*raw);
+    data.rpos(4);   // skip the opcode
+
+    auto sendEmpty = [this](OpcodeServer opcode, size_t zeroBytes)
+    {
+        WorldPacket response(opcode, zeroBytes);
+        for (size_t i = 0; i < zeroBytes; ++i)
+            response << uint8(0);
+        SendPacket(&response);
+    };
+
+    try
+    {
+        switch (packet.GetOpcode())
+        {
+            case CMSG_CLUB_FINDER_POST:
+            {
+                uint32 nameLength = data.ReadBits(7);
+                uint32 descriptionLength = data.ReadBits(12);
+                uint32 type = data.ReadBits(3);
+                data.ReadBit();                                  // cross faction
+                data.ResetBitPos();
+                uint64 clubId = data.read<uint64>();
+                uint64 specs = data.read<uint64>();
+                int32 flags = data.read<int32>();
+                int32 minItemLevel = data.read<int32>();
+                uint32 avatar = data.read<uint32>();
+                data.ReadString(nameLength);
+                std::string description(data.ReadString(descriptionLength));
+
+                Guild const* guild = _player->GetGuild();
+                Guild::Member const* member = guild ? static_cast<Guild const*>(guild)->GetMember(_player->GetGUID()) : nullptr;
+                if (type != CLUB_FINDER_TYPE_GUILD || !guild || guild->GetId() != clubId || !member
+                    || uint8(member->GetRankId()) > 1)          // guild master or the rank below
+                {
+                    sendEmpty(SMSG_CLUB_FINDER_RESPONSE_POST_RECRUITMENT_MESSAGE, 3);
+                    break;
+                }
+
+                CharacterDatabase.DirectExecute(Trinity::StringFormat(
+                    "REPLACE INTO guild_finder_posting (guildId, poster, name, description, specs, flags, minItemLevel, avatar, crossFaction, updated) "
+                    "VALUES ({}, {}, '', '{}', {}, {}, {}, {}, 0, {})",
+                    guild->GetId(), _player->GetGUID().GetCounter(), [&] { std::string escaped = description; CharacterDatabase.EscapeString(escaped); return escaped; }(),
+                    specs, flags, minItemLevel, avatar, int64(GameTime::GetGameTime())).c_str());
+
+                WorldPacket response(SMSG_CLUB_FINDER_RESPONSE_POST_RECRUITMENT_MESSAGE, 20);
+                response << GuildFinderGuid(guild->GetId());
+                response.WriteBits(CLUB_FINDER_TYPE_GUILD, 3);
+                response.WriteBits(0, 3);
+                response.FlushBits();
+                SendPacket(&response);
+                break;
+            }
+            case CMSG_CLUB_FINDER_REQUEST_CLUBS_LIST:
+                // search filters are not applied yet: every listed guild is returned
+                SendGuildFinderPostings(this, LoadGuildFinderPostings(), true);
+                break;
+            case CMSG_CLUB_FINDER_REQUEST_CLUBS_DATA:
+                // postings asked for by id (the recruitment dialog loads its own guild's, listed or not)
+                SendGuildFinderPostings(this, LoadGuildFinderPostings(), false);
+                break;
+            case CMSG_CLUB_FINDER_REQUEST_SUBSCRIBED_CLUB_POSTING_IDS:
+            {
+                // which posting belongs to each of the player's clubs: the recruiter UI finds its applicants through it
+                // (reply reader rva 0x8310C0: uint32 count, {int64 clubId, uint32, uint32})
+                WorldPacket response(SMSG_CLUB_FINDER_GET_CLUB_POSTING_IDS_RESPONSE, 20);
+                Guild const* guild = _player->GetGuild();
+                bool posted = guild && !LoadGuildFinderPostings(guild->GetId()).empty();
+                response << uint32(posted ? 1 : 0);
+                if (posted)
+                {
+                    response << int64(guild->GetId());              // clubId
+                    response << uint32(guild->GetId());             // clubFinderId (posting)
+                    response << uint32(CLUB_FINDER_TYPE_GUILD);
+                }
+                SendPacket(&response);
+                break;
+            }
+            case CMSG_CLUB_FINDER_GET_APPLICANTS_LIST:          // officer: who applied to the guild
+                if (Guild const* guild = _player->GetGuild())
+                    SendGuildFinderApplicants(this, guild->GetId());
+                break;
+            case CMSG_CLUB_FINDER_REQUEST_PENDING_CLUBS_LIST:   // player: own applications
+                SendGuildFinderPlayerApplications(this, _player->GetGUID());
+                break;
+            case CMSG_CLUB_FINDER_REQUEST_MEMBERSHIP_TO_CLUB:   // apply (writer rva 0x8C4C20): guid posting, uint64 specs, comment (10 bit length)
+            {
+                ObjectGuid posting;
+                data >> posting;
+                uint64 specs = data.read<uint64>();
+                uint32 commentLength = data.ReadBits(10);
+                data.ResetBitPos();
+                std::string comment(data.ReadString(commentLength));
+                ObjectGuid::LowType guildId = posting.GetCounter();
+                if (!sGuildMgr->GetGuildById(guildId) || _player->GetGuildId())
+                    break;
+                CharacterDatabase.EscapeString(comment);
+                CharacterDatabase.DirectExecute(Trinity::StringFormat(
+                    "REPLACE INTO guild_finder_application (guildId, player, comment, specs, status, created) VALUES ({}, {}, '{}', {}, 1, {})",
+                    guildId, _player->GetGUID().GetCounter(), comment, specs, int64(GameTime::GetGameTime())).c_str());
+                SendGuildFinderPlayerApplications(this, _player->GetGUID());
+                NotifyGuildFinderOfficers(guildId);
+                break;
+            }
+            case CMSG_CLUB_FINDER_RESPOND_TO_APPLICANT:         // officer (writer rva 0x8C4F90): guid posting, guid player, accept, type 3, force
+            {
+                ObjectGuid posting, applicant;
+                data >> posting >> applicant;
+                bool accept = data.ReadBit();
+                data.ReadBits(3);
+                data.ReadBit();
+                ObjectGuid::LowType guildId = posting.GetCounter();
+                Guild* guild = sGuildMgr->GetGuildById(guildId);
+                Guild::Member const* member = guild ? static_cast<Guild const*>(guild)->GetMember(_player->GetGUID()) : nullptr;
+                if (!member || uint8(member->GetRankId()) > 1)
+                    break;
+                bool joined = false;
+                if (accept && !sCharacterCache->GetCharacterGuildIdByGuid(applicant))
+                {
+                    CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
+                    joined = guild->AddMember(trans, applicant);
+                    CharacterDatabase.CommitTransaction(trans);
+                }
+                CharacterDatabase.DirectExecute(Trinity::StringFormat(
+                    "UPDATE guild_finder_application SET status = {} WHERE guildId = {} AND player = {}",
+                    accept ? (joined ? 5 : 4) : 3, guildId, applicant.GetCounter()).c_str());   // Joined / Approved / Declined
+                if (joined)   // only one guild: the other pending applications of the player are done
+                    CharacterDatabase.DirectExecute(Trinity::StringFormat(
+                        "UPDATE guild_finder_application SET status = 6 WHERE player = {} AND guildId <> {} AND status = 1",
+                        applicant.GetCounter(), guildId).c_str());
+                NotifyGuildFinderOfficers(guildId);
+                if (Player* target = ObjectAccessor::FindConnectedPlayer(applicant))
+                    SendGuildFinderPlayerApplications(target->GetSession(), applicant);
+                break;
+            }
+            case CMSG_CLUB_FINDER_APPLICATION_RESPONSE:         // player (writer rva 0x8C51C0): guid posting, type 3, ClubFinderApplicationUpdateType 3
+            {
+                ObjectGuid posting;
+                data >> posting;
+                data.ReadBits(3);
+                uint32 update = data.ReadBits(3);
+                ObjectGuid::LowType guildId = posting.GetCounter();
+                if (update == 3)   // Cancel
+                    CharacterDatabase.DirectExecute(Trinity::StringFormat(
+                        "DELETE FROM guild_finder_application WHERE guildId = {} AND player = {}", guildId, _player->GetGUID().GetCounter()).c_str());
+                SendGuildFinderPlayerApplications(this, _player->GetGUID());
+                NotifyGuildFinderOfficers(guildId);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    catch (ByteBufferException const& e)
+    {
+        TC_LOG_ERROR("network.opcode", "ClubFinder: {} could not be read: {}", GetOpcodeNameForLogging(packet.GetOpcode()), e.what());
+    }
+}
+
+// Classic 1.60 Group Finder (premade groups, CMSG_LFG_LIST_*), first step: log what the client sends and answer with empty
+// replies, so the client's readers run once and their layouts can be read from the client code.
+void WorldSession::HandleLfgListProbe(WorldPackets::Null& packet)
+{
+    WorldPacket const* raw = packet.GetRawPacket();
+    std::string const hex = Trinity::Impl::ByteArrayToHexStr(raw->data(), std::min<size_t>(raw->size(), 256));
+    TC_LOG_INFO("network.opcode", "GroupFinder: {} size {} data {} from {}", GetOpcodeNameForLogging(packet.GetOpcode()), raw->size(), hex, GetPlayerInfo());
+
     auto sendEmpty = [this](OpcodeServer opcode, size_t zeroBytes)
     {
         WorldPacket response(opcode, zeroBytes);
@@ -631,20 +1003,14 @@ void WorldSession::HandleClubFinderProbe(WorldPackets::Null& packet)
 
     switch (packet.GetOpcode())
     {
-        case CMSG_CLUB_FINDER_REQUEST_SUBSCRIBED_CLUB_POSTING_IDS:
-            sendEmpty(SMSG_CLUB_FINDER_GET_CLUB_POSTING_IDS_RESPONSE, 4);   // u32 count
+        case CMSG_LFG_LIST_SEARCH:
+            sendEmpty(SMSG_LFG_LIST_SEARCH_RESULTS, 8);
             break;
-        case CMSG_CLUB_FINDER_REQUEST_CLUBS_LIST:
-        case CMSG_CLUB_FINDER_REQUEST_CLUBS_DATA:
-            sendEmpty(SMSG_CLUB_FINDER_LOOKUP_CLUB_POSTINGS_LIST, 4);
+        case CMSG_REQUEST_LFG_LIST_BLACKLIST:     // login: empty blacklist (uint32 count), the category list may wait for it
+            sendEmpty(SMSG_LFG_LIST_UPDATE_BLACKLIST, 4);
             break;
-        case CMSG_CLUB_FINDER_GET_APPLICANTS_LIST:
-        case CMSG_CLUB_FINDER_REQUEST_PENDING_CLUBS_LIST:
-            sendEmpty(SMSG_CLUB_FINDER_RESPONSE_CHARACTER_APPLICATION_LIST, 4);
-            break;
-        case CMSG_CLUB_FINDER_POST:
-            sendEmpty(SMSG_CLUB_FINDER_RESPONSE_POST_RECRUITMENT_MESSAGE, 3); // packed guid (empty) + result bits
-            break;
+        // (no replies to the rest yet: an empty 'apply result' answering the empty message the client sends at login -
+        // mapped to CMSG_LFG_LIST_APPLY_TO_GROUP, probably wrongly - crashed the client)
         default:
             break;
     }

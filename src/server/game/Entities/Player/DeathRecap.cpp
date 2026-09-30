@@ -50,8 +50,8 @@
 
 namespace
 {
-    constexpr uint32 ACTOR_ENTRY = 9100000;         // sql/custom/world/2026_09_30_02_world_death_recap.sql
-    constexpr uint32 NAMED_ACTOR_FIRST = 9100001;   // 2000 copies: one per replayed player name, reused in turn
+    constexpr uint32 ACTOR_ENTRY = 8100000;         // below 2^23: the Classic creature GUID holds 23 bits of entry (sql/custom/world/2026_10_01_02_world_death_recap_entries.sql)
+    constexpr uint32 NAMED_ACTOR_FIRST = 8100001;   // 2000 copies: one per replayed player name, reused in turn
     constexpr uint32 NAMED_ACTOR_COUNT = 2000;
     constexpr size_t MAX_UNITS_PER_FRAME = 40;
     constexpr size_t MAX_RECAPS = 200;
