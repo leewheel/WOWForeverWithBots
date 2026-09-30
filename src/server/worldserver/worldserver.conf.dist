@@ -4458,3 +4458,10 @@ Recap.Range = 40
 Recap.Announce = 3
 #
 ###################################################################################################
+
+#    Classic.GuildFinder
+#        Description: Guild Finder in the Guild & Communities window (work in progress).
+#        Default:     0 - (Disabled)
+#                     1 - (Enabled)
+
+Classic.GuildFinder = 0

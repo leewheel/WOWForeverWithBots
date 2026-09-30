@@ -30,6 +30,7 @@
 #include "CharacterPackets.h"
 #include "Chat.h"
 #include "Common.h"
+#include "Config.h"
 #include "DB2Stores.h"
 #include "DatabaseEnv.h"
 #include "EquipmentSetPackets.h"
@@ -1577,6 +1578,13 @@ void WorldSession::SendFeatureSystemStatus()
     features.CharacterCommunitiesEnabled = false;
     features.ClubPresenceAllowSubscribeAll = true;
     features.ClubPresenceUnsubscribeDelay = 60000;
+    features.ClubFinderEnabled = sConfigMgr->GetBoolDefault("Classic.GuildFinder", false);   // Classic 1.60: Guild Finder (work in progress)
+    // Classic 1.60: the client starts its clubs (guild in Guild & Communities, C_Club.IsEnabled) from bit 16 of this message's
+    // flags (struct +0xF9, applied at rva 0x24C1B43 in 70058 -> club startup 0x2BFB8E0), which is RedeemForBalanceAvailable in
+    // the retail field order; the retail CommunitiesEnabled bit lands two bits later in Classic.
+    features.RedeemForBalanceAvailable = true;
+    // Same two-bit shift for Club Finder: C_ClubFinder.IsEnabled() reads the bit the retail order calls QuestSessionEnabled
+    features.QuestSessionEnabled = features.ClubFinderEnabled;
 
     features.EuropaTicketSystemStatus.emplace();
     features.EuropaTicketSystemStatus->ThrottleState.MaxTries = 10;

@@ -18,6 +18,7 @@
 #include "WorldSession.h"
 #include "AchievementPackets.h"
 #include "Common.h"
+#include "Config.h"
 #include "GameTime.h"
 #include "GossipDef.h"
 #include "Guild.h"
@@ -606,4 +607,45 @@ void WorldSession::HandleGuildGetAchievementMembers(WorldPackets::Achievement::G
 {
     if (Guild* guild = GetPlayer()->GetGuild())
         guild->HandleGetAchievementMembers(this, uint32(getAchievementMembers.AchievementID));
+}
+
+// Classic 1.60 Guild Finder, first step: log what the client sends (the realms have packet logging off) and answer the
+// login-time subscription request with an empty list, so the client's reader for it runs and its layout can be read.
+void WorldSession::HandleClubFinderProbe(WorldPackets::Null& packet)
+{
+    WorldPacket const* raw = packet.GetRawPacket();
+    std::string const hex = Trinity::Impl::ByteArrayToHexStr(raw->data(), std::min<size_t>(raw->size(), 256));
+    TC_LOG_INFO("network.opcode", "ClubFinder probe: {} size {} data {} from {}", GetOpcodeNameForLogging(packet.GetOpcode()), raw->size(), hex, GetPlayerInfo());
+
+    if (!sConfigMgr->GetBoolDefault("Classic.GuildFinder", false))
+        return;
+
+    // empty answers, so the client's reader for each answer runs once (layouts are read from the client code)
+    auto sendEmpty = [this](OpcodeServer opcode, size_t zeroBytes)
+    {
+        WorldPacket response(opcode, zeroBytes);
+        for (size_t i = 0; i < zeroBytes; ++i)
+            response << uint8(0);
+        SendPacket(&response);
+    };
+
+    switch (packet.GetOpcode())
+    {
+        case CMSG_CLUB_FINDER_REQUEST_SUBSCRIBED_CLUB_POSTING_IDS:
+            sendEmpty(SMSG_CLUB_FINDER_GET_CLUB_POSTING_IDS_RESPONSE, 4);   // u32 count
+            break;
+        case CMSG_CLUB_FINDER_REQUEST_CLUBS_LIST:
+        case CMSG_CLUB_FINDER_REQUEST_CLUBS_DATA:
+            sendEmpty(SMSG_CLUB_FINDER_LOOKUP_CLUB_POSTINGS_LIST, 4);
+            break;
+        case CMSG_CLUB_FINDER_GET_APPLICANTS_LIST:
+        case CMSG_CLUB_FINDER_REQUEST_PENDING_CLUBS_LIST:
+            sendEmpty(SMSG_CLUB_FINDER_RESPONSE_CHARACTER_APPLICATION_LIST, 4);
+            break;
+        case CMSG_CLUB_FINDER_POST:
+            sendEmpty(SMSG_CLUB_FINDER_RESPONSE_POST_RECRUITMENT_MESSAGE, 3); // packed guid (empty) + result bits
+            break;
+        default:
+            break;
+    }
 }

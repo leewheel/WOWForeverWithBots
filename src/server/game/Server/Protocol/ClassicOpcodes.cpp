@@ -55,6 +55,7 @@ std::unordered_map<uint32, uint32> const ServerOpcodes =
 std::unordered_set<uint32> const BlockedServerOpcodes =
 {
     SMSG_HEALTH_UPDATE,     // does not exist in Classic (health is sent through UnitData)
+    SMSG_GUILD_CHALLENGE_COMPLETED, // does not exist in Classic (guild switch has one case less, see TranslateServerOpcode)
     SMSG_CHANNEL_LIST,      // Classic chat index 0x1D (reader rva 0xA10E70), layout not verified yet
 };
 
@@ -74,6 +75,7 @@ constexpr uint32 LastRetailClientGroup = RetailClientConnectionGroup;
 constexpr uint32 FirstRetailServerGroup = 0x45;
 constexpr uint32 LastRetailServerGroup = 0x6A;
 constexpr uint32 ChatRetailServerGroup = 0x4A;
+constexpr uint32 GuildRetailServerGroup = 0x51;
 
 uint32 ClassicOpcodes::TranslateClientOpcode(uint32 classicOpcode)
 {
@@ -106,6 +108,12 @@ uint32 ClassicOpcodes::TranslateServerOpcode(uint32 coreOpcode)
         // CHANNEL_NOTIFY_JOINED 0x1B, CHANNEL_NOTIFY_LEFT 0x1C, CHAT_SERVER_MESSAGE 0x1E; CHAT and MOTD keep 1 and 3)
         if (group == ChatRetailServerGroup && index >= 4)
             index += 2;
+        // Guild (retail 0x51, Classic 0x52, client switch rva 0xA1F9E5 in 70058, table 0xA233EC, 0x47 cases vs retail 0x48): Classic has
+        // no GUILD_CHALLENGE_COMPLETED (retail 0x1B, blocked), so Classic index = retail - 1 from retail 0x1C on (Classic 0x1A int32 =
+        // CHALLENGE_UPDATE, 0x1B guid = ITEM_LOOTED_NOTIFY, 0x22 = NAME_CHANGED, 0x23 bit = FLAGGED_FOR_RENAME, 0x25 = BANK_QUERY_RESULTS,
+        // 0x2C = QUERY_GUILD_INFO_RESPONSE, 0x31 = EVENT_PLAYER_JOINED, 0x35 = EVENT_MOTD, 0x36 = EVENT_PRESENCE_CHANGE)
+        if (group == GuildRetailServerGroup && index >= 0x1C)
+            --index;
         return ((group + 1) << 16) | index;
     }
 
