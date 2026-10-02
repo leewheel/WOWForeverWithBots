@@ -1065,6 +1065,9 @@ enum OpcodeClient : uint32
     CMSG_BATTLE_PET_DELETE_PET_CHEAT                                = CMSG_BATTLE_PET_DELETE_PET + 1,
     CMSG_PET_BATTLE_WILD_LOCATION_FAIL                              = CMSG_PET_BATTLE_REQUEST_WILD + 1,
 
+    // Classic 1.60: Classic 0x44013A (u32 request id, u32 tag) lands on retail BATTLE_PAY_OPEN_CHECKOUT, it is the SSO token request
+    CMSG_GENERATE_SSO_TOKEN                                         = CMSG_BATTLE_PAY_OPEN_CHECKOUT,
+
     // Deleted opcodes, here only to allow compile
     CMSG_TRANSMOGRIFY_ITEMS                                         = CMSG_REQUEST_SCHEDULED_PVP_INFO + 1,
 };

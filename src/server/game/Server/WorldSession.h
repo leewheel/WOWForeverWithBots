@@ -196,6 +196,7 @@ namespace WorldPackets
     namespace Battlenet
     {
         class ChangeRealmTicket;
+        class GenerateSsoToken;
         class Request;
     }
 
@@ -750,6 +751,7 @@ namespace WorldPackets
         class UpdateMissileTrajectory;
         class UpdateAuraVisual;
         class TradeSkillSetFavorite;
+        class ShowTradeSkill;
         class KeyboundOverride;
         class SetEmpowerMinHoldStagePercent;
         class SpellEmpowerRelease;
@@ -1605,6 +1607,7 @@ class TC_GAME_API WorldSession
         void HandleConfirmRespecWipeOpcode(WorldPackets::Talent::ConfirmRespecWipe& confirmRespecWipe);
         void HandleUnlearnSkillOpcode(WorldPackets::Spells::UnlearnSkill& packet);
         void HandleTradeSkillSetFavorite(WorldPackets::Spells::TradeSkillSetFavorite const& tradeSkillSetFavorite);
+        void HandleShowTradeSkill(WorldPackets::Spells::ShowTradeSkill& packet);
 
         void HandleTraitsCommitConfig(WorldPackets::Traits::TraitsCommitConfig const& traitsCommitConfig);
         void HandleClassTalentsRequestNewConfig(WorldPackets::Traits::ClassTalentsRequestNewConfig& classTalentsRequestNewConfig);
@@ -1890,6 +1893,9 @@ class TC_GAME_API WorldSession
         // Battlenet
         void HandleBattlenetChangeRealmTicket(WorldPackets::Battlenet::ChangeRealmTicket& changeRealmTicket);
         void HandleBattlenetRequest(WorldPackets::Battlenet::Request& request);
+        void HandleGenerateSsoToken(WorldPackets::Battlenet::GenerateSsoToken& generateSsoToken);
+        static constexpr time_t SsoTokenDuration = 4 * HOUR;
+        std::string CreateSsoToken(time_t issued, time_t expires);
 
         void SendBattlenetResponse(uint32 serviceHash, uint32 methodId, uint32 token, pb::Message const* response);
         void SendBattlenetResponse(uint32 serviceHash, uint32 methodId, uint32 token, uint32 status);

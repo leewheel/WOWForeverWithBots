@@ -1205,6 +1205,34 @@ namespace WorldPackets
             bool IsFavorite = false;
         };
 
+        // Classic 1.60: clicking another player's profession link (layouts from a sniff of the official beta, build 70170)
+        class ShowTradeSkill final : public ClientPacket
+        {
+        public:
+            explicit ShowTradeSkill(WorldPacket&& packet) : ClientPacket(CMSG_SHOW_TRADE_SKILL, std::move(packet)) { }
+
+            void Read() override;
+
+            ObjectGuid PlayerGUID;
+            int32 SpellID = 0;
+            int32 SkillLineID = 0;
+        };
+
+        class ShowTradeSkillResponse final : public ServerPacket
+        {
+        public:
+            explicit ShowTradeSkillResponse() : ServerPacket(SMSG_SHOW_TRADE_SKILL_RESPONSE) { }
+
+            WorldPacket const* Write() override;
+
+            ObjectGuid PlayerGUID;
+            int32 SpellID = 0;
+            std::vector<int32> SkillLineIDs;
+            std::vector<int32> SkillRanks;
+            std::vector<int32> SkillMaxRanks;
+            std::vector<int32> KnownAbilitySpellIDs;
+        };
+
         class KeyboundOverride final : public ClientPacket
         {
         public:

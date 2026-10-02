@@ -19,6 +19,8 @@
 // Field Repair Bot 74A schematic: teaches spell 22704 to engineers (skill >= 300)
 
 #include "ScriptMgr.h"
+#include "AreaTrigger.h"
+#include "AreaTriggerAI.h"
 #include "GameObject.h"
 #include "GameObjectAI.h"
 #include "Player.h"
@@ -259,8 +261,153 @@ struct classic_go_camp_chair : public GameObjectAI
     }
 };
 
+/*######
+## classic_spell_plainsrunning (1259918)
+######*/
+
+// Classic 1.60 Tauren racial: "Gain 1% increased movement speed every 5 sec spent moving, up to a maximum of 30% increase. Taking
+// damage or standing still will reduce this effect." The racial is a 1 s periodic dummy (effect 0) with the step seconds and the
+// maximum in effects 1 and 2; the speed is the stacking aura Plainsrunning (1299038, +1% per stack). How fast it decays is not in
+// the spell data: here one stack per second standing still and five stacks when hit.
+enum Plainsrunning
+{
+    SPELL_PLAINSRUNNING_SPEED       = 1299038,
+    PLAINSRUNNING_STACKS_LOST_ON_HIT = 5
+};
+
+class classic_spell_plainsrunning : public AuraScript
+{
+    bool Validate(SpellInfo const* spellInfo) override
+    {
+        return ValidateSpellInfo({ SPELL_PLAINSRUNNING_SPEED }) && ValidateSpellEffect({ { spellInfo->Id, EFFECT_2 } });
+    }
+
+    void RemoveStacks(Unit* target, int32 count)
+    {
+        Aura* speed = target->GetAura(SPELL_PLAINSRUNNING_SPEED);
+        if (!speed)
+            return;
+
+        if (speed->GetStackAmount() <= count)
+            speed->Remove();
+        else
+            speed->ModStackAmount(-count);
+    }
+
+    void HandlePeriodic(AuraEffect const* /*aurEff*/)
+    {
+        Unit* target = GetTarget();
+        int32 secondsPerStack = std::max(1, int32(GetEffect(EFFECT_1)->GetAmount()));
+        int32 maxStacks = std::max(1, int32(GetEffect(EFFECT_2)->GetAmount()));
+
+        uint64 health = target->GetHealth();
+        bool hit = health < _lastHealth;
+        _lastHealth = health;
+        if (hit)
+        {
+            _movingSeconds = 0;
+            RemoveStacks(target, PLAINSRUNNING_STACKS_LOST_ON_HIT);
+            return;
+        }
+
+        if (!target->isMoving())
+        {
+            _movingSeconds = 0;
+            RemoveStacks(target, 1);
+            return;
+        }
+
+        if (++_movingSeconds < secondsPerStack)
+            return;
+
+        _movingSeconds = 0;
+        if (Aura* speed = target->GetAura(SPELL_PLAINSRUNNING_SPEED))
+        {
+            if (speed->GetStackAmount() < maxStacks)
+                speed->ModStackAmount(1);
+            else
+                speed->RefreshDuration();
+        }
+        else
+            target->CastSpell(target, SPELL_PLAINSRUNNING_SPEED, true);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(classic_spell_plainsrunning::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+    }
+
+    uint32 _movingSeconds = 0;
+    uint64 _lastHealth = 0;
+};
+
+/*######
+## classic_at_energizing_vortex (area trigger of Energizing Winds 1299003, create properties 43253)
+######*/
+
+// Classic 1.60 (WoW Forever): touching an Energizing Vortex gives Blessing of Zephras (run speed +40% for 5 min). The player casts
+// it on himself: an area trigger action would cast it as the vortex, and TC removes such auras when the unit leaves the (moving)
+// trigger, a second later.
+enum EnergizingVortex
+{
+    SPELL_BLESSING_OF_ZEPHRAS = 1258510
+};
+
+struct classic_at_energizing_vortex : AreaTriggerAI
+{
+    explicit classic_at_energizing_vortex(AreaTrigger* areaTrigger) : AreaTriggerAI(areaTrigger) { }
+
+    void OnUnitEnter(Unit* unit) override
+    {
+        if (Player* player = unit->ToPlayer())
+            if (!player->IsInCombat())
+                player->CastSpell(player, SPELL_BLESSING_OF_ZEPHRAS, true);
+    }
+};
+
+/*######
+## classic_event_skycutter_arrival (taxi path arrival events of the Skycutters)
+######*/
+
+// Classic 1.60 (WoW Forever): when a Skycutter docks, the dockmaster there announces it (official beta sniff, build 70170). The
+// events are the ArrivalEventIDs of the dock nodes in TaxiPathNode.db2; the Mulgore Skycutter's docks (105969 Zephras Isle,
+// 105967 Mulgore) were not heard in the sniffs yet.
+struct SkycutterAnnouncement
+{
+    uint32 EventId;
+    uint32 Creature;
+    char const* Text;
+};
+
+static constexpr SkycutterAnnouncement SkycutterAnnouncements[] =
+{
+    { 105988, 275269, "The skycutter bound for Dalaran City has just arrived. All aboard for Dalaran City!" },             // Zephras Isle dock, High Order Dockmaster
+    { 103315, 256306, "The skycutter to Zephras Isle has just arrived. Please watch your step when boarding the vessel." }, // Dalaran (Lordamere Lake) dock, Arcanist Laurain
+};
+
+class classic_event_skycutter_arrival : public EventScript
+{
+public:
+    classic_event_skycutter_arrival() : EventScript("classic_event_skycutter_arrival") { }
+
+    void OnTrigger(WorldObject* object, WorldObject* invoker, uint32 eventId) override
+    {
+        WorldObject* transport = object ? object : invoker;
+        if (!transport)
+            return;
+
+        for (SkycutterAnnouncement const& announcement : SkycutterAnnouncements)
+            if (announcement.EventId == eventId)
+                if (Creature* dockmaster = transport->FindNearestCreature(announcement.Creature, 100.0f))
+                    dockmaster->Say(announcement.Text, LANG_UNIVERSAL);
+    }
+};
+
 void AddSC_classic_go_scripts()
 {
+    new classic_event_skycutter_arrival();
+    RegisterSpellScript(classic_spell_plainsrunning);
+    RegisterAreaTriggerAI(classic_at_energizing_vortex);
     RegisterGameObjectAI(classic_go_field_repair_bot_74A);
     RegisterGameObjectAI(classic_go_camp_chair);
     RegisterSpellScript(classic_spell_campfire_rest);

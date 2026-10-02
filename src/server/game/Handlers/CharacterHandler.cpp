@@ -1359,6 +1359,10 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
     // Classic 1.60: characters that were already level 25+ get the Legacy unlock on login
     pCurrChar->UpdateClassicLegacyUnlock();
 
+    // Classic 1.60: every character has the free first bank tab. DISABLED: sending a bank tab (ActivePlayerData
+    // CharacterBankTabSettings) crashes the 70170 client at login (assert n < N, 354 vs 257): its Classic layout is not verified yet.
+    // pCurrChar->GrantClassicFreeBankTab();
+
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_ONLINE);
     stmt->setUInt64(0, pCurrChar->GetGUID().GetCounter());
     CharacterDatabase.Execute(stmt);

@@ -1718,11 +1718,9 @@ void DB2Manager::IndexLoadedStores()
         if (node->GetFlags().HasFlag(TaxiNodeFlags::ShowOnAllianceMap))
             sAllianceTaxiNodesMask[field] |= submask;
 
-        uint32 uiMapId = uint32(-1);
-        if (!GetUiMapPosition(node->Pos.X, node->Pos.Y, node->Pos.Z, node->ContinentID, 0, 0, 0, UI_MAP_SYSTEM_ADVENTURE, false, &uiMapId))
-            GetUiMapPosition(node->Pos.X, node->Pos.Y, node->Pos.Z, node->ContinentID, 0, 0, 0, UI_MAP_SYSTEM_TAXI, false, &uiMapId);
-
-        if (uiMapId == 985 || uiMapId == 986)
+        // Classic 1.60: the old continents are simply Eastern Kingdoms (map 0) and Kalimdor (map 1); retail looked them up by the
+        // Cataclysm world map ids 985/986, which the Classic UiMap data does not use (the mask stayed empty)
+        if (node->ContinentID == 0 || node->ContinentID == 1)
             sOldContinentsNodesMask[field] |= submask;
     }
 
@@ -1963,7 +1961,11 @@ std::vector<DB2Manager::HotfixOptionalData> const* DB2Manager::GetHotfixOptional
 
 uint32 DB2Manager::GetEmptyAnimStateID() const
 {
-    return sAnimationDataStore.GetNumRows();
+    // "no state animation" = one past the last AnimationData row OF THE CLIENT. Classic 1.60.1.70170 expects 1866 (official beta
+    // sniff: every gameobject create carries 1866); our extracted DB2s are older (1806), and the client then plays animation 1806 as
+    // a state: fishing bobbers never splash, NPC/object animations break. Remove when the DB2s are re-extracted from 70170 or newer.
+    static constexpr uint32 CLASSIC_EMPTY_ANIM_STATE_ID = 1866;
+    return std::max<uint32>(sAnimationDataStore.GetNumRows(), CLASSIC_EMPTY_ANIM_STATE_ID);
 }
 
 void DB2Manager::InsertNewHotfix(uint32 tableHash, uint32 recordId)

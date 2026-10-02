@@ -2314,6 +2314,25 @@ void Player::GiveLevel(uint8 level)
     sScriptMgr->OnPlayerLevelChanged(this, oldLevel);
 }
 
+// Classic 1.60 (WoW Forever): the first character bank tab is free (BankTab.db2: BankType 0, OrderIndex 0, Cost 0) and every character
+// has it without buying it (official beta sniff 70170: items stored in bank bag 63 slot 0 with no tab purchase). Without a tab the
+// bank has no slots ("bank is full").
+void Player::GrantClassicFreeBankTab()
+{
+    if (GetCharacterBankTabCount() > 0)
+        return;
+
+    uint16 pos = 0;
+    if (CanEquipNewItem(BANK_SLOT_BAG_START, pos, ITEM_CHARACTER_BANK_TAB_BAG, false) != EQUIP_ERR_OK)
+        return;
+
+    if (!EquipNewItem(pos, ITEM_CHARACTER_BANK_TAB_BAG, ItemContext::NONE, true))
+        return;
+
+    SetCharacterBankTabCount(1);
+    SetCharacterBankTabSettings(0, ChatHandler(GetSession()).PGetParseString(LANG_BANK_TAB_NAME, 1), "", "", BagSlotFlags::None);
+}
+
 void Player::UpdateClassicLegacyUnlock()
 {
     // Classic 1.60: the Legacy system (micro menu "Legacy", LegacyMicroButtonMixin:IsLegacySystemUnlocked) opens with renown level 1
@@ -14138,6 +14157,10 @@ void Player::SendNewItem(Item* item, uint32 quantity, bool pushed, bool created,
 /***                    GOSSIP SYSTEM                  ***/
 /*********************************************************/
 
+// Classic 1.60: gossip option ids of the trainer / vendor options added to menus that lack them (never used by DB options)
+static constexpr int32 CLASSIC_GOSSIP_OPTION_AUTO_TRAINER = 2146000001;
+static constexpr int32 CLASSIC_GOSSIP_OPTION_AUTO_VENDOR  = 2146000002;
+
 void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId, bool showQuests /*= false*/)
 {
     PlayerTalkClass->ClearMenus();
@@ -14245,6 +14268,28 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId, bool showQues
         if (canTalk)
             PlayerTalkClass->GetGossipMenu().AddMenuItem(gossipMenuItem, gossipMenuItem.MenuID, gossipMenuItem.OrderIndex);
     }
+
+    // Classic 1.60: the client opens trainers and vendors only through a gossip option. NPCs whose menu (vanilla data, sniffed
+    // menus) lacks the option for a service they have get it added here.
+    if (Creature* creature = source->ToCreature())
+    {
+        GossipMenu& menu = PlayerTalkClass->GetGossipMenu();
+        auto hasOption = [&](GossipOptionNpc optionNpc)
+        {
+            for (GossipMenuItem const& item : menu.GetMenuItems())
+                if (item.OptionNpc == optionNpc)
+                    return true;
+            return false;
+        };
+
+        if (creature->HasNpcFlag(UNIT_NPC_FLAG_TRAINER) && creature->GetTrainerId() && !hasOption(GossipOptionNpc::Trainer))
+            menu.AddMenuItem(CLASSIC_GOSSIP_OPTION_AUTO_TRAINER, menu.GetMenuItemCount(), GossipOptionNpc::Trainer, "Train me.", 0,
+                GossipOptionFlags::None, {}, 0, 0, false, 0, "", {}, {}, menuId, menu.GetMenuItemCount());
+
+        if (creature->HasNpcFlag(UNIT_NPC_FLAG_VENDOR) && creature->GetVendorItems() && !hasOption(GossipOptionNpc::Vendor))
+            menu.AddMenuItem(CLASSIC_GOSSIP_OPTION_AUTO_VENDOR, menu.GetMenuItemCount(), GossipOptionNpc::Vendor, "Let me browse your goods.", 0,
+                GossipOptionFlags::None, {}, 0, 0, false, 0, "", {}, {}, menuId, menu.GetMenuItemCount());
+    }
 }
 
 void Player::SendPreparedGossip(WorldObject* source)
@@ -14335,8 +14380,16 @@ void Player::OnGossipSelect(WorldObject* source, int32 gossipOptionId, uint32 me
             GetSession()->SendTaxiMenu(source->ToCreature());
             break;
         case GossipOptionNpc::Trainer:
-            GetSession()->SendTrainerList(source->ToCreature(), sObjectMgr->GetCreatureTrainerForGossipOption(source->GetEntry(), menuId, item->OrderIndex));
+        {
+            // Classic 1.60: vanilla menus point at sniffed trainers (and the added "Train me." option has no creature_trainer
+            // row): fall back to the creature's trainer
+            uint32 trainerId = sObjectMgr->GetCreatureTrainerForGossipOption(source->GetEntry(), menuId, item->OrderIndex);
+            if (!trainerId)
+                if (Creature* trainerCreature = source->ToCreature())
+                    trainerId = trainerCreature->GetTrainerId();
+            GetSession()->SendTrainerList(source->ToCreature(), trainerId);
             break;
+        }
         case GossipOptionNpc::SpiritHealer:
             source->CastSpell(source->ToCreature(), 17251, CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetOriginalCaster(GetGUID()));
             handled = false;

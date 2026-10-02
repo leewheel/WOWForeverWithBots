@@ -1550,7 +1550,16 @@ class TC_GAME_API ObjectMgr
         Trainer::Trainer const* GetTrainer(uint32 trainerId) const;
         uint32 GetCreatureDefaultTrainer(uint32 creatureId) const
         {
-            return GetCreatureTrainerForGossipOption(creatureId, 0, 0);
+            if (uint32 trainerId = GetCreatureTrainerForGossipOption(creatureId, 0, 0))
+                return trainerId;
+
+            // Classic 1.60: the client opens trainers without gossip (CMSG_TRAINER_LIST) also for creatures whose only
+            // creature_trainer row is tied to a gossip option (sniffed trainers): use that trainer
+            auto itr = _creatureDefaultTrainers.lower_bound(std::make_tuple(creatureId, 0u, 0u));
+            if (itr != _creatureDefaultTrainers.end() && std::get<0>(itr->first) == creatureId)
+                return itr->second;
+
+            return 0;
         }
         uint32 GetCreatureTrainerForGossipOption(uint32 creatureId, uint32 gossipMenuId, uint32 gossipOptionId) const;
 

@@ -991,8 +991,10 @@ public:
             if (!spellInfo)
                 return false;
 
-            if (Player* caster = handler->GetSession()->GetPlayer())
+            if (Player* caster = handler->GetSession() ? handler->GetSession()->GetPlayer() : nullptr)
                 caster->SendDirectMessage(WorldPackets::Misc::DisplayGameError(GameError::ERR_CLIENT_LOCKED_OUT).Write());
+            else
+                handler->SendSysMessage("Player is in combat or in flight.");
 
             return false;
         }

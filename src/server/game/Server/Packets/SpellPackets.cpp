@@ -1186,6 +1186,36 @@ void TradeSkillSetFavorite::Read()
     _worldPacket >> Bits<1>(IsFavorite);
 }
 
+void ShowTradeSkill::Read()
+{
+    _worldPacket >> PlayerGUID;
+    _worldPacket >> SpellID;
+    _worldPacket >> SkillLineID;
+}
+
+WorldPacket const* ShowTradeSkillResponse::Write()
+{
+    _worldPacket << PlayerGUID;
+    _worldPacket << int32(SpellID);
+    _worldPacket << Size<uint32>(SkillLineIDs);
+    _worldPacket << Size<uint32>(SkillRanks);
+    _worldPacket << Size<uint32>(SkillMaxRanks);
+    _worldPacket << Size<uint32>(KnownAbilitySpellIDs);
+    _worldPacket << uint32(0);                  // three more counts in Classic, 0 in every sniffed response
+    _worldPacket << uint32(0);
+    _worldPacket << uint32(0);
+    for (int32 id : SkillLineIDs)
+        _worldPacket << int32(id);
+    for (int32 rank : SkillRanks)
+        _worldPacket << int32(rank);
+    for (int32 rank : SkillMaxRanks)
+        _worldPacket << int32(rank);
+    for (int32 spellId : KnownAbilitySpellIDs)
+        _worldPacket << int32(spellId);
+
+    return &_worldPacket;
+}
+
 void KeyboundOverride::Read()
 {
     _worldPacket >> OverrideID;

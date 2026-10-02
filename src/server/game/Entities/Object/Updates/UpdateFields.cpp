@@ -7366,7 +7366,9 @@ void GameObjectData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags,
     data << float(ParentRotation->z);
     data << float(ParentRotation->w);
     data << int32(FactionTemplate);
-    data << int32(0);                           // Classic 1.60.1.70009: unknown int32 (client GameObjectData reader rva 0x4506180, +0x74)
+    data << int32(Level);                       // Classic 1.60 int32 (client GameObjectData reader rva 0x4506180, +0x74): the level of
+                                                // the player who created the object (official beta sniff 70170: bobbers, campfires,
+                                                // camp features carry their owner's level, world objects 0)
     data << int8(ViewerDependentValue<StateTag>::GetValue(this, receiver, owner));
     data << int8(TypeID);
     data << uint8(PercentHealth);

@@ -4529,13 +4529,9 @@ void Spell::EffectTransmitted()
 
             // end time of range when possible catch fish (FISHING_BOBBER_READY_TIME..GetDuration(m_spellInfo))
             // start time == fish-FISHING_BOBBER_READY_TIME (0..GetDuration(m_spellInfo)-FISHING_BOBBER_READY_TIME)
-            int32 lastSec = 0;
-            switch (urand(0, 2))
-            {
-                case 0: lastSec =  3; break;
-                case 1: lastSec =  7; break;
-                case 2: lastSec = 13; break;
-            }
+            // Classic 1.60 (official beta sniff): the fish bites anywhere from a few seconds after the cast to near the end of
+            // the 30 s channel (8-25 s seen), not only at TC's three fixed times (17/23/25 s)
+            int32 lastSec = irand(3, std::max(3, duration / IN_MILLISECONDS - 5));
 
             // Duration of the fishing bobber can't be higher than the Fishing channeling duration
             duration = std::min(duration, duration - lastSec*IN_MILLISECONDS + FISHING_BOBBER_READY_TIME*IN_MILLISECONDS);
@@ -4563,7 +4559,7 @@ void Spell::EffectTransmitted()
 
     go->SetOwnerGUID(unitCaster->GetGUID());
 
-    //go->SetLevel(unitCaster->getLevel());
+    go->SetLevel(unitCaster->GetLevel());           // Classic 1.60: objects placed by players carry the owner's level (official sniff)
     go->SetSpellId(m_spellInfo->Id);
 
     ExecuteLogEffectSummonObject(effectInfo->Effect, go);
