@@ -1,8 +1,8 @@
 # ![logo](https://community.trinitycore.org/public/style_images/1_trinitycore.png) TrinityCore (master)
 
-## This fork: WoW Classic beta 1.60.1.70009 ("Forever")
+## This fork: WoW Classic beta 1.60.1.70170 ("Forever")
 
-Branch `forever` runs TrinityCore master against the **WoW Classic beta client 1.60.1.70009** (`_classic_beta_\WowB.exe`)
+Branch `forever` runs TrinityCore master against the **WoW Classic beta client 1.60.1.70170** (`_classic_beta_\WowB.exe`)
 with a vanilla world (converted from VMaNGOS) and the Skyborne / Zephras Isle content.
 
 **Just want to play?** Use the Windows repack from the releases: extract, run `Setup.bat`, start the servers in the
@@ -41,6 +41,19 @@ CertificatesFile = "./<your cert chain>.pem"  # certificate for trinity.actual.b
 PrivateKeyFile = "./<your key>.pem"
 ```
 If worldserver stops right after `Realm running as realm ID 1`, `RealmID` is not 70.
+
+**Game data (maps, vmaps, mmaps).** Run the tools built from this branch in the **World of Warcraft** folder (the one that
+holds `.build.info` and `_classic_beta_`). The Forever client is the CASC product **`wow_classic_beta`**; this branch's
+extractors use it by default (TrinityCore's own default `wow` = retail fails with "Error opening casc storage / No locales
+detected"; on older builds of the tools pass `-p wow_classic_beta`):
+```
+mapextractor
+vmap4extractor
+mkdir vmaps
+vmap4assembler Buildings vmaps
+mmaps_generator
+```
+Then move `dbc`, `gt`, `maps`, `vmaps` and `mmaps` into the worldserver's `DataDir`.
 
 **3. Login.** The client logs in to `trinity.actual.battle.net` over TLS, so on the client PC:
 
