@@ -1088,6 +1088,22 @@ def load_config(path):
     global CFG
     with open(path, encoding='utf-8') as f:
         CFG = json.load(f)
+    # paths in the config may be relative to the config file (repack: web\support_site.json -> ..\server\forever.cert.pem)
+    base = os.path.dirname(os.path.abspath(path))
+    for key in ('cert', 'key'):
+        if CFG.get(key) and not os.path.isabs(CFG[key]):
+            CFG[key] = os.path.normpath(os.path.join(base, CFG[key]))
+    # no RA account of its own: use the launcher's console account (localservers.json "consoleUser"/"consolePassword")
+    ra = CFG.setdefault('ra', {})
+    if not ra.get('user') and ra.get('localservers'):
+        try:
+            with open(os.path.normpath(os.path.join(base, ra['localservers'])), encoding='utf-8-sig') as f:
+                for server in json.load(f).values():
+                    if server.get('consoleUser'):
+                        ra['user'], ra['password'] = server['consoleUser'], server.get('consolePassword', '')
+                        break
+        except (OSError, ValueError) as e:
+            print('RA account from localservers.json:', e)
 
 
 def ensure_armory_export():
