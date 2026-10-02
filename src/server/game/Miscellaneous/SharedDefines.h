@@ -1703,6 +1703,7 @@ enum SpellEffects
     SPELL_EFFECT_357                                = 357, // MiscValue[0] = ItemBonusList
     SPELL_EFFECT_358                                = 358, // MiscValue[0] = ItemBonusList
     SPELL_EFFECT_359                                = 359,
+    SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY_2           = 360, // Classic 1.60: temporary weapon enchant of poisons and shaman imbues, MiscValue[0] = SpellItemEnchantment; without an item target the main hand weapon
     TOTAL_SPELL_EFFECTS
 };
 

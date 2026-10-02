@@ -449,6 +449,7 @@ NonDefaultConstructible<SpellEffectHandlerFn> SpellEffectHandlers[TOTAL_SPELL_EF
     &Spell::EffectNULL,                                     //357 SPELL_EFFECT_357
     &Spell::EffectNULL,                                     //358 SPELL_EFFECT_358
     &Spell::EffectNULL,                                     //359 SPELL_EFFECT_359
+    &Spell::EffectEnchantItemTmp,                           //360 SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY_2
 };
 
 void Spell::EffectNULL()
@@ -2578,8 +2579,10 @@ void Spell::EffectEnchantItemTmp()
         return;
     }
 
-    // select enchantment duration
+    // select enchantment duration (Classic 1.60 poisons and imbues: from the spell, e.g. 1800 s, the enchant has none)
     uint32 duration = pEnchant->Duration;
+    if (!duration && effectValue > 0)
+        duration = uint32(effectValue);
 
     // item can be in trade slot and have owner diff. from caster
     Player* item_owner = itemTarget->GetOwner();

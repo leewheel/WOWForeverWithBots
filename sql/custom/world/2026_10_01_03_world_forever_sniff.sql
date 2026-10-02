@@ -18,24 +18,24 @@ INSERT INTO `creature_template` (`entry`,`KillCredit1`,`KillCredit2`,`name`,`fem
 (251451,0,0,'Al\'Aketh Ambusher',NULL,NULL,NULL,NULL,0,0,3578,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (251523,0,0,'Constable Aonda',NULL,'Peacekeeper',NULL,NULL,0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (251559,0,0,'Hoarder',NULL,NULL,NULL,NULL,0,0,31,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,8,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251617,0,0,'Peeps',NULL,NULL,NULL,NULL,0,0,31,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,8,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251617,0,0,'Peeps',NULL,NULL,NULL,NULL,0,0,31,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,8,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (251661,0,0,'Galestrider',NULL,NULL,NULL,NULL,0,0,189,0,0.666668,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,12,0,1,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
-(251662,0,0,'Living Lightning',NULL,NULL,NULL,NULL,0,0,3578,1,1.0,1.142857,1.0,0,0,2000,2000,1,1,8,0,2048,0,0,0,10,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
-(251902,0,0,'Illaya Amberwind',NULL,'Elder Windshaper',NULL,NULL,0,0,3599,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251903,0,0,'Rathiril Sunlance',NULL,'Elder of the High Order',NULL,NULL,0,0,3600,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251904,0,0,'Sania Silverstream',NULL,'Al\'Aketh Missionary',NULL,NULL,0,0,3578,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251905,0,0,'Zerril Softbreeze',NULL,'Cook',NULL,NULL,0,0,35,211,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251906,0,0,'Teeri Wellwind',NULL,NULL,NULL,NULL,0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251913,0,0,'Aedi Thriceforged',NULL,'Blacksmith',NULL,NULL,0,0,35,4307,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251662,0,0,'Living Lightning',NULL,NULL,NULL,NULL,0,0,3578,1,1.0,1.142857,1.0,0,0,2000,2000,1,1,8,0,18432,0,0,0,10,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(251902,0,0,'Illaya Amberwind',NULL,'Elder Windshaper',NULL,NULL,0,0,3599,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,18432,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251903,0,0,'Rathiril Sunlance',NULL,'Elder of the High Order',NULL,NULL,0,0,3600,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,18432,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251904,0,0,'Sania Silverstream',NULL,'Al\'Aketh Missionary',NULL,NULL,0,0,3578,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,18432,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251905,0,0,'Zerril Softbreeze',NULL,'Cook',NULL,NULL,0,0,35,211,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251906,0,0,'Teeri Wellwind',NULL,NULL,NULL,NULL,0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251913,0,0,'Aedi Thriceforged',NULL,'Blacksmith',NULL,NULL,0,0,35,4307,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (251918,0,0,'Highlands Bandit',NULL,NULL,NULL,NULL,0,0,16,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (251966,0,0,'Commander Cyclas',NULL,NULL,NULL,NULL,0,0,3578,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251991,0,0,'Taleen Shimmerthread',NULL,'Tailor',NULL,NULL,0,0,35,211,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251992,0,0,'Fenn Fairweather',NULL,'Fisherman',NULL,'trainer',0,0,35,4307,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(251993,0,0,'Indari Sunseam',NULL,'Leatherworker',NULL,NULL,0,0,35,4307,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(252068,0,0,'Al\'Aketh Stormcaller',NULL,NULL,NULL,NULL,0,0,3578,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(252076,0,0,'High Priestess Lorthuna',NULL,NULL,NULL,NULL,0,0,3578,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(252077,0,0,'Skypriest Aanders',NULL,NULL,NULL,NULL,0,0,3578,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(252155,0,0,'Peacekeeper Vaaniel',NULL,NULL,NULL,NULL,0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251991,0,0,'Taleen Shimmerthread',NULL,'Tailor',NULL,NULL,0,0,35,211,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251992,0,0,'Fenn Fairweather',NULL,'Fisherman',NULL,'trainer',0,0,35,4307,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(251993,0,0,'Indari Sunseam',NULL,'Leatherworker',NULL,NULL,0,0,35,4307,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(252068,0,0,'Al\'Aketh Stormcaller',NULL,NULL,NULL,NULL,0,0,3578,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,18432,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(252076,0,0,'High Priestess Lorthuna',NULL,NULL,NULL,NULL,0,0,3578,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,256,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(252077,0,0,'Skypriest Aanders',NULL,NULL,NULL,NULL,0,0,3578,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,256,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(252155,0,0,'Peacekeeper Vaaniel',NULL,NULL,NULL,NULL,0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (252172,0,0,'Danarii Bellowveil',NULL,'Advisor',NULL,NULL,0,0,35,2,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (252481,0,0,'Wind Sprite',NULL,NULL,NULL,NULL,0,0,634,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,4,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
 (252666,0,0,'Commander Belguilos',NULL,'The Breaker',NULL,NULL,0,0,35,0,1.0,1.0,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,1698,0,0,1,0,0,'',70124),
@@ -43,15 +43,15 @@ INSERT INTO `creature_template` (`entry`,`KillCredit1`,`KillCredit2`,`name`,`fem
 (252763,0,0,'Al\'Aketh Spiritcaller',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.0,1.0,0,0,2000,2000,1,1,8,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (252765,0,0,'Al\'Aketh Blademaster',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.0,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,1698,0,0,1,0,0,'',70124),
 (253474,0,0,'Peacekeeper',NULL,NULL,NULL,NULL,0,0,3584,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(254081,0,0,'Naeluna Swiftmend',NULL,'Druid Trainer',NULL,'trainer',0,0,35,49,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(254082,0,0,'Aarnor Galestrike',NULL,'Shaman Trainer',NULL,'trainer',0,0,3599,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(254084,0,0,'Elayaa Easewind',NULL,'Hunter Trainer',NULL,'trainer',0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(254086,0,0,'Shenaan Spellwind',NULL,'Mage Trainer',NULL,'trainer',0,0,35,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(254081,0,0,'Naeluna Swiftmend',NULL,'Druid Trainer',NULL,'trainer',0,0,35,49,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(254082,0,0,'Aarnor Galestrike',NULL,'Shaman Trainer',NULL,'trainer',0,0,3599,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(254084,0,0,'Elayaa Easewind',NULL,'Hunter Trainer',NULL,'trainer',0,0,35,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(254086,0,0,'Shenaan Spellwind',NULL,'Mage Trainer',NULL,'trainer',0,0,35,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (254087,0,0,'Miriaan Mistblade',NULL,'Rogue Trainer',NULL,'trainer',0,0,35,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,4,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (254088,0,0,'Corsan Earthrazer',NULL,'Warrior Trainer',NULL,'trainer',0,0,35,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (254089,0,0,'Coriella Calmbreeze',NULL,'Innkeeper',NULL,'innkeeper',0,0,35,65665,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(254100,0,0,'Zephras Citizen',NULL,NULL,NULL,NULL,0,0,35,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(254128,0,0,'Wardrobe',NULL,'A Very Convenient Obstruction',NULL,'inspect',0,0,35,0,1.0,0.992063,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,10,9200,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(254100,0,0,'Zephras Citizen',NULL,NULL,NULL,NULL,0,0,35,1,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,256,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(254128,0,0,'Wardrobe',NULL,'A Very Convenient Obstruction',NULL,'inspect',0,0,35,0,1.0,0.992063,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,10,9200,'',0,1,0,1693,0,0,1,0,0,'',70124),
 (254358,0,0,'Veena Vericloud',NULL,'General Goods',NULL,NULL,0,0,35,128,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (254360,0,0,'Belandiel Farflight',NULL,'Trade Supplies',NULL,NULL,0,0,35,128,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (254588,0,0,'Windsong Crawler',NULL,NULL,NULL,NULL,0,0,7,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,1,0,2048,0,8,0,1,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
@@ -68,24 +68,24 @@ INSERT INTO `creature_template` (`entry`,`KillCredit1`,`KillCredit2`,`name`,`fem
 (257021,0,0,'Halassa Fernbreeze',NULL,'Herbalist',NULL,NULL,0,0,35,81,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (257022,0,0,'Messana Crestwind',NULL,'Miner',NULL,NULL,0,0,35,211,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (257024,0,0,'Mendalass Tattermend',NULL,'Skinner',NULL,NULL,0,0,35,211,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(257065,0,0,'Missionary Jasaan',NULL,NULL,NULL,NULL,0,0,3578,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
-(257421,0,0,'Tephri Thriceforged',NULL,'Weapon Merchant',NULL,NULL,0,0,35,4224,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(257065,0,0,'Missionary Jasaan',NULL,NULL,NULL,NULL,0,0,3578,3,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,18432,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
+(257421,0,0,'Tephri Thriceforged',NULL,'Weapon Merchant',NULL,NULL,0,0,35,4224,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,768,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (257521,0,0,'High Order Apprentice',NULL,NULL,NULL,NULL,0,0,3673,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (257532,0,0,'Windshaper Novice Seer',NULL,NULL,NULL,NULL,0,0,3672,0,1.0,0.857143,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (258443,0,0,'Ur\'endra',NULL,'Mate of Urs\'endris',NULL,NULL,0,0,35,0,1.0,1.0,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,1,0,'',0,1,0,1694,0,0,1,0,0,'',70124),
-(263398,0,0,'Camp Tent',NULL,NULL,NULL,NULL,0,0,7,0,1.0,1.0,1.0,0,0,2000,2000,1,1,8,0,2048,0,0,0,10,0,'',0,1,0,0,0,0,1,0,0,'',70124),
-(263664,0,0,'Raan Wildwind',NULL,'Adventurer',NULL,NULL,0,0,35,3,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
-(267321,0,0,'Karne Grayhoof',NULL,NULL,NULL,NULL,0,0,104,1,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
-(267330,0,0,'Nawka Wildsong',NULL,'Junior Skinning Trainer',NULL,NULL,0,0,104,209,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
-(267331,0,0,'Vartha Rockmane',NULL,'Junior Mining Trainer',NULL,NULL,0,0,104,211,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
-(267332,0,0,'Garan Sunstrider',NULL,'Junior Herbalism Trainer',NULL,NULL,0,0,104,82,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
-(267599,0,0,'Energizing Vortex',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,4,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(263398,0,0,'Camp Tent',NULL,NULL,NULL,NULL,0,0,7,0,1.0,1.0,1.0,0,0,2000,2000,1,1,8,33555200,2048,0,0,0,10,0,'',0,1,0,0,0,0,1,0,0,'',70124),
+(263664,0,0,'Raan Wildwind',NULL,'Adventurer',NULL,NULL,0,0,35,3,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,512,2048,0,0,0,7,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(267321,0,0,'Karne Grayhoof',NULL,NULL,NULL,NULL,0,0,104,1,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
+(267330,0,0,'Nawka Wildsong',NULL,'Junior Skinning Trainer',NULL,NULL,0,0,104,209,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
+(267331,0,0,'Vartha Rockmane',NULL,'Junior Mining Trainer',NULL,NULL,0,0,104,211,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
+(267332,0,0,'Garan Sunstrider',NULL,'Junior Herbalism Trainer',NULL,NULL,0,0,104,82,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,7,0,'',0,1,0,0,0,0,1,0,0,'',70124),
+(267599,0,0,'Energizing Vortex',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,33554432,2048,0,0,0,4,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
 (270201,0,0,'Al\'Aketh Brawler',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.0,1.0,0,0,2000,2000,1,1,2,0,2048,0,0,0,7,0,'',0,1,0,1695,0,0,1,0,0,'',70124),
 (271712,0,0,'Cloudrunner',NULL,NULL,NULL,NULL,0,0,634,0,1.2,1.428571,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,1,0,'',0,1,0,1714,0,0,1,0,0,'',70124),
-(272049,0,0,'Saeyleenan',NULL,'Great Windborne Cat Spirit',NULL,NULL,0,0,3585,1,1.0,0.992063,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,1,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
-(273458,0,0,'Wisp',NULL,NULL,NULL,NULL,0,0,80,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,8,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
-(273459,0,0,'Haal',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
-(273460,0,0,'Meeri',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,0,2048,0,0,0,7,0,'',0,1,0,1693,0,0,1,0,0,'',70124);
+(272049,0,0,'Saeyleenan',NULL,'Great Windborne Cat Spirit',NULL,NULL,0,0,3585,1,1.0,0.992063,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,1,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(273458,0,0,'Wisp',NULL,NULL,NULL,NULL,0,0,80,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,33554432,2048,0,0,0,8,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(273459,0,0,'Haal',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,7,0,'',0,1,0,1693,0,0,1,0,0,'',70124),
+(273460,0,0,'Meeri',NULL,NULL,NULL,NULL,0,0,35,0,1.0,1.142857,1.0,0,0,2000,2000,1,1,1,768,2048,0,0,0,7,0,'',0,1,0,1693,0,0,1,0,0,'',70124);
 DELETE FROM `creature_template_difficulty` WHERE `Entry` IN (250868,250928,251115,251145,251245,251261,251284,251291,251306,251428,251448,251451,251523,251559,251617,251661,251662,251902,251903,251904,251905,251906,251913,251918,251966,251991,251992,251993,252068,252076,252077,252155,252172,252481,252666,252762,252763,252765,253474,254081,254082,254084,254086,254087,254088,254089,254100,254128,254358,254360,254588,254589,254596,254626,255534,256252,256930,256935,257018,257019,257020,257021,257022,257024,257065,257421,257521,257532,258443,263398,263664,267321,267330,267331,267332,267599,270201,271712,272049,273458,273459,273460);
 INSERT INTO `creature_template_difficulty` (`Entry`,`DifficultyID`,`LevelScalingDeltaMin`,`LevelScalingDeltaMax`,`ContentTuningID`,`HealthScalingExpansion`,`HealthModifier`,`ManaModifier`,`ArmorModifier`,`DamageModifier`,`CreatureDifficultyID`,`TypeFlags`,`TypeFlags2`,`TypeFlags3`,`LootID`,`PickPocketLootID`,`SkinLootID`,`GoldMin`,`GoldMax`,`VerifiedBuild`) VALUES
 (250868,0,0,0,0,0,1.25,1.0,1,1,330478,134217729,0,0,0,0,0,0,0,70124),
@@ -440,14 +440,15 @@ INSERT IGNORE INTO `creature_equip_template` (`CreatureID`,`ID`,`ItemID1`,`Appea
 (251523,1,286425,0,0,0,0,0,0,0,0,70124),
 (251537,1,5956,0,0,0,0,0,0,0,0,70124),
 (251918,1,5285,0,0,0,0,0,0,0,0,70124),
-(251964,1,2179,0,0,-2097152000,0,0,0,0,0,70124),
-(251965,1,0,0,0,889192448,0,0,0,0,0,70124),
+(251964,1,2179,0,0,2179,0,0,0,0,0,70124),
+(251965,1,0,0,0,18485,0,0,0,0,0,70124),
 (251966,1,286424,0,0,0,0,0,0,0,0,70124),
 (251992,1,12225,0,0,0,0,0,0,0,0,70124),
 (251993,1,5956,0,0,0,0,0,0,0,0,70124),
 (252068,1,2711,0,0,0,0,0,0,0,0,70124),
 (252076,1,2711,0,0,0,0,0,0,0,0,70124),
 (252077,1,2711,0,0,0,0,0,0,0,0,70124),
+(252095,1,0,0,0,0,0,0,17686,0,0,70124),
 (253474,1,286425,0,0,0,0,0,0,0,0,70124),
 (254081,1,13339,0,0,0,0,0,0,0,0,70124),
 (254082,1,272171,0,0,0,0,0,0,0,0,70124),
@@ -455,48 +456,50 @@ INSERT IGNORE INTO `creature_equip_template` (`CreatureID`,`ID`,`ItemID1`,`Appea
 (254087,1,251932,0,0,0,0,0,0,0,0,70124),
 (254088,1,250608,0,0,0,0,0,0,0,0,70124),
 (255534,1,22215,0,0,0,0,0,0,0,0,70124),
+(255979,1,0,0,0,0,0,0,5290,0,0,70124),
 (256935,1,272166,0,0,0,0,0,0,0,0,70124),
 (257421,1,5956,0,0,0,0,0,0,0,0,70124),
 (257521,1,49311,0,0,0,0,0,0,0,0,70124),
 (257532,1,13339,0,0,0,0,0,0,0,0,70124),
-(257554,1,1897,0,0,1761607680,0,0,0,0,0,70124),
+(257551,1,0,0,0,0,0,0,5290,0,0,70124),
+(257554,1,1897,0,0,1897,0,0,0,0,0,70124),
 (267330,1,7005,0,0,0,0,0,0,0,0,70124),
 (267331,1,1910,0,0,0,0,0,0,0,0,70124),
 (267332,1,2706,0,0,0,0,0,0,0,0,70124);
 
 -- faction and unit flags of the Forever creatures that were added by hand before the sniffs
-UPDATE `creature_template` SET `faction` = 7, `unit_flags3` = 0 WHERE `entry` = 250873;
-UPDATE `creature_template` SET `faction` = 14, `unit_flags3` = 0 WHERE `entry` = 250926;
-UPDATE `creature_template` SET `faction` = 14, `unit_flags3` = 0 WHERE `entry` = 250937;
-UPDATE `creature_template` SET `faction` = 14, `unit_flags3` = 0 WHERE `entry` = 251143;
-UPDATE `creature_template` SET `faction` = 3578, `unit_flags3` = 0 WHERE `entry` = 251160;
-UPDATE `creature_template` SET `faction` = 634, `unit_flags3` = 0 WHERE `entry` = 251169;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251361;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 0 WHERE `entry` = 251362;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251363;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251364;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251365;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251366;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251368;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251371;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251373;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 65536 WHERE `entry` = 251374;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251376;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251379;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251389;
-UPDATE `creature_template` SET `faction` = 14, `unit_flags3` = 0 WHERE `entry` = 251402;
-UPDATE `creature_template` SET `faction` = 14, `unit_flags3` = 0 WHERE `entry` = 251404;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251437;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251487;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251537;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251964;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 251965;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 252095;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 65536 WHERE `entry` = 255002;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 255979;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 196608 WHERE `entry` = 257551;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 0 WHERE `entry` = 257554;
-UPDATE `creature_template` SET `faction` = 35, `unit_flags3` = 0 WHERE `entry` = 263113;
+UPDATE `creature_template` SET `faction` = 7, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 250873;
+UPDATE `creature_template` SET `faction` = 14, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 250926;
+UPDATE `creature_template` SET `faction` = 14, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 250937;
+UPDATE `creature_template` SET `faction` = 14, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251143;
+UPDATE `creature_template` SET `faction` = 3578, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251160;
+UPDATE `creature_template` SET `faction` = 634, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251169;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251361;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251362;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251363;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251364;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251365;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251366;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251368;
+UPDATE `creature_template` SET `faction` = 3600, `unit_flags` = 768, `unit_flags2` = 18432, `unit_flags3` = 0 WHERE `entry` = 251371;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251373;
+UPDATE `creature_template` SET `faction` = 3599, `unit_flags` = 256, `unit_flags2` = 18432, `unit_flags3` = 0 WHERE `entry` = 251374;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251376;
+UPDATE `creature_template` SET `faction` = 3600, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251379;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251389;
+UPDATE `creature_template` SET `faction` = 14, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251402;
+UPDATE `creature_template` SET `faction` = 14, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251404;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251437;
+UPDATE `creature_template` SET `faction` = 3599, `unit_flags` = 768, `unit_flags2` = 18432, `unit_flags3` = 0 WHERE `entry` = 251487;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251537;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251964;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 251965;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 252095;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 256, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 255002;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 255979;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 768, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 257551;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 257554;
+UPDATE `creature_template` SET `faction` = 35, `unit_flags` = 0, `unit_flags2` = 2048, `unit_flags3` = 0 WHERE `entry` = 263113;
 
 -- creature levels seen in the sniffs (Forever creatures replaced, others only where missing)
 DELETE FROM `creature_classic_level` WHERE `entry` IN (250868,250873,250926,250928,250937,251115,251143,251145,251160,251169,251245,251261,251284,251291,251306,251361,251362,251363,251364,251365,251366,251368,251371,251373,251374,251376,251379,251389,251402,251404,251428,251437,251448,251451,251487,251523,251537,251559,251617,251661,251662,251902,251903,251904,251905,251906,251913,251918,251964,251965,251991,251992,251993,252068,252076,252077,252095,252172,253474,254081,254082,254084,254086,254087,254088,254089,254100,254128,254358,254360,254588,254589,255002,255534,255979,256252,256930,256935,257018,257019,257020,257021,257022,257024,257065,257421,257521,257532,257551,257554,263113,263398,263664,267321,267330,267331,267332,267599,271712,272049,273458,273459,273460);
@@ -1362,7 +1365,7 @@ INSERT INTO `creature` (`guid`,`id`,`map`,`zoneId`,`areaId`,`spawnDifficulties`,
 (21100658,252068,2991,0,0,'0',0,0,0,-1,0,1,2843.4055,1562.8976,767.3241,2.609107,120,8,0,NULL,1,NULL,NULL,NULL,NULL,'',70124),
 (21100659,252076,2991,0,0,'0',0,0,0,-1,0,1,2949.7048,1512.481,781.3062,4.572002,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100660,252077,2991,0,0,'0',0,0,0,-1,0,1,2949.3176,1509.7517,781.2779,1.276157,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
-(21100661,252095,2991,0,0,'0',0,0,0,-1,0,0,3837.165,2099.9463,967.5868,2.629524,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
+(21100661,252095,2991,0,0,'0',0,0,0,-1,0,1,3837.165,2099.9463,967.5868,2.629524,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100662,252172,2991,0,0,'0',0,0,0,-1,0,0,3280.7415,1714.6825,827.218,1.534896,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100663,253474,2991,0,0,'0',0,0,0,-1,0,1,3237.356,1827.5104,825.9905,1.14433,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100664,253474,2991,0,0,'0',0,0,0,-1,0,1,3230.8203,1827.2709,863.5324,3.838312,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
@@ -1402,10 +1405,10 @@ INSERT INTO `creature` (`guid`,`id`,`map`,`zoneId`,`areaId`,`spawnDifficulties`,
 (21100698,254589,2991,0,0,'0',0,0,0,-1,0,0,2998.3889,1857.6243,832.177,0.11357,120,7,0,NULL,1,NULL,NULL,NULL,NULL,'',70124),
 (21100699,255002,2991,0,0,'0',0,0,0,-1,0,0,4077.7336,1869.533,976.7805,4.73718,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100700,255534,2991,0,0,'0',0,0,0,-1,0,1,3684.8013,1411.7982,826.1806,4.034214,120,19,0,NULL,1,NULL,NULL,NULL,NULL,'',70124),
-(21100701,255979,2991,0,0,'0',0,0,0,-1,0,0,4083.7031,1907.5452,1021.8605,1.822742,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
-(21100702,255979,2991,0,0,'0',0,0,0,-1,0,0,4096.8369,1781.1077,986.5809,4.745528,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
-(21100703,255979,2991,0,0,'0',0,0,0,-1,0,0,4054.2908,1803.9305,1020.4803,1.59236,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
-(21100704,255979,2991,0,0,'0',0,0,0,-1,0,0,4008.2388,1835.658,975.9146,3.836586,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
+(21100701,255979,2991,0,0,'0',0,0,0,-1,0,1,4083.7031,1907.5452,1021.8605,1.822742,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
+(21100702,255979,2991,0,0,'0',0,0,0,-1,0,1,4096.8369,1781.1077,986.5809,4.745528,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
+(21100703,255979,2991,0,0,'0',0,0,0,-1,0,1,4054.2908,1803.9305,1020.4803,1.59236,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
+(21100704,255979,2991,0,0,'0',0,0,0,-1,0,1,4008.2388,1835.658,975.9146,3.836586,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100705,256252,2991,0,0,'0',0,0,0,-1,0,0,3536.02,1636.9185,848.5562,2.227944,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100706,256930,2991,0,0,'0',0,0,0,-1,0,0,3232.947,1834.6233,826.0076,5.933056,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100707,256935,2991,0,0,'0',0,0,0,-1,0,1,3713.1963,2221.9641,968.5104,4.825904,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
@@ -1443,7 +1446,7 @@ INSERT INTO `creature` (`guid`,`id`,`map`,`zoneId`,`areaId`,`spawnDifficulties`,
 (21100739,257532,2991,0,0,'0',0,0,0,-1,0,1,3165.7505,2066.8479,839.0796,5.547539,120,10,0,NULL,1,NULL,NULL,NULL,NULL,'',70124),
 (21100740,257532,2991,0,0,'0',0,0,0,-1,0,1,3142.6138,2092.5137,836.9162,5.592594,120,9,0,NULL,1,NULL,NULL,NULL,NULL,'',70124),
 (21100741,257532,2991,0,0,'0',0,0,0,-1,0,1,3148.1133,2067.2629,841.0052,5.976571,120,10,0,NULL,1,NULL,NULL,NULL,NULL,'',70124),
-(21100742,257551,2991,0,0,'0',0,0,0,-1,0,0,4023.481,1871.9497,980.8478,1.920961,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
+(21100742,257551,2991,0,0,'0',0,0,0,-1,0,1,4023.481,1871.9497,980.8478,1.920961,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100743,257554,2991,0,0,'0',0,0,0,-1,0,1,4064.5747,1794.9723,1020.2236,5.800476,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100744,263113,2991,0,0,'0',0,0,0,-1,0,0,4064.9614,1803.8557,1020.1483,2.251475,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),
 (21100745,263398,2991,0,0,'0',0,0,0,-1,0,0,3292.2405,1916.8038,837.6209,5.323254,120,0,0,NULL,0,NULL,NULL,NULL,NULL,'',70124),

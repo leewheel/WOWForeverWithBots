@@ -23,8 +23,11 @@
 #include "GameObjectAI.h"
 #include "Player.h"
 #include "SharedDefines.h"
+#include "Creature.h"
+#include "RestMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
+#include "UpdateFields.h"
 
 /*######
 ## go_field_repair_bot_74A
@@ -54,14 +57,23 @@ struct classic_go_field_repair_bot_74A : public GameObjectAI
 ## classic_spell_campfire_rest (1289723)
 ######*/
 
-// Classic 1.60 (WoW Forever): sitting near a campfire starts this 60 s rest (WorldSession::HandleStandStateChangeOpcode); when it
-// runs out the player gets Boosted Rest (1229451) and, still sitting by the fire, the next rest starts (ymir sniff of the official
-// beta). Standing up removes it early, so the minute has to be sat out in one go ("The Great Outdoors").
+// Classic 1.60 (WoW Forever) camping: sitting near a campfire starts this 60 s rest (WorldSession::HandleStandStateChangeOpcode);
+// when it runs out the player gets the "Boosted ..." buff of every camp feature placed near the fire (client spell texts: "Players
+// sitting or crafting nearby for 1 min will gain benefits from other camp features") and, still sitting by the fire, the next rest
+// starts (ymir sniff of the official beta). Standing up removes it early, so the minute has to be sat out in one go.
 enum CampfireRest
 {
     SPELL_CAMPFIRE_REST     = 1289723,
     SPELL_BOOSTED_REST      = 1229451,
     SPELL_FOCUS_CAMPFIRE    = 4
+};
+
+static constexpr float CAMP_FEATURE_RANGE = 15.0f;
+
+// camp feature creature -> the buff it gives; only features seen in the sniffs so far (placed ones need a sniff of placing them)
+static constexpr std::pair<uint32, uint32> CampFeatureBuffs[] =
+{
+    { 263398, SPELL_BOOSTED_REST },     // Camp Tent
 };
 
 class classic_spell_campfire_rest : public AuraScript
@@ -77,7 +89,9 @@ class classic_spell_campfire_rest : public AuraScript
             return;
 
         Unit* target = GetTarget();
-        target->CastSpell(target, SPELL_BOOSTED_REST, true);
+        for (auto [featureEntry, buff] : CampFeatureBuffs)
+            if (target->FindNearestCreature(featureEntry, CAMP_FEATURE_RANGE))
+                target->CastSpell(target, buff, true);
         if (target->GetStandState() == UNIT_STAND_STATE_SIT)
             target->CastSpell(target, SPELL_CAMPFIRE_REST, true);
     }
@@ -88,8 +102,34 @@ class classic_spell_campfire_rest : public AuraScript
     }
 };
 
+/*######
+## classic_spell_boosted_rest (1229451)
+######*/
+
+// Boosted Rest, the Camp Tent's benefit: "increase Rested experience to <effect value>% of a level. No effect if Rested experience
+// already exceeds that value." (client spell text; effect 0 is a dummy with value 5)
+class classic_spell_boosted_rest : public SpellScript
+{
+    void HandleDummy(SpellEffIndex /*effIndex*/)
+    {
+        Player* player = Object::ToPlayer(GetHitUnit());
+        if (!player)
+            return;
+
+        float wanted = float(*player->m_activePlayerData->NextLevelXP) * float(GetEffectValue()) / 100.0f;
+        if (player->GetRestMgr().GetRestBonus(REST_TYPE_XP) < wanted)
+            player->GetRestMgr().SetRestBonus(REST_TYPE_XP, wanted);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(classic_spell_boosted_rest::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+    }
+};
+
 void AddSC_classic_go_scripts()
 {
     RegisterGameObjectAI(classic_go_field_repair_bot_74A);
     RegisterSpellScript(classic_spell_campfire_rest);
+    RegisterSpellScript(classic_spell_boosted_rest);
 }

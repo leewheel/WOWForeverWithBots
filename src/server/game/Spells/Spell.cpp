@@ -623,6 +623,12 @@ void Spell::InitExplicitTargets(SpellCastTargets const& targets)
 {
     m_targets = targets;
 
+    // Classic 1.60: shaman weapon imbues (Rockbiter, Flametongue, ...) enchant the main hand weapon without an item target
+    if (!m_targets.GetItemTarget() && m_spellInfo->HasEffect(SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY_2))
+        if (Player* player = m_caster->ToPlayer())
+            if (Item* weapon = player->GetWeaponForAttack(BASE_ATTACK))
+                m_targets.SetItemTarget(weapon);
+
     // this function tries to correct spell explicit targets for spell
     // client doesn't send explicit targets correctly sometimes - we need to fix such spells serverside
     // this also makes sure that we correctly send explicit targets to client (removes redundant data)
@@ -7808,6 +7814,7 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
                 break;
             }
             case SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY:
+            case SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY_2:
             {
                 Item* item = m_targets.GetItemTarget();
                 if (!item)

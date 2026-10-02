@@ -3135,6 +3135,7 @@ void SpellMgr::LoadSpellInfoCustomAttributes()
                     break;
                 case SPELL_EFFECT_ENCHANT_ITEM:
                 case SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY:
+                case SPELL_EFFECT_ENCHANT_ITEM_TEMPORARY_2:
                 case SPELL_EFFECT_ENCHANT_ITEM_PRISMATIC:
                 case SPELL_EFFECT_ENCHANT_HELD_ITEM:
                 {
