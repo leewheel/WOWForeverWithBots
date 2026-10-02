@@ -15,6 +15,6 @@ INSERT INTO `graveyard_zone` (`ID`,`GhostZone`,`Comment`) VALUES
 (11033,16593,'Zephras Isle - Spirit Healer');
 
 -- .tele zephras: the starting village
-DELETE FROM `game_tele` WHERE `name` = 'Zephras';
-INSERT INTO `game_tele` (`position_x`,`position_y`,`position_z`,`orientation`,`map`,`name`) VALUES
-(4088.6,1848.9,976.3,0,2991,'Zephras');
+DELETE FROM `game_tele` WHERE `name` = 'Zephras' OR `id` = 2314;
+INSERT INTO `game_tele` (`id`,`position_x`,`position_y`,`position_z`,`orientation`,`map`,`name`) VALUES
+(2314,4088.6,1848.9,976.3,0,2991,'Zephras');

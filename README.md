@@ -13,15 +13,13 @@ Forever Launcher, press Play. No MySQL or compiling needed.
 Build the core as usual (see [Install](#install)), then:
 
 **1. Databases.** Use TrinityCore's normal auto-setup with `TDB_full_world_1210.26091_2026_09_09.sql` and
-`TDB_full_hotfixes_1210.26091_2026_09_09.sql` in the worldserver folder. Several files in `sql/custom/world` convert
-data from a VMaNGOS world database, so **before the first worldserver start** also load:
+`TDB_full_hotfixes_1210.26091_2026_09_09.sql` in the worldserver folder. worldserver then applies all updates and
+`sql/custom` files itself (`Updates.EnableDatabases = 15`); nothing else is needed. The vanilla world converted from
+VMaNGOS ships as plain SQL (`sql/custom/world/2026_09_27_00_world_forever_baseline_*.sql`, about 65 MB, so the first
+start takes a few minutes). The result is identical to the released database.
 
-- VMaNGOS database release **`db-13b49dc`** (exactly this one; other versions have different columns), file
-  `mysql-dump/mangos.sql`, into a schema named **`vmangos_world`** on the same MySQL server
-- and give the worldserver's MySQL user read access to it: `GRANT SELECT ON vmangos_world.* TO 'trinity'@'localhost';`
-
-worldserver then applies all updates and `sql/custom` files itself (`Updates.EnableDatabases = 15`). The result is
-identical to the released database, which you can also import instead (then `vmangos_world` is not needed).
+Already have a database from an older version (including one built with `vmangos_world`)? Just pull and start
+worldserver: it applies the new files on top, and `vmangos_world` can be dropped afterwards.
 
 **2. Config.** The Classic client needs these (everything else can stay default):
 
