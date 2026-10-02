@@ -1478,6 +1478,15 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         Bag*  GetBagByPos(uint8 slot) const;
         std::vector<Item*> GetCraftingReagentItemsToDeposit();
         Item* GetWeaponForAttack(WeaponAttackType attackType, bool useable = false) const;
+
+        // Classic 1.60 ammo: the ammo "slot" names the arrows or bullets shot by the ranged weapon; they stay in the bags.
+        // Stored in ActivePlayerData::PvpMedals, whose position the Classic client reads as AmmoID.
+        uint32 GetAmmoId() const { return *m_activePlayerData->PvpMedals; }
+        bool SetAmmo(uint32 itemId);                        // 0 = none; false if the player can't use that ammo
+        void AutoSelectAmmo();                              // keeps a usable ammo set, or picks one from the bags
+        void TakeAmmo();                                    // one shot
+        bool IsAmmoUsableWithRangedWeapon(ItemTemplate const* proto) const;
+        bool NeedsAmmo() const;                             // bow, gun or crossbow equipped
         Item* GetShield(bool useable = false) const;
         Item* GetChildItemByGuid(ObjectGuid guid) const;
         static WeaponAttackType GetAttackBySlot(uint8 slot, InventoryType inventoryType);        // MAX_ATTACK if not weapon slot

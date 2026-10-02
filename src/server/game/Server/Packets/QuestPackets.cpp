@@ -86,12 +86,11 @@ WorldPacket const* QueryQuestInfoResponse::Write()
 
     if (Allow)
     {
-        // Classic 1.60.1.70009: two unknown int32 after QuestID (client QuestInfo reader rva 0x961170 reads 11 int32 before
-        // RewardXPMultiplier, retail 9; without them the client shows QuestPackageID in the title and QuestSortID 0 = "Unsorted",
-        // putting them before QuestID makes the quest disappear from the log)
+        // Classic 1.60: two more int32 after QuestID (client QuestInfo reader rva 0x961170 reads 11 int32 before RewardXPMultiplier,
+        // retail 9): a level type (2 for nearly all quests) and the quest level shown in the log (sniffs of the official beta)
         _worldPacket << int32(Info.QuestID);
-        _worldPacket << int32(0);
-        _worldPacket << int32(0);
+        _worldPacket << int32(Info.ClassicLevelType);
+        _worldPacket << int32(Info.ClassicQuestLevel);
         _worldPacket << int32(Info.QuestType);
         _worldPacket << int32(Info.QuestPackageID);
         _worldPacket << int32(Info.ContentTuningID);

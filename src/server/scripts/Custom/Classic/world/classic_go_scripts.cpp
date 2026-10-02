@@ -23,6 +23,8 @@
 #include "GameObjectAI.h"
 #include "Player.h"
 #include "SharedDefines.h"
+#include "SpellAuraEffects.h"
+#include "SpellScript.h"
 
 /*######
 ## go_field_repair_bot_74A
@@ -48,7 +50,46 @@ struct classic_go_field_repair_bot_74A : public GameObjectAI
     }
 };
 
+/*######
+## classic_spell_campfire_rest (1289723)
+######*/
+
+// Classic 1.60 (WoW Forever): sitting near a campfire starts this 60 s rest (WorldSession::HandleStandStateChangeOpcode); when it
+// runs out the player gets Boosted Rest (1229451) and, still sitting by the fire, the next rest starts (ymir sniff of the official
+// beta). Standing up removes it early, so the minute has to be sat out in one go ("The Great Outdoors").
+enum CampfireRest
+{
+    SPELL_CAMPFIRE_REST     = 1289723,
+    SPELL_BOOSTED_REST      = 1229451,
+    SPELL_FOCUS_CAMPFIRE    = 4
+};
+
+class classic_spell_campfire_rest : public AuraScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_BOOSTED_REST });
+    }
+
+    void AfterRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_EXPIRE)
+            return;
+
+        Unit* target = GetTarget();
+        target->CastSpell(target, SPELL_BOOSTED_REST, true);
+        if (target->GetStandState() == UNIT_STAND_STATE_SIT)
+            target->CastSpell(target, SPELL_CAMPFIRE_REST, true);
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectRemoveFn(classic_spell_campfire_rest::AfterRemove, EFFECT_0, SPELL_AURA_ANY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
 void AddSC_classic_go_scripts()
 {
     RegisterGameObjectAI(classic_go_field_repair_bot_74A);
+    RegisterSpellScript(classic_spell_campfire_rest);
 }

@@ -254,6 +254,13 @@ void SocketedGem::ClearChangesMask()
     _changesMask.ResetAll();
 }
 
+// Classic 1.60: the official server flags every item a player owns with 0x4 and equipped items with 0x7 (sniffs); without 0x4
+// the client does not count the item, e.g. the ammo slot stays empty (GetInventoryItemID("player", 0) returns nothing)
+static uint32 ClassicItemZoneFlags(uint32 zoneFlags)
+{
+    return zoneFlags | 0x4 | ((zoneFlags & 0x1) ? 0x2 : 0x0);
+}
+
 void ItemData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteBuffer& data, Player const* receiver, Item const* owner) const
 {
     data << *Owner;
@@ -294,7 +301,7 @@ void ItemData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     data << uint32(Gems.size());
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
     {
-        data << uint32(ZoneFlags);
+        data << uint32(ClassicItemZoneFlags(ZoneFlags));
     }
     data << *ItemBonusKey;
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
@@ -445,7 +452,7 @@ void ItemData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player con
         }
         if (changesMask[18])
         {
-            data << uint32(ZoneFlags);
+            data << uint32(ClassicItemZoneFlags(ZoneFlags));
         }
         if (changesMask[19])
         {
@@ -1110,7 +1117,7 @@ void UnitData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteB
     data << uint32(PetExperience);
     data << uint32(PetNextLevelExperience);
     data << float(ModCastingSpeed);
-    data << float(ModCastingSpeedNeg);
+    data << float(ModCastingSpeedNeg != 0.0f ? float(ModCastingSpeedNeg) : 1.0f); // Classic 1.60 divides by it (0 = client float division by zero, e.g. Skysight cooldown)
     if (fieldVisibilityFlags.HasFlag(UpdateFieldFlag::Owner))
     {
         data << float(ModSpellHaste);           // Classic 1.60.1.70009: owner only (client UnitData +0x1C8, reader rva 0x44F01CB)
@@ -1689,7 +1696,7 @@ void UnitData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player con
         }
         if (changesMask[77])
         {
-            data << float(ModCastingSpeedNeg);
+            data << float(ModCastingSpeedNeg != 0.0f ? float(ModCastingSpeedNeg) : 1.0f); // Classic 1.60 divides by it (0 = client float division by zero, e.g. Skysight cooldown)
         }
         if (changesMask[78])
         {

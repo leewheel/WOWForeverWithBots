@@ -1640,7 +1640,11 @@ void GameObject::Update(uint32 diff)
                         // Some traps do not have a spell but should be triggered
                         CastSpellExtraArgs args;
                         args.SetOriginalCaster(GetOwnerGUID());
-                        if (goInfo->trap.spell)
+                        // playerCast: the unit that triggered the trap casts the spell on itself (e.g. Classic 1.60 Elemental Convergence
+                        // 1271953, a self buff: cast by the trap it would land on the trap)
+                        if (goInfo->trap.spell && goInfo->trap.playerCast)
+                            target->CastSpell(target, goInfo->trap.spell, CastSpellExtraArgs(TRIGGERED_FULL_MASK));
+                        else if (goInfo->trap.spell)
                             CastSpell(target, goInfo->trap.spell, args);
 
                         // Template value or 4 seconds
@@ -2778,7 +2782,9 @@ void GameObject::Use(Unit* user, bool ignoreCastInProgress /*= false*/)
         case GAMEOBJECT_TYPE_TRAP:                          //6
         {
             GameObjectTemplate const* goInfo = GetGOInfo();
-            if (goInfo->trap.spell)
+            if (goInfo->trap.spell && goInfo->trap.playerCast)
+                user->CastSpell(user, goInfo->trap.spell, CastSpellExtraArgs(TRIGGERED_FULL_MASK));
+            else if (goInfo->trap.spell)
                 CastSpell(user, goInfo->trap.spell);
 
             m_cooldownTime = GameTime::GetGameTimeMS() + (goInfo->trap.cooldown ? goInfo->trap.cooldown :  uint32(4)) * IN_MILLISECONDS;   // template or 4 seconds

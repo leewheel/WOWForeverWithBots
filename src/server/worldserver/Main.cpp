@@ -460,6 +460,13 @@ int main(int argc, char** argv)
 
     TC_LOG_INFO("server.worldserver", "Halting process...");
 
+    // open remote access sessions block their network thread, which the shutdown waits for
+    if (raAcceptor)
+    {
+        raAcceptor->Close();
+        RASession::CloseAll();
+    }
+
     // 0 - normal shutdown
     // 1 - shutdown at error
     // 2 - restart command used, this code can be used by restarter for restart Trinityd

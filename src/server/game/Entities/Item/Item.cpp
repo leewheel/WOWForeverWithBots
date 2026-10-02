@@ -2028,7 +2028,7 @@ int32 const ItemTransmogrificationSlots[MAX_INVTYPE] =
     -1,                                                     // INVTYPE_TRINKET
     EQUIPMENT_SLOT_MAINHAND,                                // INVTYPE_WEAPON
     EQUIPMENT_SLOT_OFFHAND,                                 // INVTYPE_SHIELD
-    EQUIPMENT_SLOT_MAINHAND,                                // INVTYPE_RANGED
+    EQUIPMENT_SLOT_RANGED,                                  // INVTYPE_RANGED
     EQUIPMENT_SLOT_BACK,                                    // INVTYPE_CLOAK
     EQUIPMENT_SLOT_MAINHAND,                                // INVTYPE_2HWEAPON
     -1,                                                     // INVTYPE_BAG
@@ -2038,8 +2038,8 @@ int32 const ItemTransmogrificationSlots[MAX_INVTYPE] =
     EQUIPMENT_SLOT_MAINHAND,                                // INVTYPE_WEAPONOFFHAND
     EQUIPMENT_SLOT_OFFHAND,                                 // INVTYPE_HOLDABLE
     -1,                                                     // INVTYPE_AMMO
-    -1,                                                     // INVTYPE_THROWN
-    EQUIPMENT_SLOT_MAINHAND,                                // INVTYPE_RANGEDRIGHT
+    EQUIPMENT_SLOT_RANGED,                                  // INVTYPE_THROWN
+    EQUIPMENT_SLOT_RANGED,                                  // INVTYPE_RANGEDRIGHT
     -1,                                                     // INVTYPE_QUIVER
     -1,                                                     // INVTYPE_RELIC
     -1,                                                     // INVTYPE_PROFESSION_TOOL

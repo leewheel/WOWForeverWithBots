@@ -9427,7 +9427,8 @@ uint8 Player::FindEquipSlot(Item const* item, uint8 slot, bool swap) const
             slots[0] = EQUIPMENT_SLOT_OFFHAND;
             break;
         case INVTYPE_RANGED:
-            slots[0] = EQUIPMENT_SLOT_MAINHAND;
+        case INVTYPE_THROWN:
+            slots[0] = EQUIPMENT_SLOT_RANGED;               // Classic: bows, guns, crossbows, wands and thrown have their own slot
             break;
         case INVTYPE_2HWEAPON:
             slots[0] = EQUIPMENT_SLOT_MAINHAND;
@@ -9447,7 +9448,7 @@ uint8 Player::FindEquipSlot(Item const* item, uint8 slot, bool swap) const
             slots[0] = EQUIPMENT_SLOT_OFFHAND;
             break;
         case INVTYPE_RANGEDRIGHT:
-            slots[0] = EQUIPMENT_SLOT_MAINHAND;
+            slots[0] = EQUIPMENT_SLOT_RANGED;
             break;
         case INVTYPE_BAG:
             if (item->GetTemplate()->GetId() == ITEM_ACCOUNT_BANK_TAB_BAG)
@@ -9752,6 +9753,75 @@ Bag* Player::GetBagByPos(uint8 bag) const
     return nullptr;
 }
 
+bool Player::NeedsAmmo() const
+{
+    Item const* ranged = GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED);
+    if (!ranged)
+        return false;
+    switch (ranged->GetTemplate()->GetSubClass())
+    {
+        case ITEM_SUBCLASS_WEAPON_BOW:
+        case ITEM_SUBCLASS_WEAPON_GUN:
+        case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+            return ranged->GetTemplate()->GetClass() == ITEM_CLASS_WEAPON;
+        default:
+            return false;
+    }
+}
+
+// Arrows for bows and crossbows, bullets for guns; without a ranged weapon any ammo can be chosen.
+bool Player::IsAmmoUsableWithRangedWeapon(ItemTemplate const* proto) const
+{
+    if (!proto || proto->GetClass() != ITEM_CLASS_PROJECTILE)
+        return false;
+    if (!NeedsAmmo())
+        return true;
+    uint32 weapon = GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED)->GetTemplate()->GetSubClass();
+    return weapon == ITEM_SUBCLASS_WEAPON_GUN ? proto->GetSubClass() == ITEM_SUBCLASS_BULLET : proto->GetSubClass() == ITEM_SUBCLASS_ARROW;
+}
+
+bool Player::SetAmmo(uint32 itemId)
+{
+    if (itemId)
+    {
+        ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemId);
+        if (!proto || proto->GetClass() != ITEM_CLASS_PROJECTILE || !HasItemCount(itemId) || CanUseItem(proto) != EQUIP_ERR_OK)
+            return false;
+    }
+    SetUpdateFieldValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::PvpMedals), itemId);
+    return true;
+}
+
+void Player::AutoSelectAmmo()
+{
+    if (uint32 current = GetAmmoId())
+        if (HasItemCount(current) && IsAmmoUsableWithRangedWeapon(sObjectMgr->GetItemTemplate(current)))
+            return;
+
+    uint32 found = 0;
+    ForEachItem(ItemSearchLocation::Inventory, [&](Item* item)
+    {
+        ItemTemplate const* proto = item->GetTemplate();
+        if (proto->GetClass() == ITEM_CLASS_PROJECTILE && IsAmmoUsableWithRangedWeapon(proto) && CanUseItem(proto) == EQUIP_ERR_OK)
+        {
+            found = item->GetEntry();
+            return ItemSearchCallbackResult::Stop;
+        }
+        return ItemSearchCallbackResult::Continue;
+    });
+    SetAmmo(found);
+}
+
+void Player::TakeAmmo()
+{
+    uint32 ammo = GetAmmoId();
+    if (!ammo)
+        return;
+    DestroyItemCount(ammo, 1, true);
+    if (!HasItemCount(ammo))
+        AutoSelectAmmo();
+}
+
 Item* Player::GetWeaponForAttack(WeaponAttackType attackType, bool useable /*= false*/) const
 {
     uint8 slot;
@@ -9759,7 +9829,7 @@ Item* Player::GetWeaponForAttack(WeaponAttackType attackType, bool useable /*= f
     {
         case BASE_ATTACK:   slot = EQUIPMENT_SLOT_MAINHAND; break;
         case OFF_ATTACK:    slot = EQUIPMENT_SLOT_OFFHAND;  break;
-        case RANGED_ATTACK: slot = EQUIPMENT_SLOT_MAINHAND;   break;
+        case RANGED_ATTACK: slot = EQUIPMENT_SLOT_RANGED;   break;
         default: return nullptr;
     }
 
@@ -9825,6 +9895,7 @@ WeaponAttackType Player::GetAttackBySlot(uint8 slot, InventoryType inventoryType
     {
         case EQUIPMENT_SLOT_MAINHAND: return inventoryType != INVTYPE_RANGED && inventoryType != INVTYPE_RANGEDRIGHT ? BASE_ATTACK : RANGED_ATTACK;
         case EQUIPMENT_SLOT_OFFHAND:  return OFF_ATTACK;
+        case EQUIPMENT_SLOT_RANGED:   return RANGED_ATTACK;
         default:                      return MAX_ATTACK;
     }
 }
@@ -11535,6 +11606,10 @@ Item* Player::StoreNewItem(ItemPosCountVec const& pos, uint32 itemId, bool updat
 
         if (item->GetTemplate()->GetInventoryType() != INVTYPE_NON_EQUIP)
             UpdateAverageItemLevelTotal();
+
+        // Classic 1.60: new ammo goes to the ammo slot when it is empty
+        if (item->GetTemplate()->GetClass() == ITEM_CLASS_PROJECTILE && !GetAmmoId())
+            AutoSelectAmmo();
     }
 
     return item;
@@ -11788,6 +11863,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
 
     if (slot == EQUIPMENT_SLOT_MAINHAND || slot == EQUIPMENT_SLOT_OFFHAND)
         CheckTitanGripPenalty();
+
+    // Classic 1.60: a new bow, gun or crossbow needs the matching ammo (arrows or bullets)
+    if (bag == INVENTORY_SLOT_BAG_0 && slot == EQUIPMENT_SLOT_RANGED)
+        AutoSelectAmmo();
 
     // only for full equip instead adding to stack
     UpdateCriteria(CriteriaType::EquipItem, pItem->GetEntry());
@@ -14480,6 +14559,10 @@ uint32 Player::GetGossipMenuForSource(WorldObject const* source) const
 
 int32 Player::GetQuestMinLevel(Quest const* quest) const
 {
+    // Classic 1.60: quests have a fixed minimum level (quest_classic_level), their ContentTuning does not limit them
+    if (quest->GetClassicMinLevel() > 0)
+        return quest->GetClassicMinLevel();
+
     return GetQuestMinLevel(quest->GetContentTuningId());
 }
 
@@ -18858,6 +18941,9 @@ bool Player::LoadFromDB(ObjectGuid guid, CharacterDatabaseQueryHolder const& hol
         holder.GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_AZERITE_UNLOCKED_ESSENCES),
         holder.GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_AZERITE_EMPOWERED),
         time_diff);
+
+    // Classic 1.60: the ammo choice is not saved; pick the ammo for the ranged weapon from the bags (new hunters: their arrows)
+    AutoSelectAmmo();
 
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
@@ -26371,6 +26457,10 @@ bool Player::HasItemFitToSpellRequirements(SpellInfo const* spellInfo, Item cons
             if (Item* item = GetUseableItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND))
                 if (item != ignoreItem && item->IsFitToSpellRequirements(spellInfo))
                     return true;
+            // Classic: bows, guns, crossbows, wands and thrown weapons are in the ranged slot
+            if (Item* item = GetUseableItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED))
+                if (item != ignoreItem && item->IsFitToSpellRequirements(spellInfo))
+                    return true;
             break;
         }
         case ITEM_CLASS_ARMOR:
@@ -31141,6 +31231,7 @@ static bool ForEachEquipmentSlot(InventoryType inventoryType, bool canDualWield,
             return true;
         case INVTYPE_RANGED:
         case INVTYPE_RANGEDRIGHT:
+        case INVTYPE_THROWN: callback(EQUIPMENT_SLOT_RANGED); return true;
         case INVTYPE_WEAPONMAINHAND: callback(EQUIPMENT_SLOT_MAINHAND); return true;
         case INVTYPE_SHIELD:
         case INVTYPE_HOLDABLE:
@@ -31150,7 +31241,6 @@ static bool ForEachEquipmentSlot(InventoryType inventoryType, bool canDualWield,
         case INVTYPE_BAG:
         case INVTYPE_TABARD:
         case INVTYPE_AMMO:
-        case INVTYPE_THROWN:
         case INVTYPE_QUIVER:
         case INVTYPE_RELIC:
         default:

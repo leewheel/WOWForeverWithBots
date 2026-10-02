@@ -27,6 +27,7 @@
 #include "Guild.h"
 #include "GuildMgr.h"
 #include "GuildPackets.h"
+#include "LFG.h"
 #include "LFGPacketsCommon.h"
 #include "Log.h"
 #include "ObjectMgr.h"
@@ -1002,6 +1003,7 @@ namespace
     };
 
     std::unordered_map<ObjectGuid, LfgListing> LfgListings;
+    std::unordered_map<ObjectGuid, uint8> LfgListRoles;     // roles the player ticked (Classic roles message)
     uint32 NextLfgListingId = 1;
 
     // LFGListJoinRequest: bits activity count 5, name 10, comment 11, voice chat 8, 9 flags (4 bools, has int32 x3, has uint8,
@@ -1050,19 +1052,18 @@ namespace
         return ticket;
     }
 
-    // SMSG_LFG_LIST_UPDATE_STATUS (Classic 0x5B000A): ticket, uint32 remaining time, uint8 result, request, bit listed
-    void SendLfgListStatus(WorldSession* session, LfgListing const* listing, bool listed)
+    // SMSG_LFG_LIST_UPDATE_STATUS (Classic 0x5B000A, reader rva 0xA49980): ticket, request, uint64 remaining time, uint8 result,
+    // bits listed, has guid, has uint8, then the optional guid and uint8
+    void SendLfgListStatus(WorldSession* session, LfgListing const& listing, bool listed)
     {
         WorldPacket data(SMSG_LFG_LIST_UPDATE_STATUS, 64);
-        if (listing)
-            data << LfgListTicket(session->GetPlayer()->GetGUID(), *listing);
-        else
-            data << WorldPackets::LFG::RideTicket();
-        data << uint32(listed ? 1800 : 0);
+        data << LfgListTicket(session->GetPlayer()->GetGUID(), listing);
+        data.append(listing.Request.data(), listing.Request.size());
+        data << uint64(listed ? 1800 : 0);
         data << uint8(0);
-        if (listing)
-            data.append(listing->Request.data(), listing->Request.size());
         data.WriteBit(listed);
+        data.WriteBit(false);
+        data.WriteBit(false);
         data.FlushBits();
         session->SendPacket(&data);
     }
@@ -1085,7 +1086,7 @@ namespace
         data << uint32(0);                          // battle.net friends
         data << uint32(0);                          // character friends
         data << uint32(0);                          // guild mates
-        data << uint32(0);                          // members (member reader not captured yet)
+        data << uint32(1);                          // members: the leader
         data << uint32(0);                          // completed encounters
         data << uint64(listing.Created);
         data << uint8(0);                           // application status
@@ -1100,6 +1101,33 @@ namespace
         }
         data << uint8(0);
         data << uint8(0);
+
+        // member (Classic reader rva 0xA4EA40): guid, int8 x3 (healer, damage, tank - tested in game), int32 area, uint8 level,
+        // {guid, float, uint32 x3, int32, uint64 x2, int32, uint8}, bit leader
+        Player const* player = ObjectAccessor::FindConnectedPlayer(leader);
+        auto roles = LfgListRoles.find(leader);
+        uint8 const roleMask = roles != LfgListRoles.end() ? roles->second : 0;
+        data << leader;
+        data << int8((roleMask & lfg::PLAYER_ROLE_HEALER) != 0);
+        data << int8((roleMask & lfg::PLAYER_ROLE_DAMAGE) != 0);
+        data << int8((roleMask & lfg::PLAYER_ROLE_TANK) != 0);
+        data << int32(player ? player->GetZoneId() : 0);
+        data << uint8(player ? player->GetLevel() : 0);
+        data << ObjectGuid::Empty;
+        data << float(0.0f);
+        data << uint32(0);
+        data << uint32(0);
+        data << uint32(0);
+        data << int32(0);
+        data << uint64(0);
+        data << uint64(0);
+        data << int32(0);
+        data << uint8(0);
+        data.WriteBit(true);                        // leader
+        data.FlushBits();
+
+        data.WriteBit(false);                       // (entry reader ends with one bit)
+        data.FlushBits();
     }
 }
 
@@ -1133,20 +1161,66 @@ void WorldSession::HandleLfgListProbe(WorldPackets::Null& packet)
                 result << uint8(0);
                 result << uint8(0);
                 SendPacket(&result);
-                SendLfgListStatus(this, &stored, true);
+                SendLfgListStatus(this, stored, true);
                 break;
             }
+            case CMSG_LFG_LIST_UPDATE_REQUEST:  // edit (serializer rva 0x944C00): ticket, request
+            {
+                WorldPackets::LFG::RideTicket ticket;
+                data >> ticket;
+                auto itr = LfgListings.find(_player->GetGUID());
+                if (itr == LfgListings.end())
+                    break;
+                LfgListing listing;
+                if (!ReadLfgListRequest(data, listing))
+                    TC_LOG_ERROR("network.opcode", "GroupFinder: update request has {} unread bytes", data.size() - data.rpos());
+                listing.Id = itr->second.Id;
+                listing.Created = itr->second.Created;
+                itr->second = std::move(listing);
+                SendLfgListStatus(this, itr->second, true);
+                break;
+            }
+            case CMSG_LFG_LIST_LEAVE:           // delist (Classic 0x440038): ticket
+            {
+                auto itr = LfgListings.find(_player->GetGUID());
+                if (itr == LfgListings.end())
+                    break;
+                LfgListing const listing = std::move(itr->second);
+                LfgListings.erase(itr);
+                SendLfgListStatus(this, listing, false);
+                break;
+            }
+            case CMSG_PERKS_PROGRAM_REQUEST_REFUND: // Classic 0x3E02B3: the roles ticked in the Group Finder (uint8 mask)
+                LfgListRoles[_player->GetGUID()] = data.read<uint8>();
+                break;
             case CMSG_LFG_LIST_GET_STATUS:      // login
             {
                 auto itr = LfgListings.find(_player->GetGUID());
                 if (itr != LfgListings.end())
-                    SendLfgListStatus(this, &itr->second, true);
+                    SendLfgListStatus(this, itr->second, true);
                 break;
             }
-            case CMSG_LFG_LIST_SEARCH:          // (writer rva 0xA4E3B0) flags byte, uint32 category, ..., activity ids at the end
+            case CMSG_LFG_LIST_SEARCH:          // (writer rva 0xA4E3B0) see below; the ticked activity ids come last
             {
+                // flags byte, uint32 category, uint32, uint32, int32, uint32 count A, uint32, uint32 count B, uint32 count C,
+                // uint32, uint8, uint8, uint32 count D, D entries (not read: only 0 seen), A x uint32, B x uint32, C x activity id
                 data.read_skip<uint8>();
                 uint32 const categoryId = data.read<uint32>();
+                data.read_skip(3 * sizeof(uint32));
+                uint32 const countA = data.read<uint32>();
+                data.read_skip<uint32>();
+                uint32 const countB = data.read<uint32>();
+                uint32 const countC = data.read<uint32>();
+                data.read_skip<uint32>();
+                data.read_skip(2 * sizeof(uint8));
+                uint32 const countD = data.read<uint32>();
+                std::unordered_set<uint32> activities;
+                if (!countD)
+                {
+                    data.read_skip((countA + countB) * sizeof(uint32));
+                    for (uint32 i = 0; i < countC; ++i)
+                        activities.insert(data.read<uint32>());
+                }
 
                 WorldPacket results(SMSG_LFG_LIST_SEARCH_RESULTS, 256);
                 std::vector<std::pair<ObjectGuid, LfgListing const*>> found;
@@ -1157,7 +1231,8 @@ void WorldSession::HandleLfgListProbe(WorldPackets::Null& packet)
                         itr = LfgListings.erase(itr);   // leader logged out
                         continue;
                     }
-                    if (itr->second.CategoryId == categoryId)
+                    if (itr->second.CategoryId == categoryId && (activities.empty() || std::ranges::any_of(itr->second.Activities,
+                        [&](uint32 activityId) { return activities.contains(activityId); })))
                         found.emplace_back(itr->first, &itr->second);
                     ++itr;
                 }

@@ -3869,6 +3869,12 @@ void Spell::_cast(bool skipCheck)
     if (!(_triggeredCastFlags & TRIGGERED_IGNORE_POWER_COST))
         TakePower();
 
+    // Classic 1.60: every shot of a bow, gun or crossbow uses one arrow or bullet
+    if (Player* player = m_caster->ToPlayer())
+        if (m_spellInfo->HasAttribute(SPELL_ATTR0_USES_RANGED_SLOT) && player->NeedsAmmo()
+            && (!(_triggeredCastFlags & TRIGGERED_IGNORE_POWER_COST) || m_spellInfo->IsAutoRepeatRangedSpell()))
+            player->TakeAmmo();
+
     if (!(_triggeredCastFlags & TRIGGERED_IGNORE_REAGENT_COST))
         TakeReagents();                                         // we must remove reagents before HandleEffects to allow place crafted item in same slot
     else if (Item* targetItem = m_targets.GetItemTarget())
@@ -4896,11 +4902,19 @@ void Spell::UpdateSpellCastDataTargets(WorldPackets::Spells::SpellCastData& data
         }
     }
 
+    // every hit target needs its hit status: the Classic 1.60 client reads HitStatus[i] for each HitTargets[i] and asserts
+    // (BC_ASSERT n < m_size) when gameobject targets, e.g. a gathered quest crystal, have none
     for (GOTargetInfo const& targetInfo : m_UniqueGOTargetInfo)
+    {
         data.HitTargets.push_back(targetInfo.TargetGUID); // Always hits
+        data.HitStatus.emplace_back(SPELL_MISS_NONE);
+    }
 
     for (CorpseTargetInfo const& targetInfo : m_UniqueCorpseTargetInfo)
+    {
         data.HitTargets.push_back(targetInfo.TargetGUID); // Always hits
+        data.HitStatus.emplace_back(SPELL_MISS_NONE);
+    }
 
     // Reset m_needAliveTargetMask for non channeled spell
     if (!m_spellInfo->IsChanneled())
@@ -4920,6 +4934,13 @@ int32 Spell::GetSpellCastDataAmmo()
             ammoInventoryType = pItem->GetTemplate()->GetInventoryType();
             if (ammoInventoryType == INVTYPE_THROWN)
                 ammoDisplayID = pItem->GetDisplayId(playerCaster);
+            else if (ItemTemplate const* ammo = sObjectMgr->GetItemTemplate(playerCaster->GetAmmoId()))   // Classic 1.60 ammo slot
+            {
+                if (ItemModifiedAppearanceEntry const* modifiedAppearance = TransmogMgr::GetItemModifiedAppearance(ammo->GetId(), 0))
+                    if (ItemAppearanceEntry const* itemAppearance = sItemAppearanceStore.LookupEntry(modifiedAppearance->ItemAppearanceID))
+                        ammoDisplayID = itemAppearance->ItemDisplayInfoID;
+                ammoInventoryType = INVTYPE_AMMO;
+            }
             else if (playerCaster->HasAura(46699))      // Requires No Ammo
             {
                 ammoDisplayID = 5996;                   // normal arrow
@@ -7456,6 +7477,14 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
     Player* player = m_caster->ToPlayer();
     if (!player)
         return SPELL_CAST_OK;
+
+    // Classic 1.60: bows, guns and crossbows shoot the ammo named in the ammo slot
+    if (m_spellInfo->HasAttribute(SPELL_ATTR0_USES_RANGED_SLOT) && player->NeedsAmmo())
+    {
+        uint32 ammo = player->GetAmmoId();
+        if (!ammo || !player->HasItemCount(ammo))
+            return SPELL_FAILED_NO_AMMO;
+    }
 
     if (!m_CastItem)
     {

@@ -711,6 +711,8 @@ WorldPacket Quest::BuildQueryData(LocaleConstant loc, Player* player) const
     response.Info.QuestType = GetQuestType();
     response.Info.ContentTuningID = GetContentTuningId();
     response.Info.QuestPackageID = GetQuestPackageID();
+    response.Info.ClassicLevelType = GetClassicLevelType();
+    response.Info.ClassicQuestLevel = GetClassicQuestLevel();
     response.Info.QuestSortID = GetZoneOrSort();
     response.Info.QuestInfoID = GetQuestInfoID();
     response.Info.SuggestedGroupNum = GetSuggestedPlayers();

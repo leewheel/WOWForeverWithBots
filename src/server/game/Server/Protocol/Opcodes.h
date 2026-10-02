@@ -916,6 +916,7 @@ enum OpcodeClient : uint32
     CMSG_SET_ACTION_BAR_TOGGLES                                     = 0x3E00D4,
     CMSG_SET_ACTION_BUTTON                                          = 0x430062,
     CMSG_SET_ACTIVE_MOVER                                           = 0x41005B,
+    CMSG_SET_AMMO                                                   = 0x3E0105, // Classic 1.60 only (0x3F0105): uint32 item id, 0 = none
     CMSG_SET_ADVANCED_COMBAT_LOGGING                                = 0x3D0193,
     CMSG_SET_ALLOW_RECENT_ALLIES_SEE_LOCATION                       = 0x3D030F,
     CMSG_SET_ASSISTANT_LEADER                                       = 0x43007B,

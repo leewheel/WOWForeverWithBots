@@ -1202,19 +1202,24 @@ void World::LoadConfigSettings(bool reload)
     if (m_int_configs[CONFIG_PACKET_SPOOF_BANMODE] == BAN_CHARACTER)
         m_int_configs[CONFIG_PACKET_SPOOF_BANMODE] = BAN_ACCOUNT;
 
-    _gameRules =
-    {
-        { .Rule = ::GameRule::TransmogEnabled, .Value = true },
-        { .Rule = ::GameRule::HousingEnabled, .Value = true }
-    };
+    // Classic 1.60: the game rules the official beta sends (SMSG_FEATURE_SYSTEM_STATUS, ymir sniffs of build 70124) switch Classic
+    // behaviour on in the client, e.g. rule 177 makes the ammo slot (Lua slot 0) valid: without it GetInventoryItemID("player", 0)
+    // returns nothing and the slot shows no ammo. Realm launch rules (3, 5, 8: character reservations, launch time) are left out.
+    _gameRules.clear();
+    for (auto [rule, value] : std::initializer_list<std::pair<int32, int32>>{
+        { 213, 1 }, { 216, 2 }, { 174, 1 }, { 206, 1 }, { 109, 1 }, { 114, 1 }, { 211, 1 }, { 112, 1 }, { 173, 1 }, { 154, 0 },
+        { 180, 0 }, { 181, 1 }, { 182, 1 }, { 195, 1 }, { 23, 1 }, { 98, 0 }, { 93, 2 }, { 102, 1 }, { 42, 1 }, { 40, 0 },
+        { 157, 1 }, { 190, 0 }, { 162, 1 }, { 209, 1 }, { 89, 1 }, { 177, 1 }, { 197, 1 }, { 199, -5 }, { 63, 1 }, { 90, 1 },
+        { 244, 1 }, { 33, 20 }, { 129, 0 }, { 228, 1 }, { 241, 1 }, { 243, 1 }, { 101, 1 }, { 237, 0 } })
+        _gameRules.push_back({ .Rule = ::GameRule(rule), .Value = value });
+    _gameRules.push_back({ .Rule = ::GameRule(200), .Value = 0.5f });
 
     // Classic 1.60 Hardcore ruleset realm: C_GameRules.IsHardcoreActive() drives the client's Hardcore UI
     if (sConfigMgr->GetBoolDefault("Classic.Hardcore", false))
         _gameRules.push_back({ .Rule = ::GameRule::HardcoreRuleset, .Value = true });
 
-    // Classic 1.60 (WoW Forever): the retail Group Finder addon is excluded for this game type; the client loads its
-    // "Vanilla style" group finder (Blizzard_GroupFinder_VanillaStyle) when PremadeGroupFinderStyle = Enum.PremadeGroupFinderStyle.Vanilla
-    _gameRules.push_back({ .Rule = ::GameRule::PremadeGroupFinderStyle, .Value = int32(2) });
+    // PremadeGroupFinderStyle (93) = 2 is in the list above: the client loads its "Vanilla style" group finder
+    // (Blizzard_GroupFinder_VanillaStyle) for it
 
     DeathRecap::LoadConfig();
 

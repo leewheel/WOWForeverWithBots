@@ -5394,6 +5394,38 @@ void ObjectMgr::LoadQuests()
         if (Quest const* quest = GetQuestTemplate(paragonReputation->QuestID))
             const_cast<Quest*>(quest)->SetSpecialFlag(QUEST_SPECIAL_FLAGS_REPEATABLE);
 
+    // Classic 1.60: quest levels for the quest log
+    if (QueryResult result = WorldDatabase.Query("SELECT ID, LevelType, QuestLevel FROM quest_template_classic_level"))
+    {
+        uint32 count = 0;
+        do
+        {
+            Field* fields = result->Fetch();
+            if (Quest* quest = Trinity::Containers::MapGetValuePtr(_questTemplates, fields[0].GetUInt32()))
+            {
+                quest->SetClassicQuestLevel(fields[1].GetInt32(), fields[2].GetInt32());
+                ++count;
+            }
+        } while (result->NextRow());
+        TC_LOG_INFO("server.loading", ">> Loaded {} Classic quest levels", count);
+    }
+
+    // Classic 1.60: level range in which a quest is offered (vanilla data and the Forever quests)
+    if (QueryResult result = WorldDatabase.Query("SELECT ID, MinLevel, MaxLevel FROM quest_classic_level"))
+    {
+        uint32 count = 0;
+        do
+        {
+            Field* fields = result->Fetch();
+            if (Quest* quest = Trinity::Containers::MapGetValuePtr(_questTemplates, fields[0].GetUInt32()))
+            {
+                quest->SetClassicLevelRange(fields[1].GetUInt8(), fields[2].GetUInt8());
+                ++count;
+            }
+        } while (result->NextRow());
+        TC_LOG_INFO("server.loading", ">> Loaded {} Classic quest level ranges", count);
+    }
+
     TC_LOG_INFO("server.loading", ">> Loaded {} quests definitions in {} ms", _questTemplates.size(), GetMSTimeDiffToNow(oldMSTime));
 }
 

@@ -31,6 +31,7 @@
 #include "Corpse.h"
 #include "DatabaseEnv.h"
 #include "DB2Stores.h"
+#include "GameObject.h"
 #include "GameTime.h"
 #include "GossipDef.h"
 #include "Group.h"
@@ -91,15 +92,10 @@ void WorldSession::HandleWhoOpcode(WorldPackets::Who::WhoRequestPkt& whoRequest)
         request.MinLevel, request.MaxLevel, request.Name, request.VirtualRealmName, request.Guild, request.GuildVirtualRealmName,
         request.RaceFilter.RawValue[1], request.RaceFilter.RawValue[0], request.ClassFilter, whoRequest.Areas.size(), request.Words.size());
 
-    // zones count, client limit = 10 (2.0.10)
-    // can't be received from real client or broken packet
-    if (whoRequest.Areas.size() > 10)
-        return;
-
-    // user entered strings count, client limit=4 (checked on 2.0.10)
-    // can't be received from real client or broken packet
-    if (request.Words.size() > 4)
-        return;
+    // Classic 1.60 allows up to 63 zones (6 bit count) and 7 words (3 bit count); the packet reader enforces both
+    TC_LOG_INFO("network", "Who: {} level {}-{} name '{}' guild '{}' class {} areas {} words {} origin {}", GetPlayerInfo(),
+        request.MinLevel, request.MaxLevel, request.Name, request.Guild, request.ClassFilter, whoRequest.Areas.size(), request.Words.size(),
+        whoRequest.Origin);
 
     /// @todo: handle following packet values
     /// VirtualRealmNames
@@ -412,6 +408,19 @@ void WorldSession::HandleStandStateChangeOpcode(WorldPackets::Misc::StandStateCh
     }
 
     _player->SetStandState(packet.StandState);
+
+    // Classic 1.60 (WoW Forever): sitting near a campfire (spell focus 4) starts a 60 s rest (1289723) that gives Boosted Rest
+    // (classic_spell_campfire_rest); standing up ends it (ymir sniff of the official beta: /sit by a campfire -> the player casts it)
+    static constexpr uint32 SPELL_CAMPFIRE_REST = 1289723;
+    if (packet.StandState == UNIT_STAND_STATE_SIT)
+    {
+        if (!_player->HasAura(SPELL_CAMPFIRE_REST))
+            if (GameObject* fire = _player->FindNearestGameObjectOfType(GAMEOBJECT_TYPE_SPELL_FOCUS, 15.0f))
+                if (fire->GetGOInfo()->spellFocus.spellFocusType == 4)
+                    _player->CastSpell(_player, SPELL_CAMPFIRE_REST, true);
+    }
+    else
+        _player->RemoveAurasDueToSpell(SPELL_CAMPFIRE_REST);
 }
 
 void WorldSession::HandleReclaimCorpse(WorldPackets::Misc::ReclaimCorpse& /*packet*/)
