@@ -422,17 +422,16 @@ void DBUpdater<T>::ApplyFile(DatabaseWorkerPool<T>& pool, std::string const& hos
 
 #endif
 
-    // Execute sql file
-    args.emplace_back("-e");
-    args.emplace_back(Trinity::StringFormat("BEGIN; SOURCE {}; COMMIT;", path.generic_string()));
-
     // Database
     if (!database.empty())
         args.emplace_back(database);
 
-    // Invokes a mysql process which doesn't leak credentials to logs
+    // Execute sql file: fed to mysql on stdin (`mysql ... database < file`). Classic 1.60 fork: `-e "BEGIN; SOURCE <file>; COMMIT;"`
+    // sometimes exited with success without running a single statement of the file (seen in the MySQL binlog: only the `updates`
+    // row was written), so databases silently missed files; feeding the file on stdin never did. A failing statement still makes
+    // mysql exit with an error.
     int32 const ret = Trinity::StartProcess(DBUpdaterUtil::GetCorrectedMySQLExecutable(), std::move(args),
-                                 "sql.updates", "", true);
+                                 "sql.updates", path.generic_string(), true);
 
     if (ret != EXIT_SUCCESS)
     {
