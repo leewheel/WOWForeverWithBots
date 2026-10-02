@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06) were regenerated on 2026-10-03: they rewrite rows this file adjusts.
 -- Classic 1.60: starting action bars of the Tauren and Skyborne hunters as the official beta sets them (first login, ymir sniffs):
 -- Auto Attack, Raptor Strike, Auto Shot, Track Beasts (Tauren), the racials, water and food; the retail rows had Steady Shot (56641).
 DELETE FROM `playercreateinfo_action` WHERE `class` = 3 AND `race` IN (6,96);

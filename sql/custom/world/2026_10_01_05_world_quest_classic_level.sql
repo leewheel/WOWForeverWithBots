@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06) were regenerated on 2026-10-03: they rewrite rows this file adjusts.
 -- Classic 1.60: the quest record sends two more int32 after the quest ID: a type (2 for almost all quests) and the quest level
 -- shown in the quest log. Levels from the official beta (ymir sniffs, build 70124) and, for the other quests, from VMaNGOS (1.12).
 CREATE TABLE IF NOT EXISTS `quest_template_classic_level` (

@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06) were regenerated on 2026-10-03: they rewrite rows this file adjusts.
 -- Classic 1.60: Skyborne racials (races 95 High Order / 96 Windshaper, RaceMask bits 32 and 33 = 0x300000000), as the official beta
 -- gives them (ymir sniff of a new Skyborne hunter): the client data does not link them to the races, so new characters had none.
 -- Elemental Blessing (1259688) is not learned: it is the aura one of these applies.

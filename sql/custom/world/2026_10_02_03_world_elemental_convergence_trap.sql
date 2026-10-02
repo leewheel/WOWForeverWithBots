@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06) were regenerated on 2026-10-03: they rewrite rows this file adjusts.
 -- Classic 1.60: the Elemental Convergence (spell focus 616992) links trap 616510, which was missing: on the official beta a player
 -- near a convergence casts Elemental Convergence (1271953) on themselves (ymir sniff), and "The Gift of Skysight" (92598) credits
 -- Skysight cast with that aura (criteria 110206, modifier tree 426349: player has aura 1271953). Traps are never queried by the

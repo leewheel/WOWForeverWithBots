@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06) were regenerated on 2026-10-03: they rewrite rows this file adjusts.
 -- Classic 1.60 (WoW Forever) "The Great Outdoors" and "Camping 101":
 -- sitting near a campfire for a minute gives Boosted Rest (1229451) through the rest aura 1289723 (classic_spell_campfire_rest;
 -- the sit itself is handled in WorldSession::HandleStandStateChangeOpcode)

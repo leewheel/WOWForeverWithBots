@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06) were regenerated on 2026-10-03: they rewrite rows this file adjusts.
 -- Classic 1.60: level range of the Forever quests (ID >= 90000). The official server's quest data gives only the quest level
 -- (quest_template_classic_level, from the sniffs); like vanilla (minimum mostly 2-4 below the quest level) they are offered from
 -- quest level - 3, at least 1.
