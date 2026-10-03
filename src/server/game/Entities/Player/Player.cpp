@@ -5653,6 +5653,74 @@ bool Player::UpdateFishingSkill(int32 expansion)
     return false;
 }
 
+// Classic 1.60: retail has no weapon / defense skill gains; vanilla rules (as in MaNGOS / TrinityCore 3.3.5)
+void Player::UpdateCombatSkills(Unit const* victim, WeaponAttackType attType, bool defense)
+{
+    uint8 playerLevel = GetLevel();
+    uint8 grayLevel = Trinity::XP::GetGrayLevel(playerLevel);
+    uint8 victimLevel = victim->GetLevelForTarget(this);
+    if (victimLevel < grayLevel)
+        return;
+
+    if (victimLevel > playerLevel + 5)
+        victimLevel = playerLevel + 5;
+
+    uint8 levelDiff = std::max<uint8>(victimLevel - grayLevel, 3);
+
+    uint32 skill;
+    if (defense)
+        skill = SKILL_DEFENSE;
+    else
+    {
+        Item const* weapon = GetWeaponForAttack(attType, true);
+        if (weapon)
+            skill = weapon->GetTemplate()->GetSkill();
+        else if (attType == BASE_ATTACK)
+            skill = SKILL_UNARMED;
+        else
+            return;
+    }
+
+    int32 skillDiff = int32(GetMaxSkillValueForLevel()) - int32(GetPureSkillValue(skill));
+    if (skillDiff <= 0)
+        return;
+
+    float chance = float(3 * levelDiff * skillDiff) / playerLevel;
+    if (!defense && (GetClass() == CLASS_WARRIOR || GetClass() == CLASS_ROGUE))
+        chance += chance * 0.02f * GetStat(STAT_INTELLECT);
+
+    if (roll_chance(std::max(chance, 1.0f)))
+    {
+        if (defense)
+            UpdateDefenseSkill();
+        else
+            UpdateWeaponSkill(attType);
+    }
+}
+
+void Player::UpdateWeaponSkill(WeaponAttackType attType)
+{
+    if (IsInFeralForm())
+        return;                                             // no weapon skill gain in cat / bear form
+
+    uint32 skill = SKILL_UNARMED;
+    if (Item const* weapon = GetWeaponForAttack(attType, true))
+    {
+        if (weapon->GetTemplate()->GetSubClass() == ITEM_SUBCLASS_WEAPON_FISHING_POLE)
+            return;
+        skill = weapon->GetTemplate()->GetSkill();
+    }
+    else if (attType != BASE_ATTACK)
+        return;
+
+    UpdateSkillPro(skill, 1000, 1);
+}
+
+void Player::UpdateDefenseSkill()
+{
+    UpdateSkillPro(SKILL_DEFENSE, 1000, 1);
+}
+
 bool Player::UpdateSkillPro(uint16 skillId, int32 chance, uint32 step)
 {
     // levels sync. with spell requirement for skill levels to learn
@@ -8309,6 +8377,10 @@ void Player::_ApplyItemBonuses(Item* item, uint8 slot, bool apply)
                 UpdateStatBuffMod(STAT_STRENGTH);
                 UpdateStatBuffMod(STAT_INTELLECT);
                 break;
+            default:
+                if (statType >= ITEM_MOD_CLASSIC_PHYSICAL_DAMAGE_DONE && statType < ITEM_MOD_CLASSIC_END)
+                    _ApplyClassicItemMod(statType, int32(val), apply);
+                break;
         }
     }
 
@@ -8322,6 +8394,81 @@ void Player::_ApplyItemBonuses(Item* item, uint8 slot, bool apply)
     WeaponAttackType attType = Player::GetAttackBySlot(slot, proto->GetInventoryType());
     if (attType != MAX_ATTACK)
         _ApplyWeaponDamage(slot, item, apply);
+}
+
+// Classic 1.60: skills of ITEM_MOD_CLASSIC_TWOHANDED_AXES .. ITEM_MOD_CLASSIC_TAILORING
+static constexpr uint32 ClassicItemModSkills[] =
+{
+    SKILL_TWO_HANDED_AXES, SKILL_TWO_HANDED_MACES, SKILL_TWO_HANDED_SWORDS, SKILL_AXES, SKILL_BOWS, SKILL_CROSSBOWS, SKILL_DAGGERS,
+    SKILL_DUAL_WIELD, SKILL_FIST_WEAPONS, SKILL_GUNS, SKILL_MACES, SKILL_POLEARMS, SKILL_STAVES, SKILL_SWORDS, 176 /*Thrown*/, SKILL_WANDS,
+    SKILL_ALCHEMY, SKILL_BLACKSMITHING, SKILL_ENCHANTING, SKILL_ENGINEERING, SKILL_JEWELCRAFTING, SKILL_LEATHERWORKING, SKILL_HERBALISM,
+    SKILL_MINING, SKILL_SKINNING, SKILL_COOKING, 129 /*First Aid*/, SKILL_FISHING, SKILL_TAILORING
+};
+static_assert(std::size(ClassicItemModSkills) == ITEM_MOD_CLASSIC_TAILORING - ITEM_MOD_CLASSIC_TWOHANDED_AXES + 1);
+
+// Classic 1.60: schools of ITEM_MOD_CLASSIC_FIRE_PENETRATION .. ITEM_MOD_CLASSIC_ARCANE_PENETRATION
+static constexpr SpellSchools ClassicItemModPenetrationSchools[] =
+{
+    SPELL_SCHOOL_FIRE, SPELL_SCHOOL_NATURE, SPELL_SCHOOL_FROST, SPELL_SCHOOL_SHADOW, SPELL_SCHOOL_ARCANE
+};
+
+// Classic 1.60: creature types of ITEM_MOD_CLASSIC_ATTACK_POWER_VS_* (and, without mechanical, ITEM_MOD_CLASSIC_SPELL_DAMAGE_VS_*)
+static constexpr CreatureType ClassicItemModCreatureTypes[] =
+{
+    CREATURE_TYPE_HUMANOID, CREATURE_TYPE_ELEMENTAL, CREATURE_TYPE_DEMON, CREATURE_TYPE_UNDEAD, CREATURE_TYPE_DRAGONKIN,
+    CREATURE_TYPE_GIANT, CREATURE_TYPE_BEAST, CREATURE_TYPE_MECHANICAL
+};
+
+void Player::_ApplyClassicItemMod(int32 statType, int32 val, bool apply)
+{
+    m_classicItemMods[statType - ITEM_MOD_CLASSIC_PHYSICAL_DAMAGE_DONE] += apply ? val : -val;
+
+    if (statType == ITEM_MOD_CLASSIC_PHYSICAL_DAMAGE_DONE)
+        UpdateAllDamageDoneMods();
+    else if (statType <= ITEM_MOD_CLASSIC_ARCANE_DAMAGE_DONE)
+        UpdateSpellDamageAndHealingBonus();
+    else if (statType <= ITEM_MOD_CLASSIC_TAILORING)
+        ModifySkillBonus(ClassicItemModSkills[statType - ITEM_MOD_CLASSIC_TWOHANDED_AXES], apply ? val : -val, false);
+    else if (statType == ITEM_MOD_CLASSIC_RESISTANCE_ALL_SCHOOLS)
+        for (UnitMods mod : { UNIT_MOD_RESISTANCE_FIRE, UNIT_MOD_RESISTANCE_NATURE, UNIT_MOD_RESISTANCE_FROST, UNIT_MOD_RESISTANCE_SHADOW, UNIT_MOD_RESISTANCE_ARCANE })
+            HandleStatFlatModifier(mod, BASE_VALUE, float(val), apply);
+    // penetration and the creature type bonuses are read when dealing damage
+}
+
+int32 Player::GetClassicSpellDamageDone(uint32 schoolMask) const
+{
+    int32 best = 0;
+    for (uint32 school = SPELL_SCHOOL_NORMAL; school < MAX_SPELL_SCHOOL; ++school)
+        if (schoolMask & (1 << school))
+            best = std::max(best, m_classicItemMods[school]); // 83 + school
+    return best;
+}
+
+int32 Player::GetClassicSpellPenetration(uint32 schoolMask) const
+{
+    int32 best = 0;
+    for (std::size_t i = 0; i < std::size(ClassicItemModPenetrationSchools); ++i)
+        if (schoolMask & (1 << ClassicItemModPenetrationSchools[i]))
+            best = std::max(best, m_classicItemMods[ITEM_MOD_CLASSIC_FIRE_PENETRATION + i - ITEM_MOD_CLASSIC_PHYSICAL_DAMAGE_DONE]);
+    return best;
+}
+
+int32 Player::GetClassicAttackPowerVersus(uint32 creatureTypeMask) const
+{
+    int32 best = 0;
+    for (std::size_t i = 0; i < std::size(ClassicItemModCreatureTypes); ++i)
+        if (creatureTypeMask & (1 << (ClassicItemModCreatureTypes[i] - 1)))
+            best = std::max(best, m_classicItemMods[ITEM_MOD_CLASSIC_ATTACK_POWER_VS_HUMANOID + i - ITEM_MOD_CLASSIC_PHYSICAL_DAMAGE_DONE]);
+    return best;
+}
+
+int32 Player::GetClassicSpellDamageVersus(uint32 creatureTypeMask) const
+{
+    int32 best = 0;
+    for (std::size_t i = 0; i < std::size(ClassicItemModCreatureTypes) - 1; ++i) // no mechanical
+        if (creatureTypeMask & (1 << (ClassicItemModCreatureTypes[i] - 1)))
+            best = std::max(best, m_classicItemMods[ITEM_MOD_CLASSIC_SPELL_DAMAGE_VS_HUMANOID + i - ITEM_MOD_CLASSIC_PHYSICAL_DAMAGE_DONE]);
+    return best;
 }
 
 void Player::_ApplyWeaponDamage(uint8 slot, Item* item, bool apply)
@@ -14639,6 +14786,10 @@ int32 Player::GetQuestLevel(Quest const* quest) const
 {
     if (!quest)
         return 0;
+
+    // Classic 1.60: quests have a fixed level (quest_template_classic_level, official beta sniffs); most of them have no ContentTuning
+    if (quest->GetClassicQuestLevel() > 0)
+        return quest->GetClassicQuestLevel();
 
     return GetQuestLevel(quest->GetContentTuningId());
 }

@@ -2206,6 +2206,10 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         bool UpdateCraftSkill(SpellInfo const* spellInfo);
         bool UpdateGatherSkill(uint32 skillId, uint32 skillValue, uint32 redLevel, uint32 multiplicator = 1, WorldObject const* object = nullptr);
         bool UpdateFishingSkill(int32 expansion);
+        // Classic 1.60: weapon and defense skills grow in melee / ranged combat (vanilla rules)
+        void UpdateCombatSkills(Unit const* victim, WeaponAttackType attType, bool defense);
+        void UpdateWeaponSkill(WeaponAttackType attType);
+        void UpdateDefenseSkill();
 
         float GetHealthBonusFromStamina() const;
         Stats GetPrimaryStat() const;
@@ -2247,6 +2251,12 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         /// Returns base spellpower bonus from spellpower stat on items, without spellpower from intellect stat
         uint32 GetBaseSpellPowerBonus() const { return m_baseSpellPower; }
         int32 GetSpellPenetrationItemMod() const { return m_spellPenetrationItemMod; }
+
+        // Classic 1.60 item stats (ITEM_MOD_CLASSIC_*): the best value of the schools / creature types in the mask
+        int32 GetClassicSpellDamageDone(uint32 schoolMask) const;
+        int32 GetClassicSpellPenetration(uint32 schoolMask) const;
+        int32 GetClassicAttackPowerVersus(uint32 creatureTypeMask) const;
+        int32 GetClassicSpellDamageVersus(uint32 creatureTypeMask) const;
 
         bool CanApplyResilience() const override { return true; }
 
@@ -2565,6 +2575,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         void ApplyAllAzeriteItemMods(bool apply);
         void ApplyAllAzeriteEmpoweredItemMods(bool apply);
         void _ApplyItemBonuses(Item* item, uint8 slot, bool apply);
+        void _ApplyClassicItemMod(int32 statType, int32 val, bool apply);
         void _ApplyWeaponDamage(uint8 slot, Item* item, bool apply);
         bool EnchantmentFitsRequirements(uint32 enchantmentcondition, int8 slot) const;
         void ToggleMetaGemsActive(uint8 exceptslot, bool apply);
@@ -3287,6 +3298,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         uint32 m_baseManaRegen;
         uint32 m_baseHealthRegen;
         int32 m_spellPenetrationItemMod;
+        std::array<int32, 140 - 83> m_classicItemMods = { };   // ItemModType 83 .. 139 (ITEM_MOD_CLASSIC_*), from equipped items
 
         SpellModContainer m_spellMods;
 

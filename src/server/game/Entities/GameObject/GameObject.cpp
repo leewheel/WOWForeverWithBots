@@ -50,7 +50,9 @@
 #include "PhasingHandler.h"
 #include "PoolMgr.h"
 #include "QueryPackets.h"
+#include "Spell.h"
 #include "SpellAuras.h"
+#include "SpellInfo.h"
 #include "SpellMgr.h"
 #include "Transport.h"
 #include "Util.h"
@@ -1431,9 +1433,15 @@ void GameObject::Update(uint32 diff)
                                 Unit* caster = GetOwner();
                                 if (caster && caster->GetTypeId() == TYPEID_PLAYER)
                                 {
+                                    uint32 fishingSpellId = GetSpellId();
                                     caster->ToPlayer()->RemoveGameObject(this, false);
 
                                     caster->ToPlayer()->SendDirectMessage(WorldPackets::GameObject::FishEscaped().Write());
+
+                                    // Classic 1.60: the fish got away, stop fishing (the channel lasts longer than the bobber)
+                                    if (Spell const* channel = caster->GetCurrentSpell(CURRENT_CHANNELED_SPELL))
+                                        if (channel->GetSpellInfo()->Id == fishingSpellId)
+                                            caster->FinishSpell(CURRENT_CHANNELED_SPELL);
                                 }
                                 // can be delete
                                 m_lootState = GO_JUST_DEACTIVATED;
@@ -2996,20 +3004,21 @@ void GameObject::Use(Unit* user, bool ignoreCastInProgress /*= false*/)
                     {
                         TC_LOG_ERROR("entities.gameobject", "Gameobject '{}' ({}) spawned in unknown area (x: {} y: {} z: {} map: {})",
                             GetEntry(), GetGUID().ToString(), GetPositionX(), GetPositionY(), GetPositionZ(), GetMapId());
+                        SetLootState(GO_JUST_DEACTIVATED); // no loot: do not leave the bobber in the water
                         break;
                     }
 
                     // Update the correct fishing skill according to the area's ContentTuning
+                    // Classic 1.60: many areas (Zephras Isle...) have no ContentTuning: Classic fishing, do not stop here without loot
                     ContentTuningEntry const* areaContentTuning = DB2Manager::GetContentTuningForArea(areaEntry);
-                    if (!areaContentTuning)
-                        break;
+                    int32 fishingExpansion = areaContentTuning ? areaContentTuning->ExpansionID : 0;
 
-                    player->UpdateFishingSkill(areaContentTuning->ExpansionID);
+                    player->UpdateFishingSkill(fishingExpansion);
 
                     // Send loot
                     int32 areaFishingLevel = sObjectMgr->GetFishingBaseSkillLevel(areaEntry);
 
-                    uint32 playerFishingSkill = player->GetProfessionSkillForExp(SKILL_FISHING, areaContentTuning->ExpansionID);
+                    uint32 playerFishingSkill = player->GetProfessionSkillForExp(SKILL_FISHING, fishingExpansion);
                     int32 playerFishingLevel = player->GetSkillValue(playerFishingSkill);
 
                     int32 roll = irand(1, 100);

@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-03 evening, build 70205 sniff).
 -- Classic 1.60 (WoW Forever), Zephras Isle orchard: Ferauu the Bludgeon (252863) and his Bandit Henchmen (252875) are summoned by
 -- the Malfunctioning Cyclone Construct's event (classic_npc_malfunctioning_cyclone_construct, official beta sniff 70170). The sniff
 -- import placed them as fixed spawns at both ends of their walk: removed. The construct wanders by its post between the events.

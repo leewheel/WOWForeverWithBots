@@ -427,14 +427,15 @@ void Quest::LoadRewardHouseDecor(Field* fields)
 
 uint32 Quest::XPValue(Player const* player) const
 {
-    return XPValue(player, GetContentTuningId(), _rewardXPDifficulty, _rewardXPMultiplier, _expansion);
+    // Classic 1.60: the quest's fixed level (without it quests with no ContentTuning gave no XP)
+    return XPValue(player, GetContentTuningId(), _rewardXPDifficulty, _rewardXPMultiplier, _expansion, player ? player->GetQuestLevel(this) : 0);
 }
 
-uint32 Quest::XPValue(Player const* player, uint32 contentTuningId, uint32 xpDifficulty, float xpMultiplier /*= 1.0f*/, int32 expansion /*= -1*/)
+uint32 Quest::XPValue(Player const* player, uint32 contentTuningId, uint32 xpDifficulty, float xpMultiplier /*= 1.0f*/, int32 expansion /*= -1*/, int32 questLevelOverride /*= 0*/)
 {
     if (player)
     {
-        uint32 questLevel = player->GetQuestLevel(contentTuningId);
+        uint32 questLevel = questLevelOverride > 0 ? questLevelOverride : player->GetQuestLevel(contentTuningId);
         QuestXPEntry const* questXp = sQuestXPStore.LookupEntry(questLevel);
         if (!questXp || xpDifficulty >= 10)
             return 0;

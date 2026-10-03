@@ -3,7 +3,7 @@
 -- what the database lacks is added.
 
 -- vendors
-DELETE FROM `npc_vendor` WHERE `entry` IN (251364,251365,251537,251905,251913,251965,251991,251992,252376,252380,252390,252449,252479,254089,254358,254360,255940,256507,257003,257006,257008,257019,257020,257022,257421,257422,258466,264078,265756,267330,267331,271465,271478,271480,271483);
+DELETE FROM `npc_vendor` WHERE `entry` IN (251364,251365,251537,251905,251913,251965,251991,251992,252376,252380,252390,252449,252479,254089,254358,254360,255940,256507,257003,257004,257005,257006,257008,257019,257020,257022,257421,257422,258466,264078,265756,267330,267331,271465,271478,271480,271483);
 INSERT IGNORE INTO `npc_vendor` (`entry`,`slot`,`item`,`maxcount`,`incrtime`,`ExtendedCost`,`type`,`BonusListIDs`,`PlayerConditionID`,`IgnoreFiltering`,`VerifiedBuild`) VALUES
 (2394,0,6401,0,0,0,1,NULL,0,0,70124),
 (2394,1,6274,0,0,0,1,NULL,0,0,70124),
@@ -74,6 +74,12 @@ INSERT IGNORE INTO `npc_vendor` (`entry`,`slot`,`item`,`maxcount`,`incrtime`,`Ex
 (2997,34,2511,0,0,0,1,NULL,0,0,70124),
 (2997,35,2516,0,0,0,1,NULL,0,0,70124),
 (2997,36,2519,0,0,0,1,NULL,0,0,70124),
+(2999,0,2901,0,0,0,1,NULL,0,0,70124),
+(2999,1,5956,0,0,0,1,NULL,0,0,70124),
+(2999,2,2880,0,0,0,1,NULL,0,0,70124),
+(2999,3,3466,0,0,0,1,NULL,0,0,70124),
+(2999,4,3857,0,0,0,1,NULL,0,0,70124),
+(2999,5,18567,0,0,0,1,NULL,0,0,70124),
 (3002,0,2901,0,0,0,1,NULL,0,0,70124),
 (3002,1,2880,0,0,0,1,NULL,0,0,70124),
 (3002,2,3466,0,0,0,1,NULL,0,0,70124),
@@ -191,27 +197,29 @@ INSERT IGNORE INTO `npc_vendor` (`entry`,`slot`,`item`,`maxcount`,`incrtime`,`Ex
 (3025,3,3771,0,0,0,1,NULL,0,0,70124),
 (3025,4,4599,0,0,0,1,NULL,0,0,70124),
 (3025,5,8952,0,0,0,1,NULL,0,0,70124),
-(3027,0,159,0,0,0,1,NULL,0,0,70124),
-(3027,1,2678,0,0,0,1,NULL,0,0,70124),
-(3027,2,2692,0,0,0,1,NULL,0,0,70124),
-(3027,3,3713,0,0,0,1,NULL,0,0,70124),
-(3027,4,10284,0,0,0,1,NULL,0,0,70124),
-(3027,5,4471,0,0,0,1,NULL,0,0,70124),
-(3027,6,4470,0,0,0,1,NULL,0,0,70124),
-(3027,7,11291,0,0,0,1,NULL,0,0,70124),
-(3027,8,272941,0,0,0,1,NULL,0,0,70124),
-(3027,9,21099,0,0,0,1,NULL,0,0,70124),
-(3027,10,21219,0,0,0,1,NULL,0,0,70124),
-(3027,11,4536,0,0,0,1,NULL,0,0,70124),
-(3027,12,6328,0,0,0,1,NULL,0,0,70124),
-(3027,13,6330,0,0,0,1,NULL,0,0,70124),
+(3027,0,278083,0,0,0,1,NULL,0,0,70124),
+(3027,1,159,0,0,0,1,NULL,0,0,70124),
+(3027,2,2678,0,0,0,1,NULL,0,0,70124),
+(3027,3,2692,0,0,0,1,NULL,0,0,70124),
+(3027,4,3713,0,0,0,1,NULL,0,0,70124),
+(3027,5,10284,0,0,0,1,NULL,0,0,70124),
+(3027,6,4471,0,0,0,1,NULL,0,0,70124),
+(3027,7,4470,0,0,0,1,NULL,0,0,70124),
+(3027,8,11291,0,0,0,1,NULL,0,0,70124),
+(3027,9,272941,0,0,0,1,NULL,0,0,70124),
+(3027,10,21099,0,0,0,1,NULL,0,0,70124),
+(3027,11,21219,0,0,0,1,NULL,0,0,70124),
+(3027,12,4536,0,0,0,1,NULL,0,0,70124),
+(3027,13,6328,0,0,0,1,NULL,0,0,70124),
+(3027,14,6330,0,0,0,1,NULL,0,0,70124),
 (3029,0,6325,0,0,0,1,NULL,0,0,70124),
 (3029,1,6330,0,0,0,1,NULL,0,0,70124),
 (3029,2,6256,0,0,0,1,NULL,0,0,70124),
-(3029,3,6529,0,0,0,1,NULL,0,0,70124),
-(3029,4,6530,0,0,0,1,NULL,0,0,70124),
-(3029,5,6532,0,0,0,1,NULL,0,0,70124),
-(3029,6,273636,0,0,0,1,NULL,0,0,70124),
+(3029,3,6365,1,3600,0,1,NULL,0,0,70124),
+(3029,4,6529,0,0,0,1,NULL,0,0,70124),
+(3029,5,6530,0,0,0,1,NULL,0,0,70124),
+(3029,6,6532,0,0,0,1,NULL,0,0,70124),
+(3029,7,273636,0,0,0,1,NULL,0,0,70124),
 (3072,0,4540,0,0,0,1,NULL,0,0,70124),
 (3072,1,159,0,0,0,1,NULL,0,0,70124),
 (3072,2,2512,0,0,0,1,NULL,0,0,70124),
@@ -365,6 +373,18 @@ INSERT IGNORE INTO `npc_vendor` (`entry`,`slot`,`item`,`maxcount`,`incrtime`,`Ex
 (3883,10,1645,0,0,0,1,NULL,0,0,70124),
 (3883,11,8766,0,0,0,1,NULL,0,0,70124),
 (5189,0,5976,0,0,0,1,NULL,0,0,70124),
+(6746,0,159,0,0,0,1,NULL,0,0,70124),
+(6746,1,1179,0,0,0,1,NULL,0,0,70124),
+(6746,2,1205,0,0,0,1,NULL,0,0,70124),
+(6746,3,1708,0,0,0,1,NULL,0,0,70124),
+(6746,4,1645,0,0,0,1,NULL,0,0,70124),
+(6746,5,8766,0,0,0,1,NULL,0,0,70124),
+(6746,6,2070,0,0,0,1,NULL,0,0,70124),
+(6746,7,414,0,0,0,1,NULL,0,0,70124),
+(6746,8,422,0,0,0,1,NULL,0,0,70124),
+(6746,9,1707,0,0,0,1,NULL,0,0,70124),
+(6746,10,3927,0,0,0,1,NULL,0,0,70124),
+(6746,11,8932,0,0,0,1,NULL,0,0,70124),
 (8358,0,16059,0,0,0,1,NULL,0,0,70124),
 (8358,1,3428,0,0,0,1,NULL,0,0,70124),
 (8358,2,16060,0,0,0,1,NULL,0,0,70124),
@@ -711,6 +731,16 @@ INSERT IGNORE INTO `npc_vendor` (`entry`,`slot`,`item`,`maxcount`,`incrtime`,`Ex
 (257003,1,4289,0,0,0,1,NULL,0,0,70124),
 (257003,2,2320,0,0,0,1,NULL,0,0,70124),
 (257003,3,277114,0,0,0,1,NULL,0,0,70124),
+(257004,0,6217,0,0,0,1,NULL,0,0,70124),
+(257004,1,247786,0,0,0,1,NULL,0,0,70124),
+(257004,2,10940,2,3600,0,1,NULL,0,0,70124),
+(257004,3,10938,2,3600,0,1,NULL,0,0,70124),
+(257004,4,4470,0,0,0,1,NULL,0,0,70124),
+(257004,5,6342,0,0,0,1,NULL,0,0,70124),
+(257005,0,3371,0,0,0,1,NULL,0,0,70124),
+(257005,1,3372,0,0,0,1,NULL,0,0,70124),
+(257005,2,8925,0,0,0,1,NULL,0,0,70124),
+(257005,3,18256,0,0,0,1,NULL,0,0,70124),
 (257006,0,4536,0,0,0,1,NULL,0,0,70124),
 (257006,1,159,0,0,0,1,NULL,0,0,70124),
 (257006,2,2678,0,0,0,1,NULL,0,0,70124),
@@ -1348,7 +1378,7 @@ INSERT INTO `trainer_spell` (`TrainerId`,`SpellId`,`MoneyCost`,`ReqSkillLine`,`R
 (1233,5177,100,0,0,5176,0,0,6,70124),
 (1259,33389,1000000,0,0,0,0,0,40,70124),
 (1259,33392,10000000,0,0,33388,0,0,60,70124);
-DELETE FROM `creature_trainer` WHERE `CreatureID` IN (251373,267331,267332,3061,257018,251991,251913,257022,251993,254081,251905,257019,257024,257020,251992,257021,265756,257004,257005,257003,257007,257008,252359,252479,252388,252380,252376,262560,11047,11071,3008,11051,7089,3026,3028,3036,3033,11869,2798);
+DELETE FROM `creature_trainer` WHERE `CreatureID` IN (251373,267331,267332,3061,257018,251991,251913,257022,251993,254081,251905,257019,257024,257020,251992,257021,265756,257004,257005,257003,257007,257008,252359,252479,252388,252380,252376,262560,11047,11071,3008,11051,7089,3026,3028,3036,3033,11869,2798,3001,10278,257006,254345);
 INSERT INTO `creature_trainer` (`CreatureID`,`TrainerID`,`MenuID`,`OptionID`) VALUES
 (251373,1233,41121,0),
 (267331,1223,44733,0),
@@ -1388,10 +1418,14 @@ INSERT INTO `creature_trainer` (`CreatureID`,`TrainerID`,`MenuID`,`OptionID`) VA
 (3036,17,4607,0),
 (3033,17,3921,0),
 (11869,398,5266,1),
-(2798,39,5856,0);
+(2798,39,5856,0),
+(3001,37,44798,0),
+(10278,293,2748,0),
+(257006,36,41725,0),
+(254345,35,41729,0);
 
 -- gossip menus (texts are Blizzard broadcast texts from the client data)
-DELETE FROM `gossip_menu` WHERE `MenuID` IN (39335,39784,39785,40447,40466,40579,40580,40581,40582,40583,40584,40585,40586,40592,40593,40599,40600,40601,40605,40607,40608,40616,40716,40780,40790,40962,40964,41095,41103,41121,41122,41123,41124,41125,41126,41129,41130,41301,41313,41423,41424,41425,41513,41515,41531,41557,41611,41612,41696,41697,41698,41699,41700,41701,41732,41740,41745,41746,41747,41761,41819,41842,42169,42812,42848,42893,42965,43328,43329,43331,43332,43333,43334,43344,43459,43460,43461,43462,43528,43530,43531,43544,43549,43828,44205,44218,44220,44221,44222,44223,44224,44225,44226,44227,44542,44543,44698,44730,44733,44798,44837,44926,45046,45048,45260,45261,45262,45380);
+DELETE FROM `gossip_menu` WHERE `MenuID` IN (39335,39784,39785,40447,40466,40579,40580,40581,40582,40583,40584,40585,40586,40592,40593,40599,40600,40601,40605,40607,40608,40616,40716,40780,40790,40962,40964,41095,41103,41121,41122,41123,41124,41125,41126,41129,41130,41301,41313,41423,41424,41425,41513,41515,41531,41553,41557,41611,41612,41696,41697,41698,41699,41700,41701,41732,41740,41745,41746,41747,41761,41819,41842,41980,42169,42812,42848,42893,42965,43328,43329,43331,43332,43333,43334,43344,43459,43460,43461,43462,43528,43530,43531,43544,43549,43828,44205,44218,44220,44221,44222,44223,44224,44225,44226,44227,44542,44543,44698,44730,44733,44798,44837,44926,45046,45048,45260,45261,45262,45380);
 INSERT INTO `gossip_menu` (`MenuID`,`TextID`,`VerifiedBuild`) VALUES
 (39335,10039335,70124),
 (39784,10039784,70124),
@@ -1438,6 +1472,7 @@ INSERT INTO `gossip_menu` (`MenuID`,`TextID`,`VerifiedBuild`) VALUES
 (41513,10041513,70124),
 (41515,10041515,70124),
 (41531,10041531,70124),
+(41553,10041553,70124),
 (41557,10041557,70124),
 (41611,10041611,70124),
 (41612,10041612,70124),
@@ -1455,6 +1490,7 @@ INSERT INTO `gossip_menu` (`MenuID`,`TextID`,`VerifiedBuild`) VALUES
 (41761,10041761,70124),
 (41819,10041819,70124),
 (41842,10041842,70124),
+(41980,10041980,70124),
 (42169,10042169,70124),
 (42812,10042812,70124),
 (42848,10042848,70124),
@@ -1501,7 +1537,7 @@ INSERT INTO `gossip_menu` (`MenuID`,`TextID`,`VerifiedBuild`) VALUES
 (45261,10045261,70124),
 (45262,10045262,70124),
 (45380,10045380,70124);
-DELETE FROM `npc_text` WHERE `ID` IN (10039335,10039784,10039785,10040447,10040466,10040579,10040580,10040581,10040582,10040583,10040584,10040585,10040586,10040592,10040593,10040599,10040600,10040601,10040605,10040607,10040608,10040616,10040716,10040780,10040790,10040962,10040964,10041095,10041103,10041121,10041122,10041123,10041124,10041125,10041126,10041129,10041130,10041301,10041313,10041423,10041424,10041425,10041513,10041515,10041531,10041557,10041611,10041612,10041696,10041697,10041698,10041699,10041700,10041701,10041732,10041740,10041745,10041746,10041747,10041761,10041819,10041842,10042169,10042812,10042848,10042893,10042965,10043328,10043329,10043331,10043332,10043333,10043334,10043344,10043459,10043460,10043461,10043462,10043528,10043530,10043531,10043544,10043549,10043828,10044205,10044218,10044220,10044221,10044222,10044223,10044224,10044225,10044226,10044227,10044542,10044543,10044698,10044730,10044733,10044798,10044837,10044926,10045046,10045048,10045260,10045261,10045262,10045380);
+DELETE FROM `npc_text` WHERE `ID` IN (10039335,10039784,10039785,10040447,10040466,10040579,10040580,10040581,10040582,10040583,10040584,10040585,10040586,10040592,10040593,10040599,10040600,10040601,10040605,10040607,10040608,10040616,10040716,10040780,10040790,10040962,10040964,10041095,10041103,10041121,10041122,10041123,10041124,10041125,10041126,10041129,10041130,10041301,10041313,10041423,10041424,10041425,10041513,10041515,10041531,10041553,10041557,10041611,10041612,10041696,10041697,10041698,10041699,10041700,10041701,10041732,10041740,10041745,10041746,10041747,10041761,10041819,10041842,10041980,10042169,10042812,10042848,10042893,10042965,10043328,10043329,10043331,10043332,10043333,10043334,10043344,10043459,10043460,10043461,10043462,10043528,10043530,10043531,10043544,10043549,10043828,10044205,10044218,10044220,10044221,10044222,10044223,10044224,10044225,10044226,10044227,10044542,10044543,10044698,10044730,10044733,10044798,10044837,10044926,10045046,10045048,10045260,10045261,10045262,10045380);
 INSERT INTO `npc_text` (`ID`,`Probability0`,`Probability1`,`Probability2`,`Probability3`,`Probability4`,`Probability5`,`Probability6`,`Probability7`,`BroadcastTextID0`,`BroadcastTextID1`,`BroadcastTextID2`,`BroadcastTextID3`,`BroadcastTextID4`,`BroadcastTextID5`,`BroadcastTextID6`,`BroadcastTextID7`,`VerifiedBuild`) VALUES
 (10039335,1,0,0,0,0,0,0,0,290402,0,0,0,0,0,0,0,70124),
 (10039784,1,0,0,0,0,0,0,0,292961,0,0,0,0,0,0,0,70124),
@@ -1527,7 +1563,7 @@ INSERT INTO `npc_text` (`ID`,`Probability0`,`Probability1`,`Probability2`,`Proba
 (10040616,1,0,0,0,0,0,0,0,300714,0,0,0,0,0,0,0,70124),
 (10040716,1,0,0,0,0,0,0,0,301009,0,0,0,0,0,0,0,70124),
 (10040780,1,0,0,0,0,0,0,0,301399,0,0,0,0,0,0,0,70124),
-(10040790,1,0,0,0,0,0,0,0,301455,0,0,0,0,0,0,0,70124),
+(10040790,1,0,0,0,0,0,0,0,301456,0,0,0,0,0,0,0,70124),
 (10040962,1,0,0,0,0,0,0,0,302067,0,0,0,0,0,0,0,70124),
 (10040964,1,0,0,0,0,0,0,0,302079,0,0,0,0,0,0,0,70124),
 (10041095,1,0,0,0,0,0,0,0,302650,0,0,0,0,0,0,0,70124),
@@ -1548,6 +1584,7 @@ INSERT INTO `npc_text` (`ID`,`Probability0`,`Probability1`,`Probability2`,`Proba
 (10041513,1,0,0,0,0,0,0,0,304612,0,0,0,0,0,0,0,70124),
 (10041515,1,0,0,0,0,0,0,0,304626,0,0,0,0,0,0,0,70124),
 (10041531,1,0,0,0,0,0,0,0,304681,0,0,0,0,0,0,0,70124),
+(10041553,1,0,0,0,0,0,0,0,304790,0,0,0,0,0,0,0,70124),
 (10041557,1,0,0,0,0,0,0,0,304808,0,0,0,0,0,0,0,70124),
 (10041611,1,0,0,0,0,0,0,0,305038,0,0,0,0,0,0,0,70124),
 (10041612,1,0,0,0,0,0,0,0,305036,0,0,0,0,0,0,0,70124),
@@ -1565,9 +1602,10 @@ INSERT INTO `npc_text` (`ID`,`Probability0`,`Probability1`,`Probability2`,`Proba
 (10041761,1,0,0,0,0,0,0,0,305854,0,0,0,0,0,0,0,70124),
 (10041819,1,0,0,0,0,0,0,0,306266,0,0,0,0,0,0,0,70124),
 (10041842,1,0,0,0,0,0,0,0,306593,0,0,0,0,0,0,0,70124),
+(10041980,1,0,0,0,0,0,0,0,307316,0,0,0,0,0,0,0,70124),
 (10042169,1,0,0,0,0,0,0,0,307942,0,0,0,0,0,0,0,70124),
 (10042812,1,0,0,0,0,0,0,0,311965,0,0,0,0,0,0,0,70124),
-(10042848,1,0,0,0,0,0,0,0,312221,0,0,0,0,0,0,0,70124),
+(10042848,1,0,0,0,0,0,0,0,312224,0,0,0,0,0,0,0,70124),
 (10042893,1,0,0,0,0,0,0,0,312713,0,0,0,0,0,0,0,70124),
 (10042965,1,0,0,0,0,0,0,0,313486,0,0,0,0,0,0,0,70124),
 (10043328,1,0,0,0,0,0,0,0,315474,0,0,0,0,0,0,0,70124),
@@ -1611,7 +1649,7 @@ INSERT INTO `npc_text` (`ID`,`Probability0`,`Probability1`,`Probability2`,`Proba
 (10045261,1,0,0,0,0,0,0,0,328028,0,0,0,0,0,0,0,70124),
 (10045262,1,0,0,0,0,0,0,0,328033,0,0,0,0,0,0,0,70124),
 (10045380,1,0,0,0,0,0,0,0,328261,0,0,0,0,0,0,0,70124);
-DELETE FROM `gossip_menu_option` WHERE `MenuID` IN (39335,39784,39785,40447,40466,40579,40580,40581,40582,40583,40584,40585,40586,40592,40593,40599,40600,40601,40605,40607,40608,40616,40716,40780,40790,40962,40964,41095,41103,41121,41122,41123,41124,41125,41126,41129,41130,41301,41313,41423,41424,41425,41513,41515,41531,41557,41611,41612,41696,41697,41698,41699,41700,41701,41732,41740,41745,41746,41747,41761,41819,41842,42169,42812,42848,42893,42965,43328,43329,43331,43332,43333,43334,43344,43459,43460,43461,43462,43528,43530,43531,43544,43549,43828,44205,44218,44220,44221,44222,44223,44224,44225,44226,44227,44542,44543,44698,44730,44733,44798,44837,44926,45046,45048,45260,45261,45262,45380);
+DELETE FROM `gossip_menu_option` WHERE `MenuID` IN (39335,39784,39785,40447,40466,40579,40580,40581,40582,40583,40584,40585,40586,40592,40593,40599,40600,40601,40605,40607,40608,40616,40716,40780,40790,40962,40964,41095,41103,41121,41122,41123,41124,41125,41126,41129,41130,41301,41313,41423,41424,41425,41513,41515,41531,41553,41557,41611,41612,41696,41697,41698,41699,41700,41701,41732,41740,41745,41746,41747,41761,41819,41842,41980,42169,42812,42848,42893,42965,43328,43329,43331,43332,43333,43334,43344,43459,43460,43461,43462,43528,43530,43531,43544,43549,43828,44205,44218,44220,44221,44222,44223,44224,44225,44226,44227,44542,44543,44698,44730,44733,44798,44837,44926,45046,45048,45260,45261,45262,45380);
 INSERT INTO `gossip_menu_option` (`MenuID`,`GossipOptionID`,`OptionID`,`OptionNpc`,`OptionText`,`OptionBroadcastTextID`,`Language`,`Flags`,`ActionMenuID`,`ActionPoiID`,`GossipNpcOptionID`,`BoxCoded`,`BoxMoney`,`BoxText`,`BoxBroadcastTextID`,`SpellID`,`OverrideIconID`,`VerifiedBuild`) VALUES
 (40579,135857,0,0,'I wish to ask you something else.',0,0,0,40586,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (40580,135858,0,0,'<Remain Silent>',0,0,0,40579,0,NULL,0,0,NULL,0,NULL,NULL,70124),
@@ -1628,6 +1666,8 @@ INSERT INTO `gossip_menu_option` (`MenuID`,`GossipOptionID`,`OptionID`,`OptionNp
 (40607,137545,1,1,'I would like to buy from you.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (40608,136803,0,3,'I\'d like training!',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (40608,137547,1,1,'I would like to buy from you.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
+(40780,136302,0,0,'I\'m ready to fight, Aamelia.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
+(40790,136311,0,0,'Question for you, Alvarion. In your experience, what is flutterfly dust used for?',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (41095,136768,0,0,'<Hide behind the wardrobe and try to listen in on the cultists\' conversation.>',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (41103,137569,0,0,'What is it that you had to say about the forest?',0,0,0,41745,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (41121,136805,0,3,'I\'d like training!',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
@@ -1655,6 +1695,7 @@ INSERT INTO `gossip_menu_option` (`MenuID`,`GossipOptionID`,`OptionID`,`OptionNp
 (41740,137561,1,1,'I would like to buy from you.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (41746,137570,0,6,'I would like to check my deposit box.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (41842,137720,0,0,'Halaan, please lend me your gift.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
+(42848,139345,0,0,'Can you remind me of what I need to do to help?',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (43328,139957,0,7,'How do I form a guild?',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (43328,139956,1,8,'I want to create a guild crest.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (43344,139978,0,1,'I\'d like to purchase a Galestrider.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
@@ -1703,7 +1744,7 @@ INSERT INTO `gossip_menu_option` (`MenuID`,`GossipOptionID`,`OptionID`,`OptionNp
 (44733,142275,1,1,'I would like to buy from you.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (44798,142380,0,3,'I would like to train.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124),
 (44837,142475,0,1,'Show me what\'s for sale.',0,0,0,0,0,NULL,0,0,NULL,0,NULL,NULL,70124);
-DELETE FROM `creature_template_gossip` WHERE `CreatureID` IN (251362,251361,251373,251371,267331,267321,251374,251964,251389,263113,257554,251376,251487,263664,254082,251902,256930,251906,251991,251913,257022,251993,251904,254088,254081,254084,251523,251905,254087,254089,256252,251992,251662,257065,254128,254086,251903,252155,250929,252800,265760,265762,265761,265756,267306,267305,267304,251968,252392,271465,257036,256076,256083,252377,252379,254411,252389,254149,255940,252448,259012,259011,252359,252476,252383,252373,252475,252388,252376,252478,265654,262502,272633,259118,264078,276171,277055);
+DELETE FROM `creature_template_gossip` WHERE `CreatureID` IN (251362,251361,251373,251371,267331,267321,251374,251964,251389,263113,257554,251376,251487,263664,254082,251902,256930,251906,251991,251913,257022,251993,251904,254088,254081,254084,251523,251905,254087,254089,256252,251992,251662,257065,254128,254086,251903,252155,250929,252800,265760,265762,265761,265756,267306,267305,267304,251968,252392,271465,257036,256076,256083,252377,252379,254411,252389,254149,255940,252448,259012,259011,252359,252476,252383,252373,252475,252388,252376,252478,265654,262502,272633,259118,264078,276171,277055,255853,256247);
 INSERT IGNORE INTO `creature_template_gossip` (`CreatureID`,`MenuID`,`VerifiedBuild`) VALUES
 (251362,40466,70124),
 (251361,41423,70124),
@@ -1826,10 +1867,24 @@ INSERT IGNORE INTO `creature_template_gossip` (`CreatureID`,`MenuID`,`VerifiedBu
 (5957,4825,70124),
 (3047,4534,70124),
 (3049,4535,70124),
-(3046,4532,70124);
+(3046,4532,70124),
+(10278,2748,70124),
+(6746,344,70124),
+(10360,6461,70124),
+(15350,6598,70124),
+(7427,6468,70124),
+(3040,4524,70124),
+(3043,4527,70124),
+(3038,4011,70124),
+(3041,4526,70124),
+(3039,4023,70124),
+(3042,4525,70124),
+(3034,4606,70124),
+(255853,41980,70124),
+(256247,41553,70124);
 
 -- quest_offer_reward: the quest giver's text (Forever and new quests replaced, others only where missing)
-DELETE FROM `quest_offer_reward` WHERE `ID` IN (92460,92461,92462,92463,92464,92465,92469,92470,92471,92472,92473,92474,92485,92514,92515,92517,92528,92529,92544,92550,92551,92553,92579,92595,92598,92700,92708,93036,93318,93319,93552,93926,93927,93948,93951,94411,94414,95998,96626,96627,97965,97967,97969,97971);
+DELETE FROM `quest_offer_reward` WHERE `ID` IN (92460,92461,92462,92463,92464,92465,92469,92470,92471,92472,92473,92474,92485,92514,92515,92517,92528,92529,92544,92550,92551,92553,92579,92595,92598,92679,92682,92683,92684,92685,92693,92698,92700,92703,92708,93036,93317,93318,93319,93552,93737,93926,93927,93948,93949,93951,94006,94411,94414,94484,94638,95998,96626,96627,97965,97967,97969,97971,98512);
 INSERT IGNORE INTO `quest_offer_reward` (`ID`,`Emote1`,`Emote2`,`Emote3`,`Emote4`,`EmoteDelay1`,`EmoteDelay2`,`EmoteDelay3`,`EmoteDelay4`,`RewardText`,`VerifiedBuild`) VALUES
 (747,0,0,0,0,0,0,0,0,'The tauren of Narache thank you, $n. You show much promise.',70124),
 (3092,0,0,0,0,0,0,0,0,'And it is my job to make sure you are prepared by teaching you the basics of our profession--how to tame your pet, how to fire your rifle, and many other skills that will become necessary.$B$BHunters are a strong part of our tradition and history, $n. You would do well to remember how important you are to the tribe. You will be respected and revered if you serve our people well.',70124),
@@ -1858,31 +1913,48 @@ INSERT IGNORE INTO `quest_offer_reward` (`ID`,`Emote1`,`Emote2`,`Emote3`,`Emote4
 (92579,0,0,0,0,0,0,0,0,'<Valennia\'s expression darkens as she reads the letter.>\r\n\r\nAonda trusted you to deliver this and she speaks highly enough of you in this letter, so I\'ll try to trust you too. Before we speak further, I need to consult with the few peacekeepers we have left here and formulate a plan in case the cult strikes here next. Enjoy your stay in Valanaar for now.\r\n\r\nIf you are looking to keep yourself busy, there are plenty of townsfolk that can likely use the help of a strong young adventurer like yourself.',70124),
 (92595,0,0,0,0,0,0,0,0,'I think you now understand how important the mission of the Windshapers is. Every soul who commands the skysight is of vital importance if we hope to establish dialogue with the spirits of the winds once again.\r\n\r\nBetween threats from within such as the Al\'Aketh, and the uncertainty of our safety here in Skywall, it is our responsibility as Windshapers to use our gifts to save our home and ensure that the Shen\'dorei can survive these trying times.',70124),
 (92598,0,0,0,0,0,0,0,0,'Like a muscle, your skysight must be exercised if you hope to grow stronger in the gift. Leveraging your skysight to bridge the distance between the mortal and the spiritual may prove invaluable to you in your adventures.\r\n\r\nYou\'d do well to remember what you\'ve learned here today. Our ability to use our gifts to hear what the elements tell us could be the key to our survival.',70124),
+(92679,0,0,0,0,0,0,0,0,'<Aamelia listens while you explain what became of Alvarion.>\r\n\r\nAt least I know he\'s going to be safe in Valanaar.\r\n\r\nStranger, I hate to tell you this but I think my idiot husband likely just sent you here to die for nothing. If you have any sense at all, you should leave now. This isn\'t your fight.',70124),
+(92682,0,0,0,0,0,0,0,0,'I watched you take down those bandits from the window. Not bad.',70124),
+(92683,0,0,0,0,0,0,0,0,'This stuff can be a bit messy and it tends to get everywhere. You\'ll probably be shaking this out of your trousers for weeks, unfortunately. I do appreciate it, though. I\'ve had this on my to-do list for weeks, but getting too far from the house when it\'s just me on my own with bandits lurking everywhere is a big risk.\r\n\r\nDon\'t bother asking me what I use this stuff for. Things. Stuff and things. Don\'t worry about it.',70124),
+(92684,0,0,0,0,0,0,0,0,'These are big tenderloins! You must have taken down some real monsters out there.',70124),
+(92685,0,0,0,0,0,0,0,0,'When I said the bloodier the better, you really listened. Good. It lets me know you made it hurt.\r\n\r\nOn a serious note, thank you for what you\'ve done so far. I\'ve been floating aimlessly around this farm for weeks as if I was just waiting for the end to come. I think I\'m starting to have hope again.\r\n\r\nFerauu and his thugs are due any time now. All that\'s left is to go out and face them. What do you say, will you see this through to the end with me?',70124),
+(92693,0,0,0,0,0,0,0,0,'I... can\'t believe it\'s over. I need to stop and calm myself before my heart leaps right out of my chest.',70124),
+(92698,0,0,0,0,0,0,0,0,'The construct? It\'s been wandering around the fields for decades. Since the wind elementals left us, I think. Alvarion suspected that it used to haul harvests to market, or maybe tend to livestock back before this was an orchard. That could have been a thousand years ago though.\r\n\r\nIn the old days, the Windshapers used to maintain these constructs. We\'ve talked about petitioning them to come and take a look at it, but it\'s never been a pressing concern to us. Mostly we just ignore it these days.',70124),
 (92700,0,0,0,0,0,0,0,0,'Elder Amberwind sent me a message about you and your exploits in Shen\'dar Village. You are most welcome here, friend.\r\n\r\nYou have a strong aura, and you clearly have a resonance with the spirits. Fewer and fewer of us have the skysight of late, and Zephras needs those with the gift if we are to survive these trying times. I am glad you have found your way to me.\r\n\r\nI look forward to further making your acquaintance.',70124),
+(92703,0,0,0,0,0,0,0,0,'<Alvarion\'s eyes tear up as you finish retelling the story of what happened at the orchard.>\r\n\r\nI don\'t know how to thank you, friend. I came to Valanaar looking for hope. A vain hope, I was almost certain. But instead I found a hero. A real hero, like the stories from before we came to Skywall. \r\n\r\nI\'ll never forget what you did for us, $n. You\'ll always be welcome at the Windfield home.',70124),
 (92708,0,0,0,0,0,0,0,0,'So now you see? There is a world of knowledge and untapped potential outside of Skywall. This will never stop being our home, but I\'ve come to believe that the path to our salvation lies below. We must travel to Azeroth and gain the power and means to save Zephras Isle. This is the way.\r\n\r\nWill you have the courage to join us when the time comes?',70124),
 (93036,0,0,0,0,0,0,0,0,'Greetings child, my name is Sania Silverstream and I am a junior priestess in the Order of the Al\'Aketh. Do you wish to learn more of our sovereign, the Windlord Al\'Akir?\r\n\r\nThere is always room at the Windlord\'s table for the righteous and the repentant.',70124),
+(93317,0,0,0,0,0,0,0,0,'Winds bless me, this meat looks fantastic! \r\n\r\nThank you so much, $c.',70124),
 (93318,0,0,0,0,0,0,0,0,'If we didn\'t have enough on our plates between the cult and the highlands bandits, we don\'t need a giant vuldren terrorizing our citizens as well. You\'ve done a great thing here today. As promised, here is your reward.',70124),
 (93319,0,0,0,0,0,0,0,0,'Thanks $c. This should help us get by for now. If we can\'t get the supply routes squared away soon though, a few stolen windstones will be the least of our worries.',70124),
 (93552,0,0,0,0,0,0,0,0,'Thank you very much for these. As elves we all have a deep connection to magic and these windstones are becoming more and more precious as the magic imbued into this island by the great anchor pylons continues to fade. \r\n\r\nWindstones aren\'t the only beneficial thing you can harvest from the land. Please, take one of these manuals.',70124),
+(93737,0,0,0,0,0,0,0,0,'<Riaani\'s face is buried under the heaving armor plates of the construct, attempting to work on the mechanisms underneath. He does not notice your presence at all.>\r\n\r\nStorms curse--where is the core?! Who thought it would be a good idea to remove the Gyrozephyr as well? It\'s a miracle this construct\'s winds haven\'t dissipated entirely by now!',70124),
 (93926,0,0,0,0,0,0,0,0,'<The body here is somewhat fresh, clearly only recently having been killed. Judging by the burns and scorch marks on this peacekeeper\'s skin, it\'s clear that they were killed by the cult\'s storm-wielding spellcasters.>',70124),
 (93927,0,0,0,0,0,0,0,0,'So they are all dead, then. Storms curse these cult bastards!\r\n\r\nWhile you managed to take out the priest and stop the cultists at the tower, I confess that I\'m now doubly concerned about whatever it was you said that they were doing to the pylon. The fact that there was such a massive cache of windstones there with them tells me that they needed enormous energy for it.\r\n\r\nI have to wonder, what\'s the end goal here? Violating the pylon, attacking the village? To what end?',70124),
 (93948,0,0,0,0,0,0,0,0,'I... am very sorry to hear that my nephew is dead. I thank you kindly for recovering this, and bringing it to me.\r\n\r\nIt\'s not common that such capable young shen\'dorei come down from the highlands. If you need work, please speak with Valennia Stormfist, the captain of the peacekeepers here in Valanaar. These days we need all the help we can get.',70124),
+(93949,0,0,0,0,0,0,0,0,'I\'m sure there are more of these critters around Valanaar, but every enchanted skyhopper we stomp out makes the city just a tiny bit safer.',70124),
 (93951,0,0,0,0,0,0,0,0,'It might seem a bit of a vain triviality, gathering feathers for our hair. However, even in times like these, one needs to embrace the small joys as much as possible. \r\n\r\nIf one thing I create brings someone joy, then I will consider that to be a good day. Thank you for bringing me these and helping me bring some joy to Zephras.',70124),
+(94006,0,0,0,0,0,0,0,0,'So, you wish to embrace the way of the claw, child? Very well. Let us speak.',70124),
 (94411,0,0,0,0,0,0,0,0,'Direct conflict with our shen\'dorei brothers and sisters only weakens us as a people, but decisive action must at times be taken to prevent greater tragedy.\r\n\r\nThe mages of the High Order have zero regard for the consequences of their magical meddling. The forces that bind our island are fragile and vulnerable and all it could take is one thoughtless action to destroy our home.',70124),
 (94414,0,0,0,0,0,0,0,0,'Thank you for taking a moment to share this with me. I will continue to watch over the grove, and ponder on the state of our homeland.',70124),
+(94484,0,0,0,0,0,0,0,0,'Thank goodness our message got to Lotheluum. Wait, where are the rest of the reinforcements? Surely it is not just you they sent?\r\n\r\n<Elegael pales as you relay your conversation with Lotheluum.>\r\n\r\nSo the message did not get through. We are in dire straits indeed then.\r\n\r\nIt seems we must handle this on our own. Time is of the essence.',70124),
+(94638,0,0,0,0,0,0,0,0,'The agony I feel over her loss is immeasurable, but it is what is necessary for the balance. You have demonstrated a resolve to persevere, even when a terrible price is asked.\r\n\r\nYou have done well, $c. I shall grant you the blessing to take on the shape of my kin. Be a beacon for those that lack the strength to persevere and a defender of those in need.\r\n\r\nGo now, and embrace the way of the claw, child.',70124),
 (95998,0,0,0,0,0,0,0,0,'So now that we\'ve learned the basics, why don\'t you go and learn a tradeskill from the trainers in the village nearby. They will also teach you how to create a camp fixture suitable to your new profession.',70124),
 (96626,0,0,0,0,0,0,0,0,'With this, you\'ll be able to set up a camp anywhere out in the wilderness. What you\'ve learned is just the basics, so you won\'t be able to place too many furnishings around it.\r\n\r\nRaise your cooking skill and you might just be able to learn to make even bigger fires.\r\n\r\nYou can also learn the basics of furnishing your campsites from other tradeskill trainers if you\'re savvy in their skills.',70124),
 (96627,0,0,0,0,0,0,0,0,'Well met!',70124),
 (97965,0,0,0,0,0,0,0,0,'There you have it, you can now craft your very own First Aid Kit. Most folk don\'t care much for camps being set up in the center of town, so you\'ll need to head into the wilderness if you want to test it out.\r\n\r\nOh, and just remember, no camp is complete without a campfire. You\'ll need one of those before you start up your camp. Most cooks can teach you to make a fire. If you haven\'t already, you might want to check in with someone who can train you in the culinary arts to learn the basics.',70124),
 (97967,0,0,0,0,0,0,0,0,'There you have it, you can now craft your very own Fish Bowl. Most folk don\'t care much for camps being set up in the center of town, so you\'ll need to head into the wilderness if you want to test it out.\r\n\r\nOh, and just remember, no camp is complete without a campfire. You\'ll need one of those before you start up your camp. Most cooks can teach you to make a fire. If you haven\'t already, you might want to check in with someone who can train you in the culinary arts to learn the basics.',70124),
 (97969,0,0,0,0,0,0,0,0,'There you have it, your very own camp tent. Most folk don\'t care much for tents being set up in the center of town, so you\'ll need to head into the wilderness if you want to test it out.\r\n\r\nOh, and just remember, no camp is complete without a campfire. You\'ll need one of those before you start up your camp. Most cooks can teach you to make a fire. If you haven\'t already, you might want to check in with someone who can train you in the culinary arts to learn the basics.',70124),
-(97971,0,0,0,0,0,0,0,0,'There you have it, you can now craft your very own Camp Chair. Most folk don\'t care much for camps being set up in the center of town, so you\'ll need to head into the wilderness if you want to test it out.\r\n\r\nOh, and just remember, no camp is complete without a campfire. You\'ll need one of those before you start up your camp. Most cooks can teach you to make a fire. If you haven\'t already, you might want to check in with someone who can train you in the culinary arts to learn the basics.',70124);
+(97971,0,0,0,0,0,0,0,0,'There you have it, you can now craft your very own Camp Chair. Most folk don\'t care much for camps being set up in the center of town, so you\'ll need to head into the wilderness if you want to test it out.\r\n\r\nOh, and just remember, no camp is complete without a campfire. You\'ll need one of those before you start up your camp. Most cooks can teach you to make a fire. If you haven\'t already, you might want to check in with someone who can train you in the culinary arts to learn the basics.',70124),
+(98512,0,0,0,0,0,0,0,0,'I\'m glad you made it back. That group of Al\'Aketh looked like stone cold killers. \r\n\r\nThank you for your aid, I\'ll include your assistance in my report when I return to Valanaar.',70124);
 
 -- quest_request_items: the quest giver's text (Forever and new quests replaced, others only where missing)
-DELETE FROM `quest_request_items` WHERE `ID` IN (92461,92470,92473,92485,92515,92550,92551,92553,92579,93318,93319,93552,93927,93948,93951,97969,97971);
+DELETE FROM `quest_request_items` WHERE `ID` IN (92461,92470,92473,92485,92515,92550,92551,92553,92579,92679,92682,92683,92684,92685,92693,93317,93318,93319,93552,93927,93948,93951,97485,97969,97971);
 INSERT IGNORE INTO `quest_request_items` (`ID`,`EmoteOnComplete`,`EmoteOnIncomplete`,`EmoteOnCompleteDelay`,`EmoteOnIncompleteDelay`,`CompletionText`,`VerifiedBuild`) VALUES
+(744,0,0,0,0,'This headdress will certainly be a wonderful gift for my brother.',70124),
 (747,0,0,0,0,'Providing meat and feathers for the tribe is the first step in proving yourself as a hunter before the Chief.',70124),
 (3092,0,0,0,0,'Welcome to Camp Narache, $n. I hear good things about you. Your bloodline is strong, and many of the elders consider you skilled already. But that we will test.$B$BThe plains of Mulgore will be your home for sometime--you should do your best to learn it very well. One day you will travel to unfamiliar lands to master greater skills. You must be ready.',70124),
+(5723,0,0,0,0,'How goes your search for the Chasm? And the troggs?$B$BThe threat cannot be allowed to persist--it will only injure our orc brethren if it continues.',70124),
 (92461,0,0,0,0,'As unsavory as it is to need to cull living creatures, this type of guiding hand is needed to avert disaster in our homeland. This is an important lesson for one such as yourself to learn.',70124),
 (92470,0,0,0,0,'What I ask of you is not easy, but you must be prepared for much greater challenges if you are to survive long enough to be of service to Zephras Isle.',70124),
 (92473,0,0,0,0,'The ursera have grown far more aggressive of late. I wonder what has changed to cause this shift in behavior?',70124),
@@ -1892,19 +1964,28 @@ INSERT IGNORE INTO `quest_request_items` (`ID`,`EmoteOnComplete`,`EmoteOnIncompl
 (92551,0,0,0,0,'There\'s a lot of hungry and desperate skyborne here who need these supplies.',70124),
 (92553,0,0,0,0,'No matter how much things change here on Zephras and how uncertain things get, I always say that a pipe full of dried peacebloom and nice full belly is a comfort that can\'t be beat!',70124),
 (92579,0,0,0,0,'A letter from Aonda. What\'s that crafty highlander been up to?',70124),
+(92679,0,0,0,0,'What? Alvarion is alive?',70124),
+(92682,0,0,0,0,'These bandits are more likely to double cross and steal from each other than they are to steal from normal folks. I bet if Ferauu knew some of his people went rogue and came here early to tamper with the harvest, he\'d kill them himself.',70124),
+(92683,0,0,0,0,'Flutterflies are normally docile and calm, but rub them the wrong way and sometimes they\'ll surprise you.',70124),
+(92684,0,0,0,0,'I don\'t think I\'ve had real meat for dinner in... well, too long.',70124),
+(92685,0,0,0,0,'If you manage to bring me enough bandit masks, maybe I\'ll stitch a blanket out of them and give it to Ferauu.\r\n\r\n<Aamelia laughs loudly.>',70124),
+(92693,0,0,0,0,'There\'s not enough stormapples in skywall to repay you for this.',70124),
+(93317,0,0,0,0,'Windsong Crawler meat is common enough here but it was something of a delicacy on the islands of Anvilas and Siroccas. Was a time, back when the skystreams were open that the locals would mob me for the stuff when I\'d make the trip to Shen\'dramar or New Eldre\'naar.\r\n\r\nNot been able to visit those places in... well... a long time.',70124),
 (93318,0,0,0,0,'I\'ll need the creature\'s head as proof of the deed.',70124),
 (93319,0,0,0,0,'These sneakthieves have likely been breaking into our supplies for months. I tried to convince Aonda to put a raid together to clear out that bandit cave for good, but she didn\'t want to pull the few peacekeepers we have away from the village. \r\n\r\nWith the cultists at Falaath Village to the south growing in numbers, I suppose I can\'t fault her for that.',70124),
 (93552,0,0,0,0,'Hello there, $c.',70124),
 (93927,0,0,0,0,'What news from the western watch?',70124),
 (93948,0,0,0,0,'What is that you have for me? Oh... oh no.',70124),
 (93951,0,0,0,0,'What beautiful things did you bring me?',70124),
+(97485,0,0,0,0,'There are many occasions one may choose to spread incense to the winds. You could be asking the Earthmother to watch over someone, bless a hunt, celebrate an occasion, or even to seek guidance from our ancestors.\r\n\r\nOr it could be something else entirely.\r\n\r\nThough the act is done with reverence, it is not strictly a ceremonial affair. Typically there are certain traditional steps observed when performing this act, but many tribes have differing practices.',70124),
 (97969,0,0,0,0,'Yes, I can teach you.',70124),
 (97971,0,0,0,0,'Yes, $c. I can teach you.',70124);
 
 -- creature texts heard in the sniffs (not yet triggered by scripts)
-DELETE FROM `creature_text` WHERE `CreatureID` IN (251451,257521,252481,251918,255534,254588,256966,252068,251966,252820,250874,250929,252863,275269,256306);
+DELETE FROM `creature_text` WHERE `CreatureID` IN (251451,257521,252481,251918,255534,254588,256966,252068,251966,252820,250874,250929,252863,275269,256306,252802,252800,252763,250921,252664);
 INSERT INTO `creature_text` (`CreatureID`,`GroupID`,`ID`,`Text`,`Type`,`Language`,`Probability`,`Emote`,`Duration`,`Sound`,`SoundPlayType`,`BroadcastTextId`,`TextRange`,`comment`) VALUES
 (250874,0,0,'%s becomes enraged!',16,0,100,0,0,0,0,0,0,'Vuldren Alpha (sniff)'),
+(250921,0,0,'The tiny sprite squeaks fearfully and vanishes!',16,0,100,0,0,0,0,0,0,'Forest Sprite (sniff)'),
 (250929,0,0,'THREAT DETECTED. ADMINISTERING VIOLENCE.',14,0,100,0,0,0,0,0,0,'Malfunctioning Cyclone Construct (sniff)'),
 (250929,1,0,'FUNCTION FULFILLED. RESUMING REST MODE.',14,0,100,0,0,0,0,0,0,'Malfunctioning Cyclone Construct (sniff)'),
 (251451,0,0,'Die, non-believer!',12,0,100,0,0,0,0,0,0,'Al\'Aketh Ambusher (sniff)'),
@@ -1914,6 +1995,10 @@ INSERT INTO `creature_text` (`CreatureID`,`GroupID`,`ID`,`Text`,`Type`,`Language
 (251966,0,0,'Only the righteous will be saved from what is to come! Death to non-believers!',12,0,100,0,0,0,0,0,0,'Commander Cyclas (sniff)'),
 (252068,0,0,'%s attempts to run away in fear!',16,0,100,0,0,0,0,0,0,'Al\'Aketh Stormcaller (sniff)'),
 (252481,0,0,'The tiny sprite squeaks fearfully and vanishes!',16,0,100,0,0,0,0,0,0,'Wind Sprite (sniff)'),
+(252664,0,0,'%s attempts to run away in fear!',16,0,100,0,0,0,0,0,0,'Al\'Aketh Stormchaser (sniff)'),
+(252763,0,0,'%s attempts to run away in fear!',16,0,100,0,0,0,0,0,0,'Al\'Aketh Spiritcaller (sniff)'),
+(252800,0,0,'It\'s time, stranger. One way or another, let\'s finish this.',12,0,100,0,0,0,0,0,0,'Aamelia Windfield (sniff)'),
+(252802,0,0,'%s attempts to run away in fear!',16,0,100,0,0,0,0,0,0,'Hungry Bandit (sniff)'),
 (252820,0,0,'%s attempts to run away in fear!',16,0,100,0,0,0,0,0,0,'Bandit Highwayman (sniff)'),
 (252863,0,0,'Little apple farmers! Ferauu is here to collect what is owed!',14,0,100,0,0,0,0,0,0,'Ferauu the Bludgeon (sniff)'),
 (254588,0,0,'%s attempts to run away in fear!',16,0,100,0,0,0,0,0,0,'Windsong Crawler (sniff)'),
@@ -1931,7 +2016,7 @@ INSERT INTO `creature_text` (`CreatureID`,`GroupID`,`ID`,`Text`,`Type`,`Language
 (275269,0,0,'The skycutter bound for Dalaran City has just arrived. All aboard for Dalaran City!',12,0,100,0,0,0,0,0,0,'High Order Dockmaster (sniff)');
 
 -- loot of the Forever creatures (chance = drops / kills seen in the sniffs)
-UPDATE `creature_template_difficulty` SET `LootID` = `Entry` WHERE `DifficultyID` = 0 AND `Entry` IN (250868,250873,250874,250926,250937,251115,251143,251145,251160,251169,251245,251261,251284,251291,251402,251404,251448,251451,251661,251662,251707,251918,251966,252068,254588,254589,255534,256966,257521,271712);
+UPDATE `creature_template_difficulty` SET `LootID` = `Entry` WHERE `DifficultyID` = 0 AND `Entry` IN (250868,250873,250874,250926,250937,251115,251143,251145,251160,251169,251245,251261,251284,251291,251402,251404,251448,251451,251622,251661,251662,251707,251918,251966,252068,252664,252802,252820,253282,253283,254588,254589,254626,255534,256092,256966,257521,258443,271712);
 UPDATE `creature_template_difficulty` SET `GoldMin` = 3, `GoldMax` = 8 WHERE `DifficultyID` = 0 AND `Entry` = 251145;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 1, `GoldMax` = 5 WHERE `DifficultyID` = 0 AND `Entry` = 251160;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 2, `GoldMax` = 9 WHERE `DifficultyID` = 0 AND `Entry` = 251448;
@@ -1939,10 +2024,15 @@ UPDATE `creature_template_difficulty` SET `GoldMin` = 6, `GoldMax` = 8 WHERE `Di
 UPDATE `creature_template_difficulty` SET `GoldMin` = 4, `GoldMax` = 17 WHERE `DifficultyID` = 0 AND `Entry` = 251918;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 26, `GoldMax` = 26 WHERE `DifficultyID` = 0 AND `Entry` = 251966;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 5, `GoldMax` = 30 WHERE `DifficultyID` = 0 AND `Entry` = 252068;
+UPDATE `creature_template_difficulty` SET `GoldMin` = 8, `GoldMax` = 40 WHERE `DifficultyID` = 0 AND `Entry` = 252664;
+UPDATE `creature_template_difficulty` SET `GoldMin` = 6, `GoldMax` = 30 WHERE `DifficultyID` = 0 AND `Entry` = 252802;
+UPDATE `creature_template_difficulty` SET `GoldMin` = 8, `GoldMax` = 29 WHERE `DifficultyID` = 0 AND `Entry` = 252820;
+UPDATE `creature_template_difficulty` SET `GoldMin` = 12, `GoldMax` = 35 WHERE `DifficultyID` = 0 AND `Entry` = 254626;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 23, `GoldMax` = 23 WHERE `DifficultyID` = 0 AND `Entry` = 256935;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 27, `GoldMax` = 27 WHERE `DifficultyID` = 0 AND `Entry` = 256966;
 UPDATE `creature_template_difficulty` SET `GoldMin` = 12, `GoldMax` = 31 WHERE `DifficultyID` = 0 AND `Entry` = 257521;
-DELETE FROM `creature_loot_template` WHERE `Entry` IN (250868,250873,250874,250926,250937,251115,251143,251145,251160,251169,251245,251261,251284,251291,251402,251404,251448,251451,251661,251662,251707,251918,251966,252068,254588,254589,255534,256966,257521,271712);
+UPDATE `creature_template_difficulty` SET `GoldMin` = 20, `GoldMax` = 20 WHERE `DifficultyID` = 0 AND `Entry` = 258443;
+DELETE FROM `creature_loot_template` WHERE `Entry` IN (250868,250873,250874,250926,250937,251115,251143,251145,251160,251169,251245,251261,251284,251291,251402,251404,251448,251451,251622,251661,251662,251707,251918,251966,252068,252664,252802,252820,253282,253283,254588,254589,254626,255534,256092,256966,257521,258443,271712);
 INSERT INTO `creature_loot_template` (`Entry`,`ItemType`,`Item`,`Chance`,`QuestRequired`,`LootMode`,`GroupId`,`MinCount`,`MaxCount`,`Comment`) VALUES
 (250868,0,3300,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
 (250873,0,2672,22.22,0,1,0,1,1,'sniff: 2 of 9 kills'),
@@ -2025,6 +2115,8 @@ INSERT INTO `creature_loot_template` (`Entry`,`ItemType`,`Item`,`Chance`,`QuestR
 (251451,0,1378,50.0,0,1,0,1,1,'sniff: 1 of 2 kills'),
 (251451,0,2589,50.0,1,1,0,1,1,'sniff: 1 of 2 kills'),
 (251451,0,4540,100.0,0,1,0,1,1,'sniff: 2 of 2 kills'),
+(251622,0,2646,50.0,0,1,0,1,1,'sniff: 1 of 2 kills'),
+(251622,0,7101,50.0,0,1,0,1,1,'sniff: 1 of 2 kills'),
 (251661,0,2643,6.67,0,1,0,1,1,'sniff: 1 of 15 kills'),
 (251661,0,2934,26.67,0,1,0,1,1,'sniff: 4 of 15 kills'),
 (251661,0,4757,33.33,0,1,0,1,1,'sniff: 5 of 15 kills'),
@@ -2033,7 +2125,11 @@ INSERT INTO `creature_loot_template` (`Entry`,`ItemType`,`Item`,`Chance`,`QuestR
 (251661,0,7096,33.33,0,1,0,1,1,'sniff: 5 of 15 kills'),
 (251661,0,7097,6.67,0,1,0,1,1,'sniff: 1 of 15 kills'),
 (251662,0,6297,100.0,0,1,0,1,1,'sniff: 4 of 4 kills'),
-(251707,0,4775,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
+(251707,0,1422,8.33,0,1,0,1,1,'sniff: 1 of 12 kills'),
+(251707,0,4775,83.33,0,1,0,1,1,'sniff: 10 of 12 kills'),
+(251707,0,4776,16.67,0,1,0,1,1,'sniff: 2 of 12 kills'),
+(251707,0,5571,8.33,0,1,0,1,1,'sniff: 1 of 12 kills'),
+(251707,0,253597,58.33,1,1,0,1,1,'sniff: 7 of 12 kills'),
 (251918,0,1181,15.38,0,1,0,1,1,'sniff: 2 of 13 kills'),
 (251918,0,1411,7.69,0,1,0,1,1,'sniff: 1 of 13 kills'),
 (251918,0,2589,38.46,1,1,0,1,2,'sniff: 5 of 13 kills'),
@@ -2058,12 +2154,53 @@ INSERT INTO `creature_loot_template` (`Entry`,`ItemType`,`Item`,`Chance`,`QuestR
 (252068,0,252760,47.62,1,1,0,1,1,'sniff: 10 of 21 kills'),
 (252068,0,255663,9.52,0,1,0,1,1,'sniff: 2 of 21 kills'),
 (252068,0,267474,4.76,0,1,0,1,1,'sniff: 1 of 21 kills'),
-(254588,0,2675,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
-(254588,0,4874,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
+(252664,0,3013,25.0,0,1,0,1,1,'sniff: 1 of 4 kills'),
+(252664,0,252030,25.0,0,1,0,1,1,'sniff: 1 of 4 kills'),
+(252664,0,252031,25.0,0,1,0,2,2,'sniff: 1 of 4 kills'),
+(252664,0,252032,25.0,0,1,0,1,1,'sniff: 1 of 4 kills'),
+(252664,0,265141,100.0,1,1,0,1,1,'sniff: 4 of 4 kills'),
+(252802,0,3013,20.0,0,1,0,1,1,'sniff: 1 of 5 kills'),
+(252802,0,252022,20.0,0,1,0,2,2,'sniff: 1 of 5 kills'),
+(252802,0,252030,20.0,0,1,0,1,1,'sniff: 1 of 5 kills'),
+(252802,0,252031,20.0,0,1,0,2,2,'sniff: 1 of 5 kills'),
+(252802,0,252032,20.0,0,1,0,1,1,'sniff: 1 of 5 kills'),
+(252820,0,1419,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(252820,0,2212,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(252820,0,2213,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(252820,0,2589,36.36,1,1,0,2,2,'sniff: 4 of 11 kills'),
+(252820,0,2645,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(252820,0,3013,18.18,0,1,0,1,1,'sniff: 2 of 11 kills'),
+(252820,0,252022,9.09,0,1,0,2,2,'sniff: 1 of 11 kills'),
+(252820,0,252030,9.09,0,1,0,2,2,'sniff: 1 of 11 kills'),
+(252820,0,252031,45.45,0,1,0,1,2,'sniff: 5 of 11 kills'),
+(252820,0,253596,63.64,1,1,0,1,1,'sniff: 7 of 11 kills'),
+(252820,0,255663,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(252820,0,267474,9.09,0,1,0,2,2,'sniff: 1 of 11 kills'),
+(253282,0,1415,16.67,0,1,0,1,1,'sniff: 1 of 6 kills'),
+(253282,0,3299,100.0,0,1,0,1,1,'sniff: 6 of 6 kills'),
+(253282,0,4674,16.67,0,1,0,1,1,'sniff: 1 of 6 kills'),
+(253283,0,3299,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
+(254588,0,1416,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(254588,0,1417,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(254588,0,2213,9.09,0,1,0,1,1,'sniff: 1 of 11 kills'),
+(254588,0,2675,45.45,0,1,0,1,1,'sniff: 5 of 11 kills'),
+(254588,0,4873,36.36,0,1,0,1,1,'sniff: 4 of 11 kills'),
+(254588,0,4874,63.64,0,1,0,1,1,'sniff: 7 of 11 kills'),
+(254588,0,257941,54.55,1,1,0,1,1,'sniff: 6 of 11 kills'),
 (254589,0,2672,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
 (254589,0,3299,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
 (254589,0,257942,100.0,1,1,0,1,1,'sniff: 1 of 1 kills'),
+(254626,0,1181,11.11,0,1,0,1,1,'sniff: 1 of 9 kills'),
+(254626,0,2589,11.11,1,1,0,2,2,'sniff: 1 of 9 kills'),
+(254626,0,8178,11.11,0,1,0,1,1,'sniff: 1 of 9 kills'),
+(254626,0,252022,22.22,0,1,0,1,1,'sniff: 2 of 9 kills'),
+(254626,0,252028,11.11,0,1,0,2,2,'sniff: 1 of 9 kills'),
+(254626,0,252031,44.44,0,1,0,1,2,'sniff: 4 of 9 kills'),
+(254626,0,252032,11.11,0,1,0,1,1,'sniff: 1 of 9 kills'),
 (255534,0,257945,100.0,1,1,0,1,1,'sniff: 1 of 1 kills'),
+(256092,0,774,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
+(256092,0,3299,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
+(256092,0,265140,100.0,1,1,0,4,4,'sniff: 1 of 1 kills'),
 (256966,0,2589,100.0,1,1,0,1,1,'sniff: 1 of 1 kills'),
 (256966,0,255663,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
 (257521,0,118,50.0,0,1,0,1,1,'sniff: 3 of 6 kills'),
@@ -2072,4 +2209,6 @@ INSERT INTO `creature_loot_template` (`Entry`,`ItemType`,`Item`,`Chance`,`QuestR
 (257521,0,2589,16.67,1,1,0,1,1,'sniff: 1 of 6 kills'),
 (257521,0,4540,33.33,0,1,0,1,1,'sniff: 2 of 6 kills'),
 (257521,0,255663,33.33,0,1,0,1,1,'sniff: 2 of 6 kills'),
+(258443,0,4775,100.0,0,1,0,1,1,'sniff: 1 of 1 kills'),
+(258443,0,6889,100.0,1,1,0,1,1,'sniff: 1 of 1 kills'),
 (271712,0,4757,100.0,0,1,0,1,1,'sniff: 1 of 1 kills');

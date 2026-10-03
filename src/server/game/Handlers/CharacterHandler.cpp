@@ -44,6 +44,7 @@
 #include "Item.h"
 #include "Language.h"
 #include "Log.h"
+#include "Mail.h"
 #include "Map.h"
 #include "MapUtils.h"
 #include "Metric.h"
@@ -505,6 +506,24 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
 
     SendPacket(charEnum.Write());
 
+    // Classic 1.60: per character restrictions, right after the enum result as on the official server (sniff 70205: Classic
+    // opcode 0x460019; per character: 2 bits (own byte), packed guid, uint32 0, uint32 10).
+    if (!charEnum.IsDeletedCharacters && !charEnum.Characters.empty())
+    {
+        WorldPacket restrictions(SMSG_REGIONWIDE_CHARACTER_RESTRICTIONS_DATA, 4 + charEnum.Characters.size() * 20);
+        restrictions << uint32(charEnum.Characters.size());
+        for (WorldPackets::Character::EnumCharactersResult::CharacterInfo const& character : charEnum.Characters)
+        {
+            restrictions.WriteBit(false);
+            restrictions.WriteBit(false);
+            restrictions.FlushBits();
+            restrictions << character.Basic.Guid;
+            restrictions << uint32(0);
+            restrictions << uint32(10);
+        }
+        SendPacket(&restrictions);
+    }
+
     // Classic 1.60.1.70009: character select keeps the enum result pending (never shows the characters) until it receives
     // Classic opcode 0x460362 (retail numbering: SMSG_RECENT_ALLY_DATA_RESPONSE), whose handler (rva 0x24F1E50) releases it.
     // Layout: uint32, uint8 (handler only uses the list when this is 7), uint32 count, entries - send it empty.
@@ -514,6 +533,84 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
         release << uint8(0);
         release << uint32(0);
         SendPacket(&release, true);
+    }
+
+    // Classic 1.60: unread mail of each character, the character list shows a mail icon with the senders (official beta sniff
+    // 70205, Classic opcode 0x46001A). Per character: 2 bits (own byte), packed guid, uint32 senders, uint32 sender types,
+    // types, 6-bit name lengths (with the terminating zero), names. Sender type of the Auction House is 8.
+    // With the 2 bits after the entry instead of before it the client read past the end and crashed (2026-10-03 23:40, 23:47).
+    if (!charEnum.IsDeletedCharacters && !charEnum.Characters.empty())
+    {
+        std::string receivers;
+        for (WorldPackets::Character::EnumCharactersResult::CharacterInfo const& character : charEnum.Characters)
+            receivers += (receivers.empty() ? "" : ",") + std::to_string(character.Basic.Guid.GetCounter());
+
+        std::unordered_map<ObjectGuid::LowType, std::vector<std::pair<uint32, std::string>>> senders;
+        if (QueryResult mails = CharacterDatabase.PQuery("SELECT m.receiver, m.messageType, m.sender, c.name FROM mail m "
+            "LEFT JOIN characters c ON m.messageType = {} AND c.guid = m.sender WHERE m.receiver IN ({}) AND m.deliver_time <= UNIX_TIMESTAMP() "
+            "AND (m.checked & {}) = 0", uint32(MAIL_NORMAL), receivers, uint32(MAIL_CHECK_MASK_READ)))
+        {
+            do
+            {
+                Field* fields = mails->Fetch();
+                uint32 type = 0;
+                std::string name;
+                switch (fields[1].GetUInt8())
+                {
+                    case MAIL_NORMAL:
+                        name = fields[3].GetString();
+                        break;
+                    case MAIL_AUCTION:
+                        type = 8;
+                        name = "Auction House";
+                        break;
+                    case MAIL_CREATURE:
+                        if (CreatureTemplate const* creature = sObjectMgr->GetCreatureTemplate(fields[2].GetUInt64()))
+                            name = creature->Name;
+                        break;
+                    case MAIL_GAMEOBJECT:
+                        if (GameObjectTemplate const* go = sObjectMgr->GetGameObjectTemplate(fields[2].GetUInt64()))
+                            name = go->name;
+                        break;
+                    default:
+                        break;
+                }
+                if (name.empty() || name.length() > 62)
+                    continue;
+
+                std::vector<std::pair<uint32, std::string>>& list = senders[fields[0].GetUInt64()];
+                if (list.size() < 10 && std::ranges::find(list, std::make_pair(type, name)) == list.end())
+                    list.emplace_back(type, std::move(name));
+            } while (mails->NextRow());
+        }
+
+        WorldPacket mailData(SMSG_REGIONWIDE_CHARACTER_MAIL_DATA, 4 + charEnum.Characters.size() * 20);
+        mailData << uint32(charEnum.Characters.size());
+        for (WorldPackets::Character::EnumCharactersResult::CharacterInfo const& character : charEnum.Characters)
+        {
+            std::vector<std::pair<uint32, std::string>> const* list = Trinity::Containers::MapGetValuePtr(senders, character.Basic.Guid.GetCounter());
+            std::size_t count = list ? list->size() : 0;
+            mailData.WriteBit(false);
+            mailData.WriteBit(false);
+            mailData.FlushBits();
+            mailData << character.Basic.Guid;
+            mailData << uint32(count);
+            mailData << uint32(count);
+            if (list)
+            {
+                for (auto const& [type, name] : *list)
+                    mailData << uint32(type);
+                for (auto const& [type, name] : *list)
+                    mailData.WriteBits(name.length() + 1, 6);
+                mailData.FlushBits();
+                for (auto const& [type, name] : *list)
+                {
+                    mailData.WriteString(name);
+                    mailData << uint8(0);
+                }
+            }
+        }
+        SendPacket(&mailData);
     }
 
     if (!charEnum.IsDeletedCharacters)

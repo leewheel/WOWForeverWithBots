@@ -1848,6 +1848,7 @@ void Unit::HandleEmoteCommand(Emote emoteId, Player* target /*=nullptr*/, Trinit
         {
             victimResistance += float(player->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, schoolMask));
             victimResistance -= float(player->GetSpellPenetrationItemMod());
+            victimResistance -= float(player->GetClassicSpellPenetration(schoolMask));
         }
         else if (Unit const* unitCaster = caster->ToUnit())
             victimResistance += float(unitCaster->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, schoolMask));
@@ -6866,6 +6867,9 @@ int32 Unit::SpellDamageBonusDone(Unit* victim, SpellInfo const* spellProto, int3
     int32 DoneAdvertisedBenefit  = SpellBaseDamageBonusDone(spellProto->GetSchoolMask());
     // modify spell power by victim's SPELL_AURA_MOD_DAMAGE_TAKEN auras (eg Amplify/Dampen Magic)
     DoneAdvertisedBenefit += victim->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_DAMAGE_TAKEN, spellProto->GetSchoolMask());
+    // Classic 1.60 item stats: spell damage versus a creature type
+    if (Player const* thisPlayer = ToPlayer())
+        DoneAdvertisedBenefit += thisPlayer->GetClassicSpellDamageVersus(victim->GetCreatureTypeMask());
 
     // Pets just add their bonus damage to their spell damage
     // note that their spell damage is just gain of their own auras
@@ -7121,6 +7125,9 @@ int32 Unit::SpellBaseDamageBonusDone(SpellSchoolMask schoolMask) const
     {
         // Base value
         DoneAdvertisedBenefit += thisPlayer->GetBaseSpellPowerBonus();
+
+        // Classic 1.60 item stats: damage done of one school
+        DoneAdvertisedBenefit += thisPlayer->GetClassicSpellDamageDone(schoolMask);
 
         if (thisPlayer->GetPrimaryStat() == STAT_INTELLECT)
             DoneAdvertisedBenefit += std::max(0, int32(GetStat(STAT_INTELLECT)));  // spellpower from intellect
@@ -8075,6 +8082,10 @@ int32 Unit::MeleeDamageBonusDone(Unit* pVictim, int32 damage, WeaponAttackType a
         // ..done (base at attack power and creature type)
         APbonus += GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_MELEE_ATTACK_POWER_VERSUS, creatureTypeMask);
     }
+
+    // Classic 1.60 item stats: attack power versus a creature type (melee and ranged)
+    if (Player const* thisPlayer = ToPlayer())
+        APbonus += thisPlayer->GetClassicAttackPowerVersus(creatureTypeMask);
 
     if (APbonus != 0)                                       // Can be negative
     {
@@ -9834,6 +9845,10 @@ void Unit::UpdateDamageDoneMods(WeaponAttackType attackType, int32 /*skipEnchant
         return CheckAttackFitToAuraRequirement(attackType, aurEff);
     });
 
+    // Classic 1.60 item stats: physical damage done (vanilla "+N Weapon Damage")
+    if (Player const* thisPlayer = ToPlayer())
+        amount += thisPlayer->GetClassicSpellDamageDone(SPELL_SCHOOL_MASK_NORMAL);
+
     SetStatFlatModifier(unitMod, TOTAL_VALUE, amount);
 }
 
@@ -10555,7 +10570,7 @@ ProcFlagsHit createProcHitMask(SpellNonMeleeDamage* damageInfo, SpellMissInfo mi
     return hitMask;
 }
 
-void Unit::ProcSkillsAndReactives(bool isVictim, Unit* procTarget, ProcFlagsInit const& typeMask, ProcFlagsHit hitMask, WeaponAttackType /*attType*/)
+void Unit::ProcSkillsAndReactives(bool isVictim, Unit* procTarget, ProcFlagsInit const& typeMask, ProcFlagsHit hitMask, WeaponAttackType attType)
 {
     // Player is loaded now - do not allow passive spell casts to proc
     if (GetTypeId() == TYPEID_PLAYER && ToPlayer()->GetSession()->PlayerLoading())
@@ -10564,6 +10579,18 @@ void Unit::ProcSkillsAndReactives(bool isVictim, Unit* procTarget, ProcFlagsInit
     // For melee/ranged based attack need update skills and set some Aura states if victim present
     if (typeMask & MELEE_BASED_TRIGGER_MASK && procTarget)
     {
+        // Classic 1.60: weapon skill of the attacker, defense of the victim (not against players or critters)
+        if (Player* player = ToPlayer())
+        {
+            if (procTarget->GetTypeId() != TYPEID_PLAYER && !procTarget->IsCritter())
+            {
+                if (hitMask & (PROC_HIT_NORMAL | PROC_HIT_CRITICAL | PROC_HIT_MISS | PROC_HIT_FULL_RESIST))
+                    player->UpdateCombatSkills(procTarget, attType, isVictim);
+                else if (isVictim && hitMask & (PROC_HIT_DODGE | PROC_HIT_PARRY | PROC_HIT_BLOCK))
+                    player->UpdateCombatSkills(procTarget, attType, true);
+            }
+        }
+
         // If exist crit/parry/dodge/block need update aura state (for victim and attacker)
         if (hitMask & (PROC_HIT_CRITICAL | PROC_HIT_PARRY | PROC_HIT_DODGE | PROC_HIT_BLOCK))
         {
