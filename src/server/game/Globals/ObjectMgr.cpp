@@ -639,6 +639,36 @@ std::pair<uint8, uint8> const* ObjectMgr::GetCreatureClassicLevel(uint32 entry) 
     return Trinity::Containers::MapGetValuePtr(_creatureClassicLevelStore, entry);
 }
 
+// Classic 1.60: vanilla block value of shields (the Classic client data has none), see Player::GetShieldBlockValue
+void ObjectMgr::LoadItemClassicBlock()
+{
+    uint32 oldMSTime = getMSTime();
+
+    _itemClassicBlockStore.clear();
+
+    //                                               0      1
+    QueryResult result = WorldDatabase.Query("SELECT entry, block FROM item_classic_block");
+    if (!result)
+    {
+        TC_LOG_INFO("server.loading", ">> Loaded 0 classic shield block values. DB table `item_classic_block` is empty.");
+        return;
+    }
+
+    do
+    {
+        Field* fields = result->Fetch();
+        _itemClassicBlockStore[fields[0].GetUInt32()] = fields[1].GetUInt32();
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded {} classic shield block values in {} ms", _itemClassicBlockStore.size(), GetMSTimeDiffToNow(oldMSTime));
+}
+
+uint32 ObjectMgr::GetItemClassicBlock(uint32 entry) const
+{
+    uint32 const* block = Trinity::Containers::MapGetValuePtr(_itemClassicBlockStore, entry);
+    return block ? *block : 0;
+}
+
 void ObjectMgr::LoadCreatureTemplateModels()
 {
     uint32 oldMSTime = getMSTime();

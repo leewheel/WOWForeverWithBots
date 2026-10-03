@@ -1526,6 +1526,7 @@ bool World::SetInitialWorldSettings()
 
     TC_LOG_INFO("server.loading", "Loading Classic creature levels...");
     sObjectMgr->LoadCreatureClassicLevels();
+    sObjectMgr->LoadItemClassicBlock();
 
     TC_LOG_INFO("server.loading", "Loading Equipment templates...");           // must be after LoadCreatureTemplates
     sObjectMgr->LoadEquipmentTemplates();

@@ -1825,6 +1825,11 @@ class TC_GAME_API Unit : public WorldObject
         float GetHoverOffset() const { return HasUnitMovementFlag(MOVEMENTFLAG_HOVER) ? *m_unitData->HoverHeight : 0.0f; }
 
         int32 RewardRage(uint32 baseRage);
+        // Classic 1.60 (vanilla) combat: rage from damage, weapon / defense skill of the attack table, blocked amount
+        int32 RewardClassicRage(uint32 damage, bool attacker);
+        int32 GetClassicWeaponSkill(WeaponAttackType attType, Unit const* victim) const;
+        int32 GetClassicDefenseSkill(Unit const* attacker) const;
+        virtual uint32 GetClassicShieldBlockValue() const { return GetLevel() / 2 + uint32(std::max(0.0f, GetStat(STAT_STRENGTH)) / 20.0f); }
 
         virtual float GetFollowAngle() const { return static_cast<float>(M_PI/2); }
 

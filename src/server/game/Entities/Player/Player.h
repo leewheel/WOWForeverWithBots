@@ -2212,6 +2212,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         void UpdateDefenseSkill();
 
         float GetHealthBonusFromStamina() const;
+        float GetManaBonusFromIntellect() const;
         Stats GetPrimaryStat() const;
 
         bool UpdateStats(Stats stat) override;
@@ -2244,6 +2245,12 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
 
         void RecalculateRating(CombatRating cr) { ApplyRatingMod(cr, 0, true);}
         void GetDodgeFromAgility(float &diminishing, float &nondiminishing) const;
+        float GetMeleeCritFromAgility() const;
+        float GetSpellCritFromIntellect() const;
+        float OCTRegenMPPerSpirit() const;
+        float OCTRegenHPPerSpirit() const;
+        float GetClassicDefenseSkillBonus() const;
+        float GetClassicBaseCritAndDodge() const;
         float GetRatingMultiplier(CombatRating cr) const;
         float GetRatingBonusValue(CombatRating cr) const;
         float ApplyRatingDiminishing(CombatRating cr, float bonusValue) const;
@@ -2257,6 +2264,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         int32 GetClassicSpellPenetration(uint32 schoolMask) const;
         int32 GetClassicAttackPowerVersus(uint32 creatureTypeMask) const;
         int32 GetClassicSpellDamageVersus(uint32 creatureTypeMask) const;
+        uint32 GetClassicShieldBlockValue() const override;
 
         bool CanApplyResilience() const override { return true; }
 
@@ -3299,6 +3307,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         uint32 m_baseHealthRegen;
         int32 m_spellPenetrationItemMod;
         std::array<int32, 140 - 83> m_classicItemMods = { };   // ItemModType 83 .. 139 (ITEM_MOD_CLASSIC_*), from equipped items
+        int32 m_classicBlockValueBonus = 0;                    // ITEM_MOD_BLOCK_VALUE of equipped items
 
         SpellModContainer m_spellMods;
 
