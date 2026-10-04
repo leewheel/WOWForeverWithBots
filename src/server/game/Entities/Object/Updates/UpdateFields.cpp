@@ -5277,12 +5277,12 @@ bool TransmogOutfitMetadata::operator==(TransmogOutfitMetadata const& right) con
 
 void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags, ByteBuffer& data, Player const* receiver, Player const* owner) const
 {
-    for (uint32 i = 0; i < 105; ++i)
+    for (uint32 i = 0; i < 108; ++i)
     {
         data << InvSlots[i];
     }
     // Classic 1.60.1.70009 has 145 InvSlots (client ActivePlayerData create reader rva 0xA882E0, count at rva 0x4E417E0)
-    for (uint32 i = 105; i < 145; ++i)
+    for (uint32 i = 108; i < 145; ++i)
         data << ObjectGuid::Empty;
     data << *FarsightObject;
     data << *SummonedBattlePetGUID;
@@ -5657,7 +5657,9 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     data.WriteBit(HasPerksProgramPendingReward);
     data.WriteBit(QuestSession.has_value());
     data.WriteBit(PetStable.has_value());
-    data.WriteBits(CharacterBankTabSettings.size(), 3);
+    // Classic 1.60: the character bank tab count has 4 bits (9 tabs: the bank's own + 8 bag slots; official sniff 70205 "10 20 00",
+    // 2 tabs). With TC's 3 bits a character with 1 tab was read as 2 (client assert n < N, 354 vs 257) and 8 tabs wrapped to 0.
+    data.WriteBits(CharacterBankTabSettings.size(), 4);
     data.WriteBits(AccountBankTabSettings.size(), 3);
     data.WriteBit(WalkInData.has_value());
     data.WriteBit(ChallengeModeData.has_value());
@@ -5714,8 +5716,8 @@ static uint32 ClassicActivePlayerDataBit(uint32 bit)
     if (bit <= 148) return bit + 2;
     if (bit <= 154) return bit + 3;
     if (bit <= 161) return bit + 4;     // ..., ViewedOutfit (165)
-    if (bit <= 268) return bit + 5;     // TransmogMetadata (167), InvSlots group (168) + InvSlots[0..104] (169..273)
-    return bit + 45;                    // arrays after InvSlots
+    if (bit <= 271) return bit + 5;     // TransmogMetadata (167), InvSlots group (168) + InvSlots[0..107] (169..276)
+    return bit + 42;                    // arrays after InvSlots (TC InvSlots has 108 of the client's 145)
 }
 
 // Classic group bit -> last child bit
@@ -6542,12 +6544,17 @@ void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Pl
     data.FlushBits();
     if (changesMask[32])
     {
+        // Classic 1.60 (official sniff 70170, buying "Tab 1" and "Tab 2"): the character tab count has 4 bits (9 tabs) and the tabs
+        // start on a byte boundary: "0001 | 1 | pad 000 | tab" and "0010 | 10 | pad 00 | tab". With TC's 3 bits the client read
+        // the rest of the update off (garbage money, every bank bag slot shown as bought) and the 8th tab wrapped the count to 0;
+        // without the padding the 4th tab's name length came out 3 bits early (client assert n < N, 112 vs 65).
+        bool classicBankTabs = changesMask[48] || changesMask[49];
         if (changesMask[48])
         {
             if (!ignoreNestedChangesMask)
-                CharacterBankTabSettings.WriteUpdateMask(data, 3);
+                CharacterBankTabSettings.WriteUpdateMask(data, 4);
             else
-                WriteCompleteDynamicFieldUpdateMask(CharacterBankTabSettings.size(), data, 3);
+                WriteCompleteDynamicFieldUpdateMask(CharacterBankTabSettings.size(), data, 4);
         }
         if (changesMask[49])
         {
@@ -6556,6 +6563,8 @@ void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Pl
             else
                 WriteCompleteDynamicFieldUpdateMask(AccountBankTabSettings.size(), data, 3);
         }
+        if (classicBankTabs)
+            data.FlushBits();
         if (changesMask[48])
         {
             for (uint32 i = 0; i < CharacterBankTabSettings.size(); ++i)
@@ -7024,7 +7033,7 @@ void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Pl
     }
     if (changesMask[163])
     {
-        for (uint32 i = 0; i < 105; ++i)
+        for (uint32 i = 0; i < 108; ++i)
         {
             if (changesMask[164 + i])
             {
@@ -7032,111 +7041,111 @@ void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Pl
             }
         }
     }
-    if (changesMask[269])
+    if (changesMask[272])
     {
         for (uint32 i = 0; i < 2; ++i)
         {
-            if (changesMask[270 + i])
+            if (changesMask[273 + i])
             {
                 RestInfo[i].WriteUpdate(ignoreNestedChangesMask, data, receiver, owner);
             }
         }
     }
-    if (changesMask[272])
+    if (changesMask[275])
     {
         for (uint32 i = 0; i < 7; ++i)
         {
-            if (changesMask[273 + i])
+            if (changesMask[276 + i])
             {
                 data << int32(ModDamageDonePos[i]);
             }
-            if (changesMask[280 + i])
+            if (changesMask[283 + i])
             {
                 data << int32(ModDamageDoneNeg[i]);
             }
-            if (changesMask[287 + i])
+            if (changesMask[290 + i])
             {
                 data << float(ModDamageDonePercent[i]);
             }
-            if (changesMask[294 + i])
+            if (changesMask[297 + i])
             {
                 data << float(ModHealingDonePercent[i]);
             }
         }
     }
-    if (changesMask[301])
+    if (changesMask[304])
     {
         for (uint32 i = 0; i < 3; ++i)
         {
-            if (changesMask[302 + i])
+            if (changesMask[305 + i])
             {
                 data << float(WeaponDmgMultipliers[i]);
             }
-            if (changesMask[305 + i])
+            if (changesMask[308 + i])
             {
                 data << float(WeaponAtkSpeedMultipliers[i]);
             }
         }
     }
-    if (changesMask[308])
+    if (changesMask[311])
     {
         for (uint32 i = 0; i < 12; ++i)
         {
-            if (changesMask[309 + i])
+            if (changesMask[312 + i])
             {
                 data << uint32(BuybackPrice[i]);
             }
-            if (changesMask[321 + i])
+            if (changesMask[324 + i])
             {
                 data << int64(BuybackTimestamp[i]);
             }
         }
     }
-    if (changesMask[333])
+    if (changesMask[336])
     {
         for (uint32 i = 0; i < 32; ++i)
         {
-            if (changesMask[334 + i])
+            if (changesMask[337 + i])
             {
                 data << int32(CombatRatings[i]);
             }
         }
     }
-    if (changesMask[366])
+    if (changesMask[369])
     {
         for (uint32 i = 0; i < 4; ++i)
         {
-            if (changesMask[367 + i])
+            if (changesMask[370 + i])
             {
                 data << uint32(NoReagentCostMask[i]);
             }
         }
     }
-    if (changesMask[371])
+    if (changesMask[374])
     {
         for (uint32 i = 0; i < 2; ++i)
         {
-            if (changesMask[372 + i])
+            if (changesMask[375 + i])
             {
                 data << int32(ProfessionSkillLine[i]);
             }
         }
     }
-    if (changesMask[374])
+    if (changesMask[377])
     {
         for (uint32 i = 0; i < 5; ++i)
         {
-            if (changesMask[375 + i])
+            if (changesMask[378 + i])
             {
                 data << uint32(BagSlotFlags[i]);
             }
         }
     }
-    if (changesMask[380])
+    if (changesMask[383])
     {
         for (uint32 i = 0; i < 17; ++i)
         {
-            if (changesMask[381 + i])
+            if (changesMask[384 + i])
             {
                 data << float(ItemUpgradeHighWatermark[i]);
             }
@@ -7404,7 +7413,14 @@ void GameObjectData::WriteUpdate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlags,
 
 void GameObjectData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Player const* receiver, GameObject const* owner, bool ignoreNestedChangesMask) const
 {
-    data.WriteBits(changesMask.GetBlock(0), 27);
+    // Classic 1.60: the client's GameObjectData has one more field than retail, the int32 at +0x74 between FactionTemplate and State
+    // that WriteCreate fills with Level. Its update reader (rva 0x45071e0 in 70009) reads 28 mask bits: bit 16 = that field, then
+    // State 17, TypeID 18, PercentHealth 19, ArtKit 20, CustomParam 21, Level 22, AnimGroupInstance 23, UiWidgetItem* 24-26,
+    // AssistActionData 27. Retail bits 16..26 move up by one. With the retail 27 bits a door's State change (bit 16) reached the
+    // client as that extra field: doors and gates opened on the server but not in the game (Scholomance Iron Gates, 2026-10-04).
+    uint32 retailBits = changesMask.GetBlock(0);
+    uint32 classicBits = (retailBits & 0xFFFF) | ((retailBits & ~0xFFFFu) << 1) | (changesMask[21] ? (1u << 16) : 0u);
+    data.WriteBits(classicBits, 28);
 
     ViewerDependentValue<StateWorldEffectIDsTag>::value_type stateWorldEffectIDs = {};
 
@@ -7511,6 +7527,10 @@ void GameObjectData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Play
         if (changesMask[15])
         {
             data << int32(FactionTemplate);
+        }
+        if (changesMask[21])
+        {
+            data << int32(Level);               // Classic field at +0x74 (mask bit 16), see above
         }
         if (changesMask[16])
         {

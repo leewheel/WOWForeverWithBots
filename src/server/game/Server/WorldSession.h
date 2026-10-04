@@ -1952,6 +1952,10 @@ class TC_GAME_API WorldSession
         void ProcessQueryCallbacks();
 
         QueryCallbackProcessor _queryProcessor;
+
+        // Classic 1.60: SMSG_REGIONWIDE_CHARACTER_MAIL_DATA waits until the character list is shown (HandleCharEnum)
+        std::unique_ptr<WorldPacket> _classicCharacterMailData;
+        uint32 _classicCharacterMailDataTimer = 0;
         AsyncCallbackProcessor<TransactionCallback> _transactionCallbacks;
         AsyncCallbackProcessor<SQLQueryHolderCallback> _queryHolderProcessor;
 

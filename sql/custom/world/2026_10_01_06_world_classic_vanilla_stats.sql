@@ -1,4 +1,4 @@
--- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-03 evening, build 70205 sniff).
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-04, build 70205 sniff of 04:31, gossip greetings).
 -- Classic 1.60: vanilla base stats (VMaNGOS player_levelstats split into race offsets and class/level stats, classic_re/vanilla_stats.py);
 -- the retail tables gave e.g. 292 stamina at level 1. Races and classes not in vanilla keep their rows.
 DELETE FROM `player_racestats` WHERE `race` IN (1,2,3,4,5,6,7,8);

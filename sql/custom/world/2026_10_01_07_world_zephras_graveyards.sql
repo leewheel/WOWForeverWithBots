@@ -1,4 +1,4 @@
--- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-03 evening, build 70205 sniff).
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-04, build 70205 sniff of 04:31, gossip greetings).
 -- Classic 1.60: graveyards of Zephras Isle (map 2991, zone 16593); without them a death there sent the player to the Barrens.
 -- IDs from the official beta's cemetery list for the zone (ymir sniffs). Positions = where SMSG_DEATH_RELEASE_LOC sent the player
 -- after dying on Zephras Isle (4 graveyards seen; the client has no graveyard positions). 11031 (starting village) and 11033 (Spirit

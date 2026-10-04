@@ -680,6 +680,7 @@
     { 0x3F00EA, 0x3E00E7 }, // CMSG_COMPLETE_CINEMATIC (region 0x3F00E0-0x3F00F0 = retail - 3, manual)
     { 0x3F00EB, 0x3E00E8 }, // CMSG_CONVERSATION_LINE_STARTED (region 0x3F00E0-0x3F00F0 = retail - 3, manual)
     { 0x3F00EC, 0x3E00E9 }, // CMSG_CONVERSATION_CINEMATIC_READY (region 0x3F00E0-0x3F00F0 = retail - 3, manual)
+    { 0x3F012C, 0x3E0128 }, // CMSG_BUY_ACCOUNT_BANK_TAB (Classic buys character bank tabs with it: banker guid + bank type 0, official sniff 70170)
     { 0x3E00CD, 0x3D00CC }, // CMSG_LOOT_MONEY (loot block 0x3E00CC-0x3E00D3 = retail - 1, manual)
     { 0x3E00CE, 0x3D00CD }, // CMSG_LOOT_ITEM (loot block 0x3E00CC-0x3E00D3 = retail - 1, manual)
     { 0x3E00CF, 0x3D00CE }, // CMSG_MASTER_LOOT_ITEM (loot block 0x3E00CC-0x3E00D3 = retail - 1, manual)

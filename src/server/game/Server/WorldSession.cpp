@@ -357,6 +357,19 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     if (IsConnectionIdle() && !HasPermission(rbac::RBAC_PERM_IGNORE_IDLE_CONNECTION))
         m_Socket[CONNECTION_TYPE_REALM]->CloseSocket();
 
+    // Classic 1.60: character list mail data, sent once the character list is shown (see HandleCharEnum)
+    if (_classicCharacterMailData && updater.ProcessUnsafe())
+    {
+        if (_classicCharacterMailDataTimer <= diff)
+        {
+            if (!_player)
+                SendPacket(_classicCharacterMailData.get());
+            _classicCharacterMailData.reset();
+        }
+        else
+            _classicCharacterMailDataTimer -= diff;
+    }
+
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// not process packets if socket already closed
     WorldPacket* packet = nullptr;

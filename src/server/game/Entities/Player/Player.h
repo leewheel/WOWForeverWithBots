@@ -712,7 +712,7 @@ enum PlayerSlots
     // first slot for item stored (in any way in player m_items data)
     PLAYER_SLOT_START           = 0,
     // last+1 slot for item stored (in any way in player m_items data)
-    PLAYER_SLOT_END             = 105,
+    PLAYER_SLOT_END             = 108,                  // Classic 1.60: 9 bank bag slots, everything after them +3
     PLAYER_SLOTS_COUNT          = (PLAYER_SLOT_END - PLAYER_SLOT_START)
 };
 
@@ -787,49 +787,49 @@ enum InventoryPackSlots : uint8                             // 28 slots
     INVENTORY_SLOT_ITEM_END     = 63
 };
 
-enum BankBagSlots                                           // 6 slots
+enum BankBagSlots                                           // 9 slots (Classic 1.60: the bank's own tab + 8 bags)
 {
     BANK_SLOT_BAG_START         = 63,
-    BANK_SLOT_BAG_END           = 69
+    BANK_SLOT_BAG_END           = 72
 };
 
 enum BuyBackSlots                                           // 12 slots
 {
     // stored in m_buybackitems
-    BUYBACK_SLOT_START          = 69,
-    BUYBACK_SLOT_END            = 81
+    BUYBACK_SLOT_START          = 72,                   // Classic 1.60: official sniff 70170 sells into slots 72..83
+    BUYBACK_SLOT_END            = 84
 };
 
 enum ChildEquipmentSlots
 {
-    CHILD_EQUIPMENT_SLOT_START   = 81,
-    CHILD_EQUIPMENT_SLOT_END     = 84,
+    CHILD_EQUIPMENT_SLOT_START   = 84,
+    CHILD_EQUIPMENT_SLOT_END     = 87,
 };
 
 enum EquipableSpellSlots
 {
-    EQUIPABLE_SPELL_OFFENSIVE_SLOT1 = 84,
-    EQUIPABLE_SPELL_OFFENSIVE_SLOT2 = 85,
-    EQUIPABLE_SPELL_OFFENSIVE_SLOT3 = 86,
-    EQUIPABLE_SPELL_OFFENSIVE_SLOT4 = 87,
-    EQUIPABLE_SPELL_UTILITY_SLOT1   = 88,
-    EQUIPABLE_SPELL_UTILITY_SLOT2   = 89,
-    EQUIPABLE_SPELL_UTILITY_SLOT3   = 90,
-    EQUIPABLE_SPELL_UTILITY_SLOT4   = 91,
-    EQUIPABLE_SPELL_DEFENSIVE_SLOT1 = 92,
-    EQUIPABLE_SPELL_DEFENSIVE_SLOT2 = 93,
-    EQUIPABLE_SPELL_DEFENSIVE_SLOT3 = 94,
-    EQUIPABLE_SPELL_DEFENSIVE_SLOT4 = 95,
-    EQUIPABLE_SPELL_WEAPON_SLOT1    = 96,
-    EQUIPABLE_SPELL_WEAPON_SLOT2    = 97,
-    EQUIPABLE_SPELL_WEAPON_SLOT3    = 98,
-    EQUIPABLE_SPELL_WEAPON_SLOT4    = 99,
+    EQUIPABLE_SPELL_OFFENSIVE_SLOT1 = 87,
+    EQUIPABLE_SPELL_OFFENSIVE_SLOT2 = 88,
+    EQUIPABLE_SPELL_OFFENSIVE_SLOT3 = 89,
+    EQUIPABLE_SPELL_OFFENSIVE_SLOT4 = 90,
+    EQUIPABLE_SPELL_UTILITY_SLOT1   = 91,
+    EQUIPABLE_SPELL_UTILITY_SLOT2   = 92,
+    EQUIPABLE_SPELL_UTILITY_SLOT3   = 93,
+    EQUIPABLE_SPELL_UTILITY_SLOT4   = 94,
+    EQUIPABLE_SPELL_DEFENSIVE_SLOT1 = 95,
+    EQUIPABLE_SPELL_DEFENSIVE_SLOT2 = 96,
+    EQUIPABLE_SPELL_DEFENSIVE_SLOT3 = 97,
+    EQUIPABLE_SPELL_DEFENSIVE_SLOT4 = 98,
+    EQUIPABLE_SPELL_WEAPON_SLOT1    = 99,
+    EQUIPABLE_SPELL_WEAPON_SLOT2    = 100,
+    EQUIPABLE_SPELL_WEAPON_SLOT3    = 101,
+    EQUIPABLE_SPELL_WEAPON_SLOT4    = 102,
 };
 
 enum AccountBankBagSlots
 {
-    ACCOUNT_BANK_SLOT_BAG_START = 100,
-    ACCOUNT_BANK_SLOT_BAG_END   = 105
+    ACCOUNT_BANK_SLOT_BAG_START = 103,
+    ACCOUNT_BANK_SLOT_BAG_END   = 108
 };
 
 struct ItemPosCount

@@ -1,3 +1,4 @@
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-04, build 70205 sniff of 04:31, gossip greetings).
 -- Classic 1.60 (WoW Forever), Zephras Isle orchard: quest Standing Our Ground (92693). "I'm ready to fight, Aamelia." (gossip 40780,
 -- option 136302) starts the Ferauu event (classic_npc_aamelia_windfield + classic_npc_malfunctioning_cyclone_construct, official beta
 -- sniff 70205). The sniff AI import had her casting Make Your Stand on a timer: that cast belongs to the end of the event. The option

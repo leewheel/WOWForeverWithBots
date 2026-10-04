@@ -539,6 +539,8 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
     // 70205, Classic opcode 0x46001A). Per character: 2 bits (own byte), packed guid, uint32 senders, uint32 sender types,
     // types, 6-bit name lengths (with the terminating zero), names. Sender type of the Auction House is 8.
     // With the 2 bits after the entry instead of before it the client read past the end and crashed (2026-10-03 23:40, 23:47).
+    // Sent right after the enum the client ignores it (icon shown only with the 3 s delay): the official server sends it ~2.6 s
+    // after the enum result, WorldSession::Update sends it after the same delay.
     if (!charEnum.IsDeletedCharacters && !charEnum.Characters.empty())
     {
         std::string receivers;
@@ -584,7 +586,9 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
             } while (mails->NextRow());
         }
 
-        WorldPacket mailData(SMSG_REGIONWIDE_CHARACTER_MAIL_DATA, 4 + charEnum.Characters.size() * 20);
+        _classicCharacterMailData = std::make_unique<WorldPacket>(SMSG_REGIONWIDE_CHARACTER_MAIL_DATA, 4 + charEnum.Characters.size() * 20);
+        _classicCharacterMailDataTimer = 3000;
+        WorldPacket& mailData = *_classicCharacterMailData;
         mailData << uint32(charEnum.Characters.size());
         for (WorldPackets::Character::EnumCharactersResult::CharacterInfo const& character : charEnum.Characters)
         {
@@ -610,7 +614,6 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
                 }
             }
         }
-        SendPacket(&mailData);
     }
 
     if (!charEnum.IsDeletedCharacters)
@@ -1456,8 +1459,8 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
     // Classic 1.60: characters that were already level 25+ get the Legacy unlock on login
     pCurrChar->UpdateClassicLegacyUnlock();
 
-    // Classic 1.60: every character has the free first bank tab. DISABLED: sending a bank tab (ActivePlayerData
-    // CharacterBankTabSettings) crashes the 70170 client at login (assert n < N, 354 vs 257): its Classic layout is not verified yet.
+    // Classic 1.60: characters start without bank tabs, the first one (BankTab.db2 character tab 0) is bought for 0 at the banker like
+    // on the official beta (sniff 70170: "Tab 1" created by the purchase). Granting it at login is not needed.
     // pCurrChar->GrantClassicFreeBankTab();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_ONLINE);

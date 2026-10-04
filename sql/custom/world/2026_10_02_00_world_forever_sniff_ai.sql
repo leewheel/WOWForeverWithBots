@@ -1,14 +1,14 @@
 -- Classic 1.60: SmartAI of the new-zone creatures from the spells they cast in ymir sniffs of the official beta, build 70124
 -- (classic_re/sniff/sniff_ai.py): timings are the medians seen (first cast after the attack start, repeat gap).
-UPDATE `creature_template` SET `AIName` = 'SmartAI' WHERE `entry` IN (2523,3579,5923,246848,250874,250928,251115,251145,251160,251261,251284,251366,251374,251404,251448,251451,251622,251662,251707,251727,251902,251918,251966,252068,252477,252481,252762,252763,252765,252800,252802,252820,253282,253283,253474,254596,254626,255534,256083,256359,256935,256966,256996,257521,259006,259843,267599,270201,275398);
-DELETE FROM `smart_scripts` WHERE `source_type` = 0 AND `entryorguid` IN (2523,3579,5923,246848,250874,250928,251115,251145,251160,251261,251284,251366,251374,251404,251448,251451,251622,251662,251707,251727,251902,251918,251966,252068,252477,252481,252762,252763,252765,252800,252802,252820,253282,253283,253474,254596,254626,255534,256083,256359,256935,256966,256996,257521,259006,259843,267599,270201,275398);
+UPDATE `creature_template` SET `AIName` = 'SmartAI' WHERE `entry` IN (2523,3579,5923,246848,250874,250928,251115,251145,251160,251261,251284,251366,251374,251404,251448,251451,251622,251662,251707,251727,251902,251918,251966,252068,252477,252481,252762,252763,252765,252800,252802,252820,253282,253283,253474,254596,254626,255534,256083,256359,256935,256966,256996,257521,259006,259843,267599,270201,270313,275398);
+DELETE FROM `smart_scripts` WHERE `source_type` = 0 AND `entryorguid` IN (2523,3579,5923,246848,250874,250928,251115,251145,251160,251261,251284,251366,251374,251404,251448,251451,251622,251662,251707,251727,251902,251918,251966,252068,252477,252481,252762,252763,252765,252800,252802,252820,253282,253283,253474,254596,254626,255534,256083,256359,256935,256966,256996,257521,259006,259843,267599,270201,270313,275398);
 INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type`,`event_phase_mask`,`event_chance`,`event_flags`,`event_param1`,`event_param2`,`event_param3`,`event_param4`,`action_type`,`action_param1`,`action_param2`,`target_type`,`comment`) VALUES
 (2523,0,0,0,1,0,100,0,1000,3000,1900,3200,11,3606,0,1,'Searing Totem - Out of Combat - Cast ''3606'' on Self'),
 (3579,0,0,0,1,0,100,0,1000,3000,1500,2500,11,5729,0,1,'Stoneclaw Totem - Out of Combat - Cast ''5729'' on Self'),
 (5923,0,0,0,25,0,100,0,0,0,0,0,11,8168,0,1,'Poison Cleansing Totem - On Reset - Cast ''8168'' on Self'),
 (246848,0,0,0,0,0,100,0,2000,5000,1800,3000,11,1316579,0,2,'Kirin Tor Guard - In Combat - Cast ''1316579'' on Victim'),
-(250874,0,0,0,0,0,100,0,3100,5100,8000,12000,11,3151,0,2,'Vuldren Alpha - In Combat - Cast ''3151'' on Victim'),
-(250874,0,1,0,0,0,100,0,10300,17100,8000,12000,11,8599,0,1,'Vuldren Alpha - In Combat - Cast ''8599'' on Self'),
+(250874,0,0,0,0,0,100,0,3000,5100,8000,12000,11,3151,0,2,'Vuldren Alpha - In Combat - Cast ''3151'' on Victim'),
+(250874,0,1,0,0,0,100,0,8800,14600,8000,12000,11,8599,0,1,'Vuldren Alpha - In Combat - Cast ''8599'' on Self'),
 (250928,0,0,0,0,0,100,0,6000,10000,12000,20000,11,3242,0,2,'Highlands Ursera - In Combat - Cast ''3242'' on Victim'),
 (251115,0,0,0,0,0,100,0,600,1000,8000,12000,11,11430,0,2,'Urs''anah - In Combat - Cast ''11430'' on Victim'),
 (251145,0,0,0,0,0,100,0,4500,7500,8000,12000,11,1259652,0,2,'Al''Aketh Brute - In Combat - Cast ''1259652'' on Victim'),
@@ -25,9 +25,9 @@ INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type
 (251622,0,0,0,0,0,100,0,5700,9600,9600,16000,11,9591,0,2,'Flutterfly - In Combat - Cast ''9591'' on Victim'),
 (251662,0,0,0,1,0,100,0,1000,3000,900,1500,11,1253931,0,1,'Living Lightning - Out of Combat - Cast ''1253931'' on Self'),
 (251662,0,1,0,0,0,100,0,3100,5100,10600,17600,11,1271522,0,2,'Living Lightning - In Combat - Cast ''1271522'' on Victim'),
-(251707,0,0,0,0,0,100,0,4500,7600,8000,12000,11,7272,0,1,'Ornery Galestrider - In Combat - Cast ''7272'' on Self'),
-(251727,0,0,0,0,0,100,0,4400,7400,8000,12000,11,1270782,0,1,'Skyhopper - In Combat - Cast ''1270782'' on Self'),
-(251727,0,1,0,0,0,100,0,4400,7400,8000,12000,11,1270784,0,1,'Skyhopper - In Combat - Cast ''1270784'' on Self'),
+(251707,0,0,0,0,0,100,0,3600,6100,8000,12000,11,7272,0,1,'Ornery Galestrider - In Combat - Cast ''7272'' on Self'),
+(251727,0,0,0,0,0,100,0,3600,6100,8000,12000,11,1270782,0,1,'Skyhopper - In Combat - Cast ''1270782'' on Self'),
+(251727,0,1,0,0,0,100,0,3600,6100,8000,12000,11,1270784,0,1,'Skyhopper - In Combat - Cast ''1270784'' on Self'),
 (251902,0,0,0,1,0,100,0,1000,3000,4000,6600,11,1255951,0,1,'Illaya Amberwind - Out of Combat - Cast ''1255951'' on Self'),
 (251918,0,0,0,25,0,100,0,0,0,0,0,11,1266456,0,1,'Highlands Bandit - On Reset - Cast ''1266456'' on Self'),
 (251966,0,0,0,0,0,100,0,1400,2300,7300,12200,11,1259652,0,2,'Commander Cyclas - In Combat - Cast ''1259652'' on Victim'),
@@ -47,7 +47,8 @@ INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type
 (253282,0,0,0,25,0,100,0,0,0,0,0,11,1259630,0,1,'Shriekling Fledgling - On Reset - Cast ''1259630'' on Self'),
 (253283,0,0,0,0,0,100,0,3300,5500,8000,12000,11,5422,0,2,'Shriekling Matriarch - In Combat - Cast ''5422'' on Victim'),
 (253474,0,0,0,1,0,100,0,1000,3000,900,1500,11,1288546,0,1,'Peacekeeper - Out of Combat - Cast ''1288546'' on Self'),
-(254596,0,0,0,0,0,100,0,1900,3100,8000,12000,11,1259652,0,2,'Al''Aketh Healer - In Combat - Cast ''1259652'' on Victim'),
+(254596,0,0,0,0,0,100,0,9600,16000,8000,12000,11,11986,0,1,'Al''Aketh Healer - In Combat - Cast ''11986'' on Self'),
+(254596,0,1,0,0,0,100,0,1500,2500,7300,12200,11,1259652,0,2,'Al''Aketh Healer - In Combat - Cast ''1259652'' on Victim'),
 (254626,0,0,0,0,0,100,0,5100,8600,10900,18200,11,11430,0,2,'Al''Aketh Assassin - In Combat - Cast ''11430'' on Victim'),
 (254626,0,1,0,0,0,100,0,2600,4300,7200,12100,11,14873,0,2,'Al''Aketh Assassin - In Combat - Cast ''14873'' on Victim'),
 (255534,0,0,0,0,0,100,0,5400,9100,8000,12000,11,1265416,0,2,'"Badwind" Bennic - In Combat - Cast ''1265416'' on Victim'),
@@ -64,5 +65,6 @@ INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type
 (259843,0,0,0,25,0,100,0,0,0,0,0,11,1278201,0,1,'Musical Gustjumper - On Reset - Cast ''1278201'' on Self'),
 (267599,0,0,0,25,0,100,0,0,0,0,0,11,1299003,0,1,'Energizing Vortex - On Reset - Cast ''1299003'' on Self'),
 (267599,0,1,0,25,0,100,0,0,0,0,0,11,1299005,0,1,'Energizing Vortex - On Reset - Cast ''1299005'' on Self'),
-(270201,0,0,0,0,0,100,0,3500,5900,9400,15700,11,1259652,0,2,'Al''Aketh Brawler - In Combat - Cast ''1259652'' on Victim'),
+(270201,0,0,0,0,0,100,0,4300,7200,7400,12400,11,1259652,0,2,'Al''Aketh Brawler - In Combat - Cast ''1259652'' on Victim'),
+(270313,0,0,0,25,0,100,0,0,0,0,0,11,1268651,0,1,'Generic Bunny - On Reset - Cast ''1268651'' on Self'),
 (275398,0,0,0,25,0,100,0,0,0,0,0,11,12544,0,1,'Arcanist Braedin - On Reset - Cast ''12544'' on Self');

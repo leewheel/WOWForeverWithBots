@@ -1,4 +1,4 @@
--- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-03 evening, build 70205 sniff).
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-04, build 70205 sniff of 04:31, gossip greetings).
 -- Classic 1.60 (WoW Forever): the Energizing Vortex (267599) tornadoes on Zephras Isle carry Energizing Winds (1299003, aura 395 =
 -- area trigger, create properties 43253). Touching one gives Blessing of Zephras (1258510: run speed +40% for 5 min, ends on
 -- hostile action), seen on the player in the official beta sniff (70170); the player casts it on himself

@@ -406,8 +406,173 @@ private:
     bool _returning = false;
 };
 
+/*######
+## classic_npc_belathaan_brightwish (256247)
+######*/
+
+// Classic 1.60 (WoW Forever), Gustberry Lowlands, quest A Firm Response (93746, official beta sniff 70205): the player confronts
+// Belathaan ("Belathaan! The Windshapers demand to know..."), High Priestess Lorthuna and two Living Storms come down from the sky
+// next to him and hover there; ~31 s later the storms strike him with lightning (he dies, the player gets the credit) and turn on the
+// player. Lorthuna stays out of the fight.
+enum BelathaanEvent
+{
+    NPC_BELATHAAN_BRIGHTWISH        = 256247,
+    NPC_HIGH_PRIESTESS_LORTHUNA     = 256249,
+    NPC_LIVING_STORM                = 256250,
+    GOSSIP_MENU_BELATHAAN           = 41553,
+    SPELL_LIGHTNING_FROM_SKY_VFX    = 414887,
+    SPELL_STORM_LIGHTNING_STRIKE    = 1268650,
+
+    SAY_BELATHAAN_NOT_WITH_ME       = 0,
+    SAY_BELATHAAN_BE_REASONABLE     = 1,
+    SAY_LORTHUNA_MATTERS_NOT        = 0,
+    SAY_LORTHUNA_GOODBYE            = 1,
+
+    EVENT_BELATHAAN_STORMS_ARRIVE   = 1,
+    EVENT_BELATHAAN_SAY_NOT_WITH_ME,
+    EVENT_LORTHUNA_SAY_MATTERS_NOT,
+    EVENT_BELATHAAN_SAY_REASONABLE,
+    EVENT_LORTHUNA_SAY_GOODBYE,
+    EVENT_BELATHAAN_STORMS_STRIKE,
+    EVENT_BELATHAAN_DIE
+};
+
+static Position const BelathaanLorthuna = { 2853.2f, 896.5f, 773.2f, 3.1f };
+
+static Position const BelathaanStorms[] =
+{
+    { 2853.7f, 890.9f, 773.1f, 2.5f },
+    { 2852.4f, 901.7f, 773.4f, 3.6f },
+};
+
+struct classic_npc_belathaan_brightwish : public ScriptedAI
+{
+    classic_npc_belathaan_brightwish(Creature* creature) : ScriptedAI(creature), _summons(creature) { }
+
+    void JustAppeared() override
+    {
+        _events.Reset();
+        _summons.DespawnAll();
+        _players.clear();
+        _busy = false;
+    }
+
+    void JustSummoned(Creature* summon) override
+    {
+        _summons.Summon(summon);
+        summon->SetImmuneToPC(true);                    // hover next to him until they strike (Lorthuna for good)
+        summon->SetReactState(REACT_PASSIVE);
+        summon->SetFacingToObject(me);
+        summon->CastSpell(summon, SPELL_LIGHTNING_FROM_SKY_VFX, true);
+    }
+
+    void SummonedCreatureDespawn(Creature* summon) override
+    {
+        _summons.Despawn(summon);
+    }
+
+    bool OnGossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
+    {
+        if (menuId != GOSSIP_MENU_BELATHAAN || gossipListId != 0)
+            return false;
+
+        CloseGossipMenuFor(player);
+        _players.insert(player->GetGUID());
+        if (!_busy)
+        {
+            _busy = true;
+            _events.ScheduleEvent(EVENT_BELATHAAN_STORMS_ARRIVE, 5700ms);
+            _events.ScheduleEvent(EVENT_BELATHAAN_SAY_NOT_WITH_ME, 17900ms);
+            _events.ScheduleEvent(EVENT_LORTHUNA_SAY_MATTERS_NOT, 23400ms);
+            _events.ScheduleEvent(EVENT_BELATHAAN_SAY_REASONABLE, 32400ms);
+            _events.ScheduleEvent(EVENT_LORTHUNA_SAY_GOODBYE, 36200ms);
+            _events.ScheduleEvent(EVENT_BELATHAAN_STORMS_STRIKE, 36500ms);
+        }
+        return true;
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _events.Update(diff);
+
+        while (uint32 eventId = _events.ExecuteEvent())
+        {
+            switch (eventId)
+            {
+                case EVENT_BELATHAAN_STORMS_ARRIVE:
+                    // the storms leave a minute out of combat (longer than the wait for the strike), their corpses a minute after dying
+                    me->SummonCreature(NPC_HIGH_PRIESTESS_LORTHUNA, BelathaanLorthuna, TEMPSUMMON_TIMED_DESPAWN, 75s);
+                    for (Position const& pos : BelathaanStorms)
+                        me->SummonCreature(NPC_LIVING_STORM, pos, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60s);
+                    break;
+                case EVENT_BELATHAAN_SAY_NOT_WITH_ME:
+                    Talk(SAY_BELATHAAN_NOT_WITH_ME);
+                    break;
+                case EVENT_BELATHAAN_SAY_REASONABLE:
+                    Talk(SAY_BELATHAAN_BE_REASONABLE);
+                    break;
+                case EVENT_LORTHUNA_SAY_MATTERS_NOT:
+                case EVENT_LORTHUNA_SAY_GOODBYE:
+                    for (ObjectGuid const& guid : _summons)
+                        if (Creature* lorthuna = ObjectAccessor::GetCreature(*me, guid))
+                            if (lorthuna->GetEntry() == NPC_HIGH_PRIESTESS_LORTHUNA)
+                                lorthuna->AI()->Talk(eventId == EVENT_LORTHUNA_SAY_MATTERS_NOT ? SAY_LORTHUNA_MATTERS_NOT : SAY_LORTHUNA_GOODBYE);
+                    break;
+                case EVENT_BELATHAAN_STORMS_STRIKE:
+                {
+                    Player* target = nullptr;
+                    for (ObjectGuid const& guid : _players)
+                    {
+                        if (Player* player = ObjectAccessor::GetPlayer(*me, guid))
+                        {
+                            if (player->IsWithinDistInMap(me, 60.0f))
+                            {
+                                player->KilledMonsterCredit(NPC_BELATHAAN_BRIGHTWISH);
+                                if (!target)
+                                    target = player;
+                            }
+                        }
+                    }
+
+                    for (ObjectGuid const& guid : _summons)
+                    {
+                        Creature* storm = ObjectAccessor::GetCreature(*me, guid);
+                        if (!storm || storm->GetEntry() != NPC_LIVING_STORM)
+                            continue;
+
+                        storm->CastSpell(me, SPELL_STORM_LIGHTNING_STRIKE, true);
+                        storm->SetImmuneToPC(false);
+                        storm->SetReactState(REACT_AGGRESSIVE);
+                        if (target)
+                            storm->AI()->AttackStart(target);
+                    }
+
+                    _players.clear();
+                    _events.ScheduleEvent(EVENT_BELATHAAN_DIE, 1s);
+                    break;
+                }
+                case EVENT_BELATHAAN_DIE:
+                    // the lightning kills him; if it did not, he still goes down. He comes back with his spawn's respawn time
+                    _busy = false;
+                    if (me->IsAlive())
+                        me->KillSelf();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+private:
+    EventMap _events;
+    SummonList _summons;
+    GuidUnorderedSet _players;
+    bool _busy = false;
+};
+
 void AddSC_classic_npcs_special()
 {
+    RegisterCreatureAI(classic_npc_belathaan_brightwish);
     RegisterCreatureAI(classic_npc_sickly_critter);
     RegisterCreatureAI(classic_npc_malfunctioning_cyclone_construct);
     RegisterCreatureAI(classic_npc_aamelia_windfield);
