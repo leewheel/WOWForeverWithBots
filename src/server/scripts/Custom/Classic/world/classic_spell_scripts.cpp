@@ -19,7 +19,9 @@
 
 #include "ScriptMgr.h"
 #include "AreaTrigger.h"
+#include "Creature.h"
 #include "ObjectAccessor.h"
+#include "Player.h"
 #include "SpellAuraEffects.h"
 #include "SpellInfo.h"
 #include "SpellScript.h"
@@ -108,7 +110,105 @@ class classic_spell_ground_area_damage : public AuraScript
     }
 };
 
+// Classic 1.60 (WoW Forever), Shen'dar Highlands cave, quest 94489 (official beta sniff 70205): clicking an injured druid makes the
+// player cast 1276047 (dummy) on it. Credit "Injured Druids healed" (257964) and the druid's own hidden objective (its entry).
+enum ClassicHealInjuredDruid
+{
+    NPC_INJURED_DRUIDS_HEALED_CREDIT = 257964
+};
+
+class classic_spell_heal_injured_druid : public SpellScript
+{
+    void HandleDummy(SpellEffIndex /*effIndex*/)
+    {
+        Player* player = GetCaster()->ToPlayer();
+        Creature* druid = GetHitCreature();
+        if (!player || !druid)
+            return;
+
+        player->KilledMonsterCredit(NPC_INJURED_DRUIDS_HEALED_CREDIT);
+        player->KilledMonsterCredit(druid->GetEntry());
+        druid->SetStandState(UNIT_STAND_STATE_STAND);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(classic_spell_heal_injured_druid::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+    }
+};
+
+// Classic 1.60 (WoW Forever) profession books: Mining for Dummies (247840, 1245608), Wild Harvest (247841, 1245609), Pelt Collecting for
+// Beginners (247846, 1245610). "Increases your <profession> skill by $m1. Cannot raise <profession> skill over $m2. You will learn
+// <profession> if it is not already trained and you do not already know two other professions." Both effects are dummies.
+class classic_spell_profession_book : public SpellScript
+{
+    struct BookProfession
+    {
+        uint32 SpellId;
+        uint32 SkillId;
+        uint32 ApprenticeSpell;
+    };
+
+    static BookProfession const* GetProfession(uint32 spellId)
+    {
+        static BookProfession const books[] =
+        {
+            { 1245608, SKILL_MINING,    2575 },     // Mining (Apprentice)
+            { 1245609, SKILL_HERBALISM, 2366 },     // Herb Gathering (Apprentice)
+            { 1245610, SKILL_SKINNING,  8613 },     // Skinning (Apprentice)
+        };
+        for (BookProfession const& book : books)
+            if (book.SpellId == spellId)
+                return &book;
+        return nullptr;
+    }
+
+    uint32 GetCap() const
+    {
+        return uint32(std::max<int32>(GetSpellInfo()->GetEffect(EFFECT_1).CalcValue(), 1));
+    }
+
+    SpellCastResult CheckCast()
+    {
+        Player* player = GetCaster()->ToPlayer();
+        BookProfession const* book = GetProfession(GetSpellInfo()->Id);
+        if (!player || !book)
+            return SPELL_FAILED_DONT_REPORT;
+
+        if (player->HasSkill(book->SkillId))
+            return player->GetPureSkillValue(book->SkillId) < GetCap() ? SPELL_CAST_OK : SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+
+        return player->GetFreePrimaryProfessionPoints() > 0 ? SPELL_CAST_OK : SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+    }
+
+    void HandleDummy(SpellEffIndex /*effIndex*/)
+    {
+        Player* player = GetCaster()->ToPlayer();
+        BookProfession const* book = GetProfession(GetSpellInfo()->Id);
+        if (!player || !book)
+            return;
+
+        if (!player->HasSkill(book->SkillId))
+            player->LearnSpell(book->ApprenticeSpell, false);
+        if (!player->HasSkill(book->SkillId))
+            return;
+
+        uint16 const current = player->GetPureSkillValue(book->SkillId);
+        uint16 const target = uint16(std::min<uint32>(current + uint32(GetEffectValue()), GetCap()));
+        if (target > current)
+            player->SetSkill(book->SkillId, player->GetSkillStep(book->SkillId), target, player->GetPureMaxSkillValue(book->SkillId));
+    }
+
+    void Register() override
+    {
+        OnCheckCast += SpellCheckCastFn(classic_spell_profession_book::CheckCast);
+        OnEffectHitTarget += SpellEffectFn(classic_spell_profession_book::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+    }
+};
+
 void AddSC_classic_spell_scripts()
 {
+    RegisterSpellScript(classic_spell_profession_book);
     RegisterSpellScript(classic_spell_ground_area_damage);
+    RegisterSpellScript(classic_spell_heal_injured_druid);
 }

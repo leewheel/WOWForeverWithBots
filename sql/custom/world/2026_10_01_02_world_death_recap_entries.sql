@@ -1,5 +1,5 @@
--- Death recap actors move from 9100000-9102000 to 8100000-8102000: the Classic client's creature GUID holds only 23 bits of
--- entry, so actors above 8388607 got a GUID entry that didn't match their object and failed the client's create validation
+-- Death recap actors move from 9100000-9102000 to 8100000-8102000: the Classic clients creature GUID holds only 23 bits of
+-- entry, so actors above 8388607 got a GUID entry that didnt match their object and failed the clients create validation
 -- ("Failed to validate JamCliObjCreate", disconnect).
 -- Safe to run again: an actor already in 8100000-8102000 is replaced only when its 9100000-9102000 copy is back.
 DELETE a FROM `creature_template` a JOIN `creature_template` b ON b.`entry` = a.`entry` + 1000000 WHERE a.`entry` BETWEEN 8100000 AND 8102000;

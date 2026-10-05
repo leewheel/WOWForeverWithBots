@@ -78,6 +78,9 @@ void WorldSession::HandleQuestgiverHelloOpcode(WorldPackets::Quest::QuestGiverHe
         creature->PauseMovement(pause);
     creature->SetHomePosition(creature->GetPosition());
 
+    // Classic 1.60: "talk to" objectives are credited when the creature is talked to (see HandleGossipHelloOpcode)
+    _player->TalkedToCreature(creature->GetEntry(), creature->GetGUID());
+
     _player->PlayerTalkClass->ClearMenus();
     if (creature->AI()->OnGossipHello(_player))
         return;

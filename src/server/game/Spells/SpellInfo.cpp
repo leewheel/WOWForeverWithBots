@@ -573,7 +573,7 @@ SpellEffectValue SpellEffectInfo::CalcValue(WorldObject const* caster /*= nullpt
         if (Scaling.ResourceCoefficient)
             comboDamage = value * Scaling.ResourceCoefficient;
     }
-    else if (GetScalingExpectedStat() == ExpectedStatType::None)
+    else if (GetScalingExpectedStat() == ExpectedStatType::None || UsesClassicFlatBasePoints(caster))
     {
         if (casterUnit && basePointsPerLevel != 0.0)
         {
@@ -659,6 +659,12 @@ SpellEffectValue SpellEffectInfo::CalcValue(WorldObject const* caster /*= nullpt
     return std::clamp(value, MinValue, MaxValue);
 }
 
+// Classic 1.60: spells of players and of what they control (pets, totems, traps) use their base points as flat values
+bool SpellEffectInfo::UsesClassicFlatBasePoints(WorldObject const* caster)
+{
+    return caster && caster->GetAffectingPlayer();
+}
+
 SpellEffectValue SpellEffectInfo::CalcBaseValue(WorldObject const* caster, Unit const* target, uint32 itemId, int32 itemLevel) const
 {
     if (Scaling.Coefficient != 0.0f)
@@ -725,7 +731,10 @@ SpellEffectValue SpellEffectInfo::CalcBaseValue(WorldObject const* caster, Unit 
     {
         float value = BasePoints;
         ExpectedStatType stat = GetScalingExpectedStat();
-        if (stat != ExpectedStatType::None)
+        // Classic 1.60: base points of player spells are flat vanilla values (Fireball rank 1: 18 +-22% = 14..22); only creature
+        // spells are a percentage of the expected stat (Living Storm Shock: 10 -> 16..18 on the official beta). Scaling Scorch made
+        // it hit for 7-8k.
+        if (stat != ExpectedStatType::None && !UsesClassicFlatBasePoints(caster))
         {
             if (_spellInfo->HasAttribute(SPELL_ATTR0_SCALES_WITH_CREATURE_LEVEL))
                 stat = ExpectedStatType::CreatureAutoAttackDps;

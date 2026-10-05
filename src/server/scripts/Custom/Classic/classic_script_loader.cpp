@@ -195,6 +195,7 @@ void AddSC_classic_npcs_special();
 void AddSC_classic_go_scripts();
 void AddSC_classic_spell_scripts();
 void AddSC_classic_armory_commands();
+void AddSC_classic_legacy_commands();
 void AddSC_classic_wetlands();
 void AddSC_classic_westfall();
 void AddSC_classic_western_plaguelands();
@@ -386,6 +387,7 @@ void AddClassicScripts()
     AddSC_classic_go_scripts();
     AddSC_classic_spell_scripts();
     AddSC_classic_armory_commands();
+    AddSC_classic_legacy_commands();
     AddSC_classic_wetlands();
     AddSC_classic_westfall();
     AddSC_classic_western_plaguelands();

@@ -1,9 +1,9 @@
--- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-04, build 70205 sniff of 04:31, gossip greetings).
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-05, sniff of 2026-10-04 20:05).
 -- Classic 1.60: graveyards of Zephras Isle (map 2991, zone 16593); without them a death there sent the player to the Barrens.
--- IDs from the official beta's cemetery list for the zone (ymir sniffs). Positions = where SMSG_DEATH_RELEASE_LOC sent the player
+-- IDs from the official betas cemetery list for the zone (ymir sniffs). Positions = where SMSG_DEATH_RELEASE_LOC sent the player
 -- after dying on Zephras Isle (4 graveyards seen; the client has no graveyard positions). 11031 (starting village) and 11033 (Spirit
 -- Healer) are certain; which of 10912 / 11032 is which of the other two spots is not in the data (the server only picks the nearest
--- graveyard, so it doesn't matter in game). The fifth ID in the list, 11432, has not been seen yet.
+-- graveyard, so it doesnt matter in game). The fifth ID in the list, 11432, has not been seen yet.
 DELETE FROM `world_safe_locs` WHERE `ID` IN (10912,11031,11032,11033);
 INSERT INTO `world_safe_locs` (`ID`,`MapID`,`LocX`,`LocY`,`LocZ`,`Facing`,`Comment`) VALUES
 (11031,2991,4122.5,1939.0,974.6,4.71,'Zephras Isle - starting village'),

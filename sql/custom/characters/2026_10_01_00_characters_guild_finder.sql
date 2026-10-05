@@ -1,5 +1,5 @@
 -- Safe to run again (the database updater re-runs files whose content changed).
--- Classic 1.60 Guild Finder: one recruitment posting per guild, and the players' applications
+-- Classic 1.60 Guild Finder: one recruitment posting per guild, and the players applications
 CREATE TABLE IF NOT EXISTS `guild_finder_posting` (
   `guildId` bigint unsigned NOT NULL,
   `poster` bigint unsigned NOT NULL DEFAULT '0',

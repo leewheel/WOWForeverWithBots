@@ -7342,8 +7342,10 @@ float Unit::SpellCritChanceTaken(Unit const* caster, Spell* spell, AuraEffect co
                 // Spell crit suppression
                 if (GetTypeId() == TYPEID_UNIT)
                 {
+                    // Classic 1.60: only higher level targets lower the chance; a level 60 on a level 3 mob gained +57% crit
                     int32 const levelDiff = static_cast<int32>(GetLevelForTarget(caster)) - caster->GetLevel();
-                    crit_chance -= levelDiff * 1.0f;
+                    if (levelDiff > 0)
+                        crit_chance -= levelDiff * 1.0f;
                 }
             }
             break;
@@ -7395,7 +7397,8 @@ float Unit::SpellCritChanceTaken(Unit const* caster, Spell* spell, AuraEffect co
 /*static*/ uint32 Unit::SpellCriticalDamageBonus(Unit const* caster, SpellInfo const* spellProto, uint32 damage, Unit* victim)
 {
     // Calculate critical bonus
-    int32 crit_bonus = damage * 2;
+    // Classic 1.60 (vanilla): spell crits do 150% damage (retail 200%); talents such as Ice Shards or Ruin add to the 50% bonus below
+    int32 crit_bonus = damage + damage / 2;
     float crit_mod = 0.0f;
 
     if (caster)
@@ -8172,7 +8175,7 @@ int32 Unit::MeleeDamageBonusDone(Unit* pVictim, int32 damage, WeaponAttackType a
     if (APbonus != 0)                                       // Can be negative
     {
         bool const normalized = spellProto && spellProto->HasEffect(SPELL_EFFECT_NORMALIZED_WEAPON_DMG);
-        DoneFlatBenefit += int32(APbonus / 3.5f * GetAPMultiplier(attType, normalized));
+        DoneFlatBenefit += int32(APbonus / (IsControlledByPlayer() ? 14.0f : 3.5f) * GetAPMultiplier(attType, normalized));   // Classic 1.60: vanilla 14 for players and pets
     }
 
     // Done total percent damage auras

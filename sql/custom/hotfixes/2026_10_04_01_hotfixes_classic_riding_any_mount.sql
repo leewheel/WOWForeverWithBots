@@ -1,6 +1,6 @@
 -- Classic 1.60: the mount types of the vanilla mount families (horse, wolf, ram, saber, raptor, mechanostrider, undead horse,
 -- kodo, Forever galestrider) require the racial riding spell (824, 825, 826, 828, 10861, 10906, 10907, 18995, 1285849) besides
--- Riding 75 / 150, so every other race's mount said "Requires Raptor Riding skill". Here only Apprentice (75) / Journeyman (150)
+-- Riding 75 / 150, so every other races mount said "Requires Raptor Riding skill". Here only Apprentice (75) / Journeyman (150)
 -- Riding is needed: MountCapability rows without ReqSpellKnownID, sent as hotfixes (the server uses the same rows). Safe to run again.
 DELETE FROM `mount_capability` WHERE `ID` IN (537,538,539,540,541,542,543,544,545,546,547,548,549,550,551,552,557,558);
 INSERT INTO `mount_capability` (`ID`,`Flags`,`ReqRidingSkill`,`ReqAreaID`,`ReqSpellAuraID`,`ReqSpellKnownID`,`ModSpellAuraID`,`ReqMapID`,`PlayerConditionID`,`FlightCapabilityID`,`DriveCapabilityID`,`VerifiedBuild`) VALUES

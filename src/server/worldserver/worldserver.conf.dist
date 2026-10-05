@@ -709,7 +709,8 @@ DeclinedNames = 0
 #    Expansion
 #        Description: Allow server to use content from expansions. Checks for expansion-related
 #                     map files, client compatibility and class/race character creation.
-#        Default:     11 - (Expansion 11)
+#        Default:     0  - (Classic 1.60: the client has no expansion maps, e.g. no Outland (530))
+#                     11 - (Expansion 11)
 #                     10 - (Expansion 10)
 #                     9 - (Expansion 9)
 #                     8 - (Expansion 8)
@@ -722,7 +723,7 @@ DeclinedNames = 0
 #                     1 - (Expansion 1)
 #                     0 - (Disabled, Ignore and disable expansion content (maps, races, classes)
 
-Expansion = 11
+Expansion = 0
 
 #
 #    MinPlayerName

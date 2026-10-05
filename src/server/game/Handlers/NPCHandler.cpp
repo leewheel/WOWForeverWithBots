@@ -181,10 +181,13 @@ void WorldSession::HandleGossipHelloOpcode(WorldPackets::NPC::Hello& packet)
         _player->SendAreaSpiritHealerTime(unit);
     }
 
+    // Classic 1.60: "talk to" objectives are credited when the gossip opens (official beta sniff 70205: Find Valennia on the Road,
+    // Making Our Move, The Turncoat... credit right after the hello), scripted creatures included
+    _player->TalkedToCreature(unit->GetEntry(), unit->GetGUID());
+
     _player->PlayerTalkClass->ClearMenus();
     if (!unit->AI()->OnGossipHello(_player))
     {
-//        _player->TalkedToCreature(unit->GetEntry(), unit->GetGUID());
         _player->PrepareGossipMenu(unit, _player->GetGossipMenuForSource(unit), true);
         _player->SendPreparedGossip(unit);
     }

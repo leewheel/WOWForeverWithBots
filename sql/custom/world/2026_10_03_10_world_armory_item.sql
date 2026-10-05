@@ -1,5 +1,5 @@
 -- Classic 1.60: data for the website armory (contrib/support_site), written by the console command ".armory export"
--- (scripts/Custom/Classic/world/classic_armory_commands.cpp) from the server's item templates (DB2 + hotfixes).
+-- (scripts/Custom/Classic/world/classic_armory_commands.cpp) from the servers item templates (DB2 + hotfixes).
 -- stats = "statType:value,..." (ItemModType), effects = "triggerType:spellId:spellName|...", icon = file name from the listfile.
 CREATE TABLE IF NOT EXISTS `armory_item` (
   `id` int unsigned NOT NULL,

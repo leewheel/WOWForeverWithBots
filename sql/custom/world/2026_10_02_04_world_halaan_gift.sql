@@ -1,6 +1,6 @@
--- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-04, build 70205 sniff of 04:31, gossip greetings).
+-- Re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00/06, 2026_10_03_00) were regenerated: they rewrite rows this file adjusts (last: 2026-10-05, sniff of 2026-10-04 20:05).
 -- Classic 1.60: Halaan Hawk-Eye (257554), "The Anchors of Zephras" (94414, objective "View the Anchor Pylon"): the gossip option
--- "Halaan, please lend me your gift." shows only while the quest is in the log, and choosing it makes the player cast Halaan's Gift
+-- "Halaan, please lend me your gift." shows only while the quest is in the log, and choosing it makes the player cast Halaans Gift
 -- (1272014) on themselves, which views the pylon and credits the objective (ymir sniff of the official beta: gossip select menu 41842
 -- option 137720 -> player casts 1272014 -> criteria update and quest credit).
 DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 15 AND `SourceGroup` = 41842 AND `SourceEntry` = 0;

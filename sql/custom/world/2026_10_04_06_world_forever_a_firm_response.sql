@@ -2,7 +2,7 @@
 -- (gossip 41553, option 137326) starts the Living Storm scene (classic_npc_belathaan_brightwish, official beta sniff 70205): High
 -- Priestess Lorthuna and two storms come down next to him, the storms strike him ~31 s later (credit "Confront Belathaan Brightwish",
 -- objective 467315) and attack the player. The option shows only while that objective is open. He was back ~90 s after the strike.
--- Safe to run again; re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00) were regenerated.
+-- Safe to run again; re-run after the sniff files (2026_10_01_03/04, 2026_10_02_00) were regenerated (last: 2026-10-05, sniff of 2026-10-04 20:05).
 UPDATE `creature_template` SET `AIName` = '', `ScriptName` = 'classic_npc_belathaan_brightwish' WHERE `entry` = 256247;
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 256247 AND `source_type` = 0;
 UPDATE `creature` SET `spawntimesecs` = 90 WHERE `id` = 256247;
@@ -18,7 +18,7 @@ INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Lan
 -- Lorthuna and the storms are summoned by the script, the sniff import had spawned the ones it saw
 DELETE FROM `creature` WHERE `id` IN (256249, 256250) AND `map` = 2991 AND `position_x` BETWEEN 2840 AND 2870 AND `position_y` BETWEEN 880 AND 910;
 
--- The Generic Bunny's sniff AI cast Belathaan's kill credit (1268651) on every reset, everywhere the bunny stands
+-- The Generic Bunnys sniff AI cast Belathaans kill credit (1268651) on every reset, everywhere the bunny stands
 UPDATE `creature_template` SET `AIName` = '' WHERE `entry` = 270313;
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 270313 AND `source_type` = 0;
 
@@ -27,7 +27,7 @@ INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry
 (15, 41553, 137326, 0, 0, 47, 0, 93746, 8, 0, '', 0, 0, 0, '', 'Belathaan Brightwish - show gossip option if A Firm Response is in progress'),
 (15, 41553, 137326, 0, 0, 48, 0, 467315, 0, 0, '', 0, 0, 0, '', 'Belathaan Brightwish - show gossip option if he was not confronted yet');
 
--- The storms' spells are in the 70205 client data (Lightning Strike 1268650, Shock 1259652, Lightning Cloud 1269323, credit 1268651):
+-- The storms spells are in the 70205 client data (Lightning Strike 1268650, Shock 1259652, Lightning Cloud 1269323, credit 1268651):
 -- the server side copies an earlier version of this file added are not needed (the server refused them anyway).
 DELETE FROM `serverside_spell` WHERE `Id` IN (1268650, 1268651, 1259652, 1269323);
 DELETE FROM `serverside_spell_effect` WHERE `SpellID` IN (1268650, 1268651, 1259652, 1269323);

@@ -5590,7 +5590,8 @@ bool Player::UpdateGatherSkill(uint32 skillId, uint32 skillValue, uint32 redLeve
     }
 
     // For skinning and Mining chance decrease with level. 1-74 - no decrease, 75-149 - 2 times, 225-299 - 8 times
-    switch (skillEntry->ParentSkillLineID)
+    // Classic 1.60: gathering levels the profession itself (Herbalism 182, Mining 186, Skinning 393), which has no parent line
+    switch (skillEntry->ParentSkillLineID ? skillEntry->ParentSkillLineID : skillEntry->ID)
     {
         case SKILL_HERBALISM:
             return UpdateSkillPro(skillId, SkillGainChance(skillValue, grayLevel, greenLevel, yellowLevel) * multiplicator, gatheringSkillGain);
@@ -6861,6 +6862,11 @@ void Player::RewardReputation(Quest const* quest)
 
         FactionEntry const* factionEntry = sFactionStore.LookupEntry(quest->RewardFactionId[i]);
         if (!factionEntry)
+            continue;
+
+        // Classic 1.60: the Zephras quests reward both the Windshapers (Horde) and the High Order (Alliance); the official beta only
+        // raised the player's side (sniff 70205: a Horde player got the Windshapers' +50s only)
+        if (GetReputationMgr().IsOtherSideFaction(factionEntry))
             continue;
 
         int32 rep = 0;
@@ -8516,7 +8522,8 @@ void Player::_ApplyWeaponDamage(uint8 slot, Item* item, bool apply)
     if (proto->GetDelay() && !(shapeshift && shapeshift->CombatRoundTime))
         SetBaseAttackTime(attType, apply ? proto->GetDelay() : BASE_ATTACK_TIME);
 
-    int32 weaponBasedAttackPower = apply ? int32(proto->GetDPS(itemLevel) * 6.0f) : 0;
+    // Classic 1.60: no weapon based attack power (retail adds weapon dps * 6 to the attack power of abilities)
+    int32 weaponBasedAttackPower = 0;
     switch (attType)
     {
         case BASE_ATTACK:

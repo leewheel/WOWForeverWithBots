@@ -1,5 +1,5 @@
 -- Classic 1.60 (WoW Forever): guard directions (map pins of gossip options) from ymir sniffs, classic_re sniff_gossip_poi.py.
--- Safe to run again; re-run after 2026_10_01_04 was regenerated (it rewrites these options) (last: 2026-10-04, gossip greetings).
+-- Safe to run again; re-run after 2026_10_01_04 was regenerated (it rewrites these options) (last: 2026-10-05, sniff of 2026-10-04 20:05).
 DELETE FROM `points_of_interest` WHERE `ID` IN (168,8795,8796,8797,8798,8800,8957,8958,8959,8960,8961,8962,8965,8968,9051);
 INSERT INTO `points_of_interest` (`ID`,`PositionX`,`PositionY`,`PositionZ`,`Icon`,`Flags`,`Importance`,`Name`,`WMOGroupID`,`VerifiedBuild`) VALUES
 (168,-1257.800,24.143,127.718,7,99,0,'Thunder Bluff Bank',0,70205),

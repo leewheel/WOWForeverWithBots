@@ -366,6 +366,52 @@ struct classic_at_energizing_vortex : AreaTriggerAI
 };
 
 /*######
+## classic_at_rohashi_wind (static area trigger at the edge of the Rohashi Spires platform)
+######*/
+
+// Classic 1.60 (WoW Forever), quest Confront Lorthuna (92646, official beta sniff 70205): stepping into the wind at the edge of the
+// platform the Portal To Rohashi Spires leads to launches the player over to Lorthuna (1256704: jump to 3013.0 118.4 1164.6).
+enum RohashiWind
+{
+    SPELL_ROHASHI_WIND_LAUNCH = 1256704
+};
+
+struct classic_at_rohashi_wind : AreaTriggerAI
+{
+    explicit classic_at_rohashi_wind(AreaTrigger* areaTrigger) : AreaTriggerAI(areaTrigger) { }
+
+    void OnUnitEnter(Unit* unit) override
+    {
+        if (Player* player = unit->ToPlayer())
+            player->CastSpell(player, SPELL_ROHASHI_WIND_LAUNCH, true);
+    }
+};
+
+/*######
+## classic_at_secluded_house (static area trigger at the turncoat's house in Shen'dar Highlands)
+######*/
+
+// Classic 1.60 (WoW Forever), quest The Turncoat (92643, official beta sniff 70205): reaching the secluded house gives "Find the
+// secluded house in Shen'dar Highlands" (255013).
+enum SecludedHouse
+{
+    QUEST_THE_TURNCOAT          = 92643,
+    NPC_SECLUDED_HOUSE_CREDIT   = 255013
+};
+
+struct classic_at_secluded_house : AreaTriggerAI
+{
+    explicit classic_at_secluded_house(AreaTrigger* areaTrigger) : AreaTriggerAI(areaTrigger) { }
+
+    void OnUnitEnter(Unit* unit) override
+    {
+        if (Player* player = unit->ToPlayer())
+            if (player->GetQuestStatus(QUEST_THE_TURNCOAT) == QUEST_STATUS_INCOMPLETE)
+                player->KilledMonsterCredit(NPC_SECLUDED_HOUSE_CREDIT);
+    }
+};
+
+/*######
 ## classic_event_skycutter_arrival (taxi path arrival events of the Skycutters)
 ######*/
 
@@ -408,6 +454,8 @@ void AddSC_classic_go_scripts()
     new classic_event_skycutter_arrival();
     RegisterSpellScript(classic_spell_plainsrunning);
     RegisterAreaTriggerAI(classic_at_energizing_vortex);
+    RegisterAreaTriggerAI(classic_at_rohashi_wind);
+    RegisterAreaTriggerAI(classic_at_secluded_house);
     RegisterGameObjectAI(classic_go_field_repair_bot_74A);
     RegisterGameObjectAI(classic_go_camp_chair);
     RegisterSpellScript(classic_spell_campfire_rest);

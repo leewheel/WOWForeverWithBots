@@ -3924,11 +3924,9 @@ void Spell::EffectSkinning()
         else
             reqValue = 900;
 
+        // Classic 1.60: many creatures (the Zephras Isle beasts from the sniffs) have no content tuning; they are Classic content
         ContentTuningEntry const* contentTuning = sContentTuningStore.LookupEntry(creature->GetContentTuning());
-        if (!contentTuning)
-            return;
-
-        uint32 skinningSkill = player->GetProfessionSkillForExp(skill, contentTuning->ExpansionID);
+        uint32 skinningSkill = player->GetProfessionSkillForExp(skill, contentTuning ? contentTuning->ExpansionID : 0);
         if (!skinningSkill)
             return;
 

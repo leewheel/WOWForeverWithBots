@@ -1,6 +1,6 @@
 -- WoW Classic 1.60.1.70009 ("WoW Forever"): enable the Skyborne races
 -- ChrRaces 95 = High Order Skyborne (Alliance), 96 = Windshaper Skyborne (Horde); starting zone Zephras Isle (map 2991, area 16593)
--- Class combinations from the client's CharBaseInfo.db2:
+-- Class combinations from the clients CharBaseInfo.db2:
 --   95: Warrior, Hunter, Rogue, Mage, Druid
 --   96: Warrior, Hunter, Rogue, Shaman, Druid
 

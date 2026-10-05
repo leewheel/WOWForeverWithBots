@@ -1,7 +1,7 @@
 -- Classic 1.60: ground spells of the official client data create an area trigger (effect 1, create properties below) and put a
 -- periodic dummy aura on the caster (effect 2): Blizzard, Flamestrike (burning ground), Rain of Fire, Volley; Flare only the area.
 -- Nothing of it was on the server: no ground effect, no damage ticks. Areas: spheres with the effect radius of the client data
--- (8 yd, Flamestrike 5 yd, Flare 10 yd), lasting the spell's duration. Ticks: classic_spell_ground_area_damage (vanilla damage
+-- (8 yd, Flamestrike 5 yd, Flare 10 yd), lasting the spells duration. Ticks: classic_spell_ground_area_damage (vanilla damage
 -- per rank). The retail Rain of Fire / Flame Patch scripts are unbound from these ids. Safe to run again.
 DELETE FROM `areatrigger_template` WHERE `Id` IN (41261,41262,41263,41264,41265,41260,41266,41267,41268,41269,41270,41271,41450,41452,41455,41456,41245,41244,41242,41236) AND `IsCustom` = 1;
 INSERT INTO `areatrigger_template` (`Id`, `IsCustom`, `Flags`, `ActionSetId`, `ActionSetFlags`, `VerifiedBuild`) VALUES
