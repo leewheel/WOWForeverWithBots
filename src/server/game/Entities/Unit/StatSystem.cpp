@@ -1248,7 +1248,10 @@ void Creature::CalculateMinMaxDamage(WeaponAttackType attType, bool normalized, 
 
     float attackPower      = GetTotalAttackPowerValue(attType, false);
     float attackSpeedMulti = GetAPMultiplier(attType, normalized);
-    float baseValue        = GetFlatModifierValue(unitMod, BASE_VALUE) + (attackPower / 3.5f) * variance;
+    // Classic 1.60 (vanilla): the base damage already holds the creature's own attack power; only attack power changes from
+    // auras (Battle Shout, Demoralizing Shout...) count, at the vanilla 14 attack power per 1 damage per second
+    float baseAttackPower  = attType == RANGED_ATTACK ? m_baseRangedAttackPower : m_baseAttackPower;
+    float baseValue        = GetFlatModifierValue(unitMod, BASE_VALUE) + ((attackPower - baseAttackPower) / 14.0f) * variance;
     float basePct          = GetPctModifierValue(unitMod, BASE_PCT) * attackSpeedMulti;
     float totalValue       = GetFlatModifierValue(unitMod, TOTAL_VALUE);
     float totalPct         = addTotalPct ? GetPctModifierValue(unitMod, TOTAL_PCT) : 1.0f;

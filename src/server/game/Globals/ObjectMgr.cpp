@@ -4355,8 +4355,8 @@ void ObjectMgr::LoadPlayerInfo()
 
         } while (raceStatsResult->NextRow());
 
-        //                                                  0      1     2    3    4    5    6
-        QueryResult result  = WorldDatabase.Query("SELECT class, level, str, agi, sta, inte, spi FROM player_classlevelstats");
+        //                                                  0      1     2    3    4    5    6    7
+        QueryResult result  = WorldDatabase.Query("SELECT class, level, str, agi, sta, inte, spi, basehp FROM player_classlevelstats");
 
         if (!result)
         {
@@ -4398,6 +4398,7 @@ void ObjectMgr::LoadPlayerInfo()
                     PlayerLevelInfo& levelInfo = playerInfo->levelInfo[current_level - 1];
                     for (uint8 i = 0; i < MAX_STATS; ++i)
                         levelInfo.stats[i] = fields[i + 2].GetInt32() + raceStats.StatModifier[i];
+                    levelInfo.baseHealth = fields[7].GetUInt32();
                 }
             }
 

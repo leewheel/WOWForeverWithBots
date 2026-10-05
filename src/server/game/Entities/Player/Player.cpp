@@ -2228,7 +2228,7 @@ void Player::GiveLevel(uint8 level)
 
     WorldPackets::Misc::LevelUpInfo packet;
     packet.Level = level;
-    packet.HealthDelta = 0;
+    packet.HealthDelta = int32(info.baseHealth) - int32(GetCreateHealth());
 
     /// @todo find some better solution
     // for (int i = 0; i < MAX_STORED_POWERS; ++i)
@@ -2265,7 +2265,8 @@ void Player::GiveLevel(uint8 level)
     for (uint8 i = STAT_STRENGTH; i < MAX_STATS; ++i)
         SetCreateStat(Stats(i), info.stats[i]);
 
-    SetCreateHealth(0);
+    // Classic 1.60 (vanilla): class base health per level (retail: 0, all health from stamina)
+    SetCreateHealth(info.baseHealth);
     SetCreateMana(basemana);
 
     InitTalentForLevel();
@@ -2453,7 +2454,8 @@ void Player::InitStatsForLevel(bool reapplyMods)
     for (uint8 i = STAT_STRENGTH; i < MAX_STATS; ++i)
         SetStat(Stats(i), info.stats[i]);
 
-    SetCreateHealth(0);
+    // Classic 1.60 (vanilla): class base health per level (retail: 0, all health from stamina)
+    SetCreateHealth(info.baseHealth);
 
     //set create powers
     SetCreateMana(basemana);

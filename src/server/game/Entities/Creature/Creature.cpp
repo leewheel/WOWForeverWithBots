@@ -1651,8 +1651,11 @@ void Creature::UpdateLevelDependantStats()
     // damage
     float basedamage = GetBaseDamageForLevel(level);
 
-    float weaponBaseMinDamage = basedamage;
-    float weaponBaseMaxDamage = basedamage * 1.5f;
+    // Classic 1.60 (vanilla): the client's ExpectedStat CreatureAutoAttackDps is the whole average damage per second (x 2 s =
+    // VMaNGOS melee_damage at every level); hits vary by 14% around it (VMaNGOS damage_variance). Retail: dps to 1.5 x dps,
+    // plus attack power on top.
+    float weaponBaseMinDamage = basedamage * 0.86f;
+    float weaponBaseMaxDamage = basedamage * 1.14f;
 
     SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, weaponBaseMinDamage);
     SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, weaponBaseMaxDamage);

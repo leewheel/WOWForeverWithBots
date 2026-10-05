@@ -8175,7 +8175,7 @@ int32 Unit::MeleeDamageBonusDone(Unit* pVictim, int32 damage, WeaponAttackType a
     if (APbonus != 0)                                       // Can be negative
     {
         bool const normalized = spellProto && spellProto->HasEffect(SPELL_EFFECT_NORMALIZED_WEAPON_DMG);
-        DoneFlatBenefit += int32(APbonus / (IsControlledByPlayer() ? 14.0f : 3.5f) * GetAPMultiplier(attType, normalized));   // Classic 1.60: vanilla 14 for players and pets
+        DoneFlatBenefit += int32(APbonus / 14.0f * GetAPMultiplier(attType, normalized));   // Classic 1.60: vanilla 14 attack power per 1 dps (also creatures)
     }
 
     // Done total percent damage auras

@@ -629,6 +629,7 @@ typedef std::vector<PlayerCreateInfoItem> PlayerCreateInfoItems;
 struct PlayerLevelInfo
 {
     int32 stats[MAX_STATS] = { };
+    uint32 baseHealth = 0;      // Classic 1.60 (vanilla): base health of the class at this level, stamina adds on top
 };
 
 typedef std::vector<uint32> PlayerCreateInfoSpells;
