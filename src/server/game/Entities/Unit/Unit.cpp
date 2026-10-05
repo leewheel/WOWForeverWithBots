@@ -5370,7 +5370,9 @@ void Unit::UpdateStatBuffModForClient(Stats stat)
 void Unit::SetCreateStat(Stats stat, float val)
 {
     UnitMods const unitMod = static_cast<UnitMods>(UNIT_MOD_STAT_START + AsUnderlyingType(stat));
-    HandleStatFlatModifier(unitMod, BASE_VALUE, val, true);
+    // Classic 1.60: set, not add. Player::GiveLevel calls this with the new level's base stats, so adding stacked every level's
+    // stats on top of each other (a level 2 paladin had 47 stamina instead of 24). Gear and auras use TOTAL_VALUE.
+    SetStatFlatModifier(unitMod, BASE_VALUE, val);
 }
 
 float Unit::GetCreateStat(Stats stat) const
