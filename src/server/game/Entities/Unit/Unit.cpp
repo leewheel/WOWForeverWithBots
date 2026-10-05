@@ -1791,7 +1791,10 @@ void Unit::HandleEmoteCommand(Emote emoteId, Player* target /*=nullptr*/, Trinit
         return damage;
 
     float mitigation = std::min(armor / (armor + armorConstant), 0.85f);
-    return uint32(std::max(damage * (1.0f - mitigation), 0.0f));
+    // Classic 1.60 (vanilla): rounded, and armor never takes a hit below 1 damage (retail truncated: 1 damage hits became 0)
+    if (!damage)
+        return 0;
+    return std::max<uint32>(uint32(damage * (1.0f - mitigation) + 0.5f), 1);
 }
 
 /*static*/ uint32 Unit::CalcSpellResistedDamage(Unit const* attacker, Unit* victim, uint32 damage, SpellSchoolMask schoolMask, SpellInfo const* spellInfo)
@@ -2572,7 +2575,9 @@ uint32 Unit::CalculateDamage(WeaponAttackType attType, bool normalized, bool add
     if (minDamage > maxDamage)
         std::swap(minDamage, maxDamage);
 
-    return urand(uint32(minDamage), uint32(maxDamage));
+    // Classic 1.60: roll inside the real range and round (truncating min and max took up to 1 damage off every hit: a level 1
+    // creature doing 1.2 - 1.6 always hit for 1, then 0 after armor)
+    return uint32(frand(minDamage, maxDamage) + 0.5f);
 }
 
 void Unit::SendMeleeAttackStart(Unit* victim)
@@ -8247,7 +8252,7 @@ int32 Unit::MeleeDamageBonusDone(Unit* pVictim, int32 damage, WeaponAttackType a
             modOwner->ApplySpellMod(spellProto, damagetype == DOT ? SpellModOp::PeriodicHealingAndDamage : SpellModOp::HealingAndDamage, damageF);
 
     // bonus result can be negative
-    return int32(std::max(damageF, 0.0f));
+    return int32(std::max(damageF, 0.0f) + 0.5f);   // Classic 1.60: rounded, not truncated
 }
 
 int32 Unit::MeleeDamageBonusTaken(Unit* attacker, int32 pdamage, WeaponAttackType attType, DamageEffectType damagetype, SpellInfo const* spellProto /*= nullptr*/, SpellSchoolMask damageSchoolMask /*= SPELL_SCHOOL_MASK_NORMAL*/)
@@ -8356,7 +8361,7 @@ int32 Unit::MeleeDamageBonusTaken(Unit* attacker, int32 pdamage, WeaponAttackTyp
     }
 
     float tmpDamage = float(pdamage + TakenFlatBenefit) * TakenTotalMod;
-    return int32(std::max(tmpDamage, 0.0f));
+    return int32(std::max(tmpDamage, 0.0f) + 0.5f);   // Classic 1.60: rounded, not truncated
 }
 
 void Unit::ApplySpellImmune(uint32 spellId, SpellImmunity op, uint32 type, bool apply)
