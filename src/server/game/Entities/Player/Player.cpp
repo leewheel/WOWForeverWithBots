@@ -25933,7 +25933,9 @@ void Player::LearnSkillRewardedSpells(uint32 skillId, uint32 skillValue, Races r
         }
 
         // Check race if set
-        if (!ability->RaceMask.IsEmpty() && !ability->RaceMask.HasRace(race))
+        // Classic 1.60: Riding teaches every race's riding spell (Horse Riding, Mechanostrider Piloting... dummies under skill 762):
+        // the mount items require that spell (ItemSparse.RequiredAbility), and any race may use any mount here (MountCapability hotfix)
+        if (!ability->RaceMask.IsEmpty() && !ability->RaceMask.HasRace(race) && skillId != SKILL_RIDING)
             continue;
 
         // Check class if set
