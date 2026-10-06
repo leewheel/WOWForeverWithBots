@@ -6511,15 +6511,18 @@ void Player::CheckAreaExplore()
 
         UpdateCriteria(CriteriaType::RevealWorldMapOverlay, GetAreaId());
 
-        if (Optional<ContentTuningLevels> areaLevels = sDB2Manager.GetContentTuningData(areaEntry->ContentTuningID, m_playerData->CtrOptions->ConditionalFlags))
+        // Classic 1.60: AreaTable has no ContentTuningID, the area level is ExplorationLevel; every new area is announced ("Discovered",
+        // sound), with 0 experience at max level or in areas without a level (sniffs of the official beta: level 6 area 55 XP, level 0 area 0)
+        Optional<ContentTuningLevels> areaLevels = sDB2Manager.GetContentTuningData(areaEntry->ContentTuningID, m_playerData->CtrOptions->ConditionalFlags);
+        int16 explorationLevel = areaLevels ? std::min(std::max(int16(GetLevel()), areaLevels->MinLevel), areaLevels->MaxLevel) : int16(areaEntry->ExplorationLevel);
         {
-            if (IsMaxLevel())
+            if (IsMaxLevel() || explorationLevel <= 0)
             {
                 SendExplorationExperience(areaId, 0);
             }
             else
             {
-                int16 areaLevel = std::min(std::max(int16(GetLevel()), areaLevels->MinLevel), areaLevels->MaxLevel);
+                int16 areaLevel = explorationLevel;
                 int32 diff = int32(GetLevel()) - areaLevel;
                 uint32 XP;
                 if (diff < -5)
