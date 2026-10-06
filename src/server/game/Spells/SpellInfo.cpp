@@ -5011,6 +5011,7 @@ bool _isPositiveEffectImpl(SpellInfo const* spellInfo, SpellEffectInfo const& ef
                     case SpellModOp::Period:
                     case SpellModOp::PowerCostOnMiss:
                     case SpellModOp::StartCooldown:
+                    case SpellModOp::ProcCooldown:          // Classic 1.60 Moonkin Form (24858): -50% proc cooldown
                         if (bp > 0)
                             return false;
                         break;

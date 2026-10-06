@@ -42,6 +42,7 @@ namespace WorldPackets
             WorldPacket const* Write() override;
 
             std::string Name;
+            std::string Surname;                // Classic 1.60
             uint8 Command = 0u;
             uint8 Result = 0u;
             uint32 ResultData = 0u;
@@ -84,6 +85,7 @@ namespace WorldPackets
             ObjectGuid InviterGUID;
             ObjectGuid InviterBNetAccountId;
             std::string InviterName;
+            std::string InviterSurname;         // Classic 1.60
 
             // Realm
             bool IsXRealm = false;

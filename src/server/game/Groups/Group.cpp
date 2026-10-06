@@ -506,6 +506,8 @@ bool Group::AddMember(Player* player)
 
     player->FailCriteria(CriteriaFailEvent::ModifyPartyStatus, 0);
 
+    // Classic 1.60: group members do not get each other's party member fields (see Player::GetUpdateFieldFlagsFor)
+    if (false)
     {
         // Broadcast new player group member fields to rest of the group
         UpdateData groupData(player->GetMapId());

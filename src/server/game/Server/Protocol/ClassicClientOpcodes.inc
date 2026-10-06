@@ -362,6 +362,7 @@
     { 0x3F007B, 0x3E0079 }, // CMSG_SET_FACTION_AT_WAR (3.8)
     { 0x3F007C, 0x3E007A }, // CMSG_SET_FACTION_NOT_AT_WAR (3.8)
     { 0x3F007E, 0x3E007C }, // CMSG_SET_WATCHED_FACTION (3.8)
+    { 0x3F007F, 0x3E007D }, // CMSG_DUEL_RESPONSE (manual: arbiter guid + Accepted/Forfeited bits, sent by both duelists on accept)
     { 0x3F0082, 0x3E0080 }, // CMSG_UNLEARN_SKILL (3.8)
     { 0x3F0084, 0x3E0082 }, // CMSG_CANCEL_AUTO_REPEAT_SPELL (0.0)
     { 0x3F0088, 0x3E0086 }, // CMSG_SOCKET_GEMS (1.8)

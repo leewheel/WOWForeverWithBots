@@ -16,6 +16,7 @@
  */
 
 #include "WorldSession.h"
+#include "CharacterCache.h"
 #include "Common.h"
 #include "DatabaseEnv.h"
 #include "Group.h"
@@ -48,6 +49,8 @@ void WorldSession::SendPartyResult(PartyOperation operation, const std::string& 
     WorldPackets::Party::PartyCommandResult packet;
 
     packet.Name = member;
+    if (ObjectGuid memberGuid = sCharacterCache->GetCharacterGuidByName(member); !memberGuid.IsEmpty())
+        packet.Surname = sCharacterCache->GetCharacterSurnameByGuid(memberGuid);
     packet.Command = uint8(operation);
     packet.Result = uint8(res);
     packet.ResultData = val;

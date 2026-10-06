@@ -16,6 +16,7 @@
  */
 
 #include "PartyPackets.h"
+#include "CharacterCache.h"
 #include "Group.h"
 #include "PacketOperators.h"
 #include "Pet.h"
@@ -30,13 +31,16 @@ namespace WorldPackets::Party
 {
 WorldPacket const* PartyCommandResult::Write()
 {
-    _worldPacket << SizedString::BitsSize<9>(Name);
+    // Classic 1.60: 6 bit name and 9 bit surname length (sniffs of the official beta: "Helpz" + "Meplz", "Gle" + "Syr")
+    _worldPacket << SizedString::BitsSize<6>(Name);
+    _worldPacket << SizedString::BitsSize<9>(Surname);
     _worldPacket << Bits<4>(Command);
     _worldPacket << Bits<6>(Result);
 
     _worldPacket << uint32(ResultData);
     _worldPacket << ResultGUID;
     _worldPacket << SizedString::Data(Name);
+    _worldPacket << SizedString::Data(Surname);
 
     return &_worldPacket;
 }
@@ -67,6 +71,7 @@ WorldPacket const* PartyInvite::Write()
     _worldPacket << Bits<1>(AllowMultipleRoles);
     _worldPacket << Bits<1>(QuestSessionActive);
     _worldPacket << SizedString::BitsSize<6>(InviterName);
+    _worldPacket << SizedString::BitsSize<9>(InviterSurname);    // Classic 1.60 (sniff of the official beta: "Gank" + "Norris")
     _worldPacket << Bits<1>(IsCrossFaction);
 
     _worldPacket << InviterGUID;
@@ -78,6 +83,7 @@ WorldPacket const* PartyInvite::Write()
     _worldPacket << uint32(LfgCompletedMask);
 
     _worldPacket << SizedString::Data(InviterName);
+    _worldPacket << SizedString::Data(InviterSurname);
 
     for (uint32 lfgSlot : LfgSlots)
         _worldPacket << lfgSlot;
@@ -90,6 +96,7 @@ void PartyInvite::Initialize(Player const* inviter, int32 proposedRoles, bool ca
     CanAccept = canAccept;
 
     InviterName = inviter->GetName();
+    InviterSurname = sCharacterCache->GetCharacterSurnameByGuid(inviter->GetGUID());
     InviterGUID = inviter->GetGUID();
     InviterBNetAccountId = inviter->m_playerData->BnetAccount;
 
@@ -154,7 +161,7 @@ void RequestPartyMemberStats::Read()
 
 ByteBuffer& operator<<(ByteBuffer& data, PartyMemberPhase const& phase)
 {
-    data << uint32(phase.Flags);
+    data << uint8(phase.Flags);                 // Classic 1.60: 1 byte like PhaseShiftDataPhase (official sniff: "01 17 6e" = flags 1, phase 28183)
     data << uint16(phase.Id);
 
     return data;

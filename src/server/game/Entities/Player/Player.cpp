@@ -3627,7 +3627,9 @@ void Player::BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* target) c
 UF::UpdateFieldFlag Player::GetUpdateFieldFlagsFor(Player const* target) const
 {
     UF::UpdateFieldFlag flags = Unit::GetUpdateFieldFlagsFor(target);
-    if (IsInSameRaidWith(target))
+    // Classic 1.60: the party member fields (quest log, quest session, quest id map) only for the player himself for now - sent to
+    // other group members they crashed both clients on joining a group (client JamVectorDeltaType assert, size 0x17FFFFFF)
+    if (target == this)
         flags |= UF::UpdateFieldFlag::PartyMember;
 
     return flags;
