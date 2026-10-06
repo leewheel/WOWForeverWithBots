@@ -636,13 +636,18 @@ if __name__ == '__main__':
         stream.reconfigure(encoding='utf-8', errors='replace')     # names and chat can hold any character
     discord.utils.setup_logging(level=logging.INFO)
     cfg_file = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'discord_bot.json')
-    if not os.path.exists(cfg_file):
-        log.error('%s not found: copy discord_bot.example.json to discord_bot.json and fill it in (README.md)', cfg_file)
+
+    def not_set_up(message, *args):
+        # started by the launcher's "Start all" before anyone set it up: keep the reason readable before the window closes
+        log.error(message, *args)
+        time.sleep(30)
         sys.exit(1)
+
+    if not os.path.exists(cfg_file):
+        not_set_up('%s not found: copy discord_bot.example.json to discord_bot.json and fill it in (README.md)', cfg_file)
     load_config(cfg_file)
     if not CFG.get('token') or CFG['token'].startswith('PUT'):
-        log.error('no bot token in %s (README.md, "Create the Discord bot")', cfg_file)
-        sys.exit(1)
+        not_set_up('no bot token in %s (README.md, "Create the Discord bot")', cfg_file)
     load_state()
     try:
         sys.exit(asyncio.run(main()))
