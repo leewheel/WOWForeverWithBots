@@ -57,7 +57,8 @@ namespace WorldPackets
             void Read() override;
 
             Optional<uint8> PartyIndex;
-            uint32 ProposedRoles = 0;
+            uint32 ProposedRoles = 0;           // not sent by the Classic 1.60 client
+            uint32 TargetRealmAddress = 0;      // Classic 1.60: where retail has ProposedRoles (0 for invites by name; Battle.net friend invites: 70-1-70)
             std::string TargetName;
             std::string TargetRealm;
             ObjectGuid TargetGUID;

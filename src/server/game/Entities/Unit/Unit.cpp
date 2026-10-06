@@ -72,6 +72,7 @@
 #include "Player.h"
 #include "PlayerAI.h"
 #include "QuestDef.h"
+#include "RecentAllies.h"
 #include "Spell.h"
 #include "ScheduledChangeAI.h"
 #include "SpellAuraEffects.h"
@@ -11446,6 +11447,10 @@ void Unit::SetMeleeAnimKitId(uint16 animKitId)
         if (!creature->CanHaveLoot())
             isRewardAllowed = false;
     }
+
+    // Classic 1.60 Social window, Allies tab: players who fought this creature together
+    if (creature)
+        RecentAllies::OnCreatureKill(creature);
 
     // Exploit fix
     if (creature && creature->IsPet() && creature->GetOwnerGUID().IsPlayer())

@@ -59,6 +59,7 @@
 #include "DuelPackets.h"
 #include "EquipmentSetPackets.h"
 #include "Formulas.h"
+#include "FriendsService.h"
 #include "GameEventMgr.h"
 #include "GameEventSender.h"
 #include "GameObjectAI.h"
@@ -115,6 +116,7 @@
 #include "QuestObjectiveCriteriaMgr.h"
 #include "QuestPackets.h"
 #include "RealmList.h"
+#include "RecentAllies.h"
 #include "ReputationMgr.h"
 #include "RestMgr.h"
 #include "Scenario.h"
@@ -2311,6 +2313,8 @@ void Player::GiveLevel(uint8 level)
     UpdateClassicLegacyUnlock();
 
     sScriptMgr->OnPlayerLevelChanged(this, oldLevel);
+
+    BattlenetPresence::OnCharacterChanged(this);
 }
 
 // Classic 1.60 (WoW Forever): the first character bank tab is free (BankTab.db2: BankType 0, OrderIndex 0, Cost 0) and every character
@@ -7781,6 +7785,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
     {
         sOutdoorPvPMgr->HandlePlayerLeaveZone(this, oldZone);
         sBattlefieldMgr->HandlePlayerLeaveZone(this, oldZone);
+        BattlenetPresence::OnCharacterChanged(this);    // Battle.net friends see the new zone
     }
 
     // group update
@@ -22871,6 +22876,8 @@ void Player::Whisper(std::string_view text, Language language, Player* target, b
 
     packet.Initialize(CHAT_MSG_WHISPER_INFORM, language, target, target, _text);
     SendDirectMessage(packet.Write());
+
+    RecentAllies::OnWhisper(this, target);
 
     if (!isAcceptWhispers() && !IsGameMaster() && !target->IsGameMaster())
     {

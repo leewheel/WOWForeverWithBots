@@ -53,7 +53,9 @@ void PartyInviteClient::Read()
     _worldPacket >> SizedString::BitsSize<9>(TargetName);
     _worldPacket >> SizedString::BitsSize<9>(TargetRealm);
 
-    _worldPacket >> ProposedRoles;
+    // Classic 1.60: a realm address, not the proposed roles (sniffs: 0 when inviting by name; 0x46010046 with the target guid from the
+    // Battle.net friends list). Read as roles it made the invitee see the Group Finder role choice with nothing selectable.
+    _worldPacket >> TargetRealmAddress;
     _worldPacket >> TargetGUID;
 
     _worldPacket >> SizedString::Data(TargetName);

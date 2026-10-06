@@ -20,6 +20,7 @@
 #include "Common.h"
 #include "DatabaseEnv.h"
 #include "Group.h"
+#include "GroupFinderListings.h"
 #include "GroupMgr.h"
 #include "LFG.h"
 #include "Log.h"
@@ -329,6 +330,7 @@ void WorldSession::HandleSetRoleOpcode(WorldPackets::Party::SetRole& packet)
         roleChangedInform.PartyIndex = group->GetGroupCategory();
         group->BroadcastPacket(roleChangedInform.Write(), false);
         group->SetLfgRoles(packet.TargetGUID, packet.Role);
+        GroupFinderListings::OnGroupChanged(group);     // the group's Group Finder post in Discord shows the new role
     }
     else
         SendPacket(roleChangedInform.Write());
