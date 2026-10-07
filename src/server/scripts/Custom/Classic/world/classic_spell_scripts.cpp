@@ -400,8 +400,73 @@ class classic_spell_pal_holy_shock : public SpellScript
     }
 };
 
+// 1515 - Tame Beast: a 20 second channel in Classic (periodic aura on the beast); when it runs out the beast is tamed with 13481
+// (SPELL_EFFECT_TAME_CREATURE). The retail script on 1515 (spell_hun_tame_beast) keeps its cast checks; it tames instantly in
+// retail, so the Classic channel ended without a pet.
+class classic_spell_hun_tame_beast_channel : public AuraScript
+{
+    static constexpr uint32 SPELL_TAME_BEAST_TAME = 13481;
+
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_TAME_BEAST_TAME });
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_EXPIRE)
+            return;
+
+        if (Unit* caster = GetCaster())
+            caster->CastSpell(GetTarget(), SPELL_TAME_BEAST_TAME, CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetOriginalCaster(caster->GetGUID()));
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectRemoveFn(classic_spell_hun_tame_beast_channel::HandleRemove, EFFECT_1, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// 1280003, 1280046, 1271103 - Taming Rod (Skyborne hunter quests Taming the Beast 94978, 94979, 94013): a 20 second channel with a
+// dummy aura on the beast; when it runs out the rod's tame spell charms the beast for 12 sec and completes the quest (sniff of the
+// official beta: channel 20000 ms, then 1280004 / 1280044 / 1271102)
+class classic_spell_hun_taming_rod : public AuraScript
+{
+    static uint32 GetTameSpell(uint32 channelSpellId)
+    {
+        switch (channelSpellId)
+        {
+            case 1280003: return 1280004;   // Windsong Crawler (94978)
+            case 1280046: return 1280044;   // Ornery Galestrider (94979)
+            case 1271103: return 1271102;   // Vuldren Alpha (94013)
+            default:      return 0;
+        }
+    }
+
+    bool Validate(SpellInfo const* spellInfo) override
+    {
+        return ValidateSpellInfo({ GetTameSpell(spellInfo->Id) });
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_EXPIRE)
+            return;
+
+        if (Unit* caster = GetCaster())
+            caster->CastSpell(GetTarget(), GetTameSpell(GetId()), CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetOriginalCaster(caster->GetGUID()));
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectRemoveFn(classic_spell_hun_taming_rod::HandleRemove, EFFECT_1, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
 void AddSC_classic_spell_scripts()
 {
+    RegisterSpellScript(classic_spell_hun_taming_rod);
+    RegisterSpellScript(classic_spell_hun_tame_beast_channel);
     RegisterSpellScript(classic_spell_pal_holy_shock);
     RegisterSpellScript(classic_spell_pal_judgement_of_the_crusader_refresh);
     RegisterSpellScript(classic_spell_pal_seal_of_righteousness);

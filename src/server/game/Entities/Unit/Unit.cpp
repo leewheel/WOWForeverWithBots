@@ -7045,6 +7045,10 @@ float Unit::SpellDamagePctDone(Unit* victim, SpellInfo const* spellProto, Damage
     if (GetTypeId() == TYPEID_UNIT && !IsPet())
         DoneTotalMod *= ToCreature()->GetSpellDamageMod(ToCreature()->GetCreatureTemplate()->Classification);
 
+    // Classic 1.60: a hunter pet's mood (unhappy 75%, content 100%, happy 125%)
+    if (Pet const* pet = ToPet())
+        DoneTotalMod *= pet->GetHappinessDamageMod();
+
     // Versatility
     if (Player* modOwner = GetSpellModOwner())
         AddPct(DoneTotalMod, modOwner->GetRatingBonusValue(CR_VERSATILITY_DAMAGE_DONE) + modOwner->GetTotalAuraModifier(SPELL_AURA_MOD_VERSATILITY));
@@ -8188,6 +8192,10 @@ int32 Unit::MeleeDamageBonusDone(Unit* pVictim, int32 damage, WeaponAttackType a
 
     // Done total percent damage auras
     float DoneTotalMod = 1.0f;
+
+    // Classic 1.60: a hunter pet's mood (unhappy 75%, content 100%, happy 125%)
+    if (Pet const* pet = ToPet())
+        DoneTotalMod *= pet->GetHappinessDamageMod();
 
     SpellSchoolMask schoolMask = spellProto ? spellProto->GetSchoolMask() : damageSchoolMask;
 
@@ -11336,6 +11344,13 @@ bool Unit::InitTamedPet(Pet* pet, uint8 level, uint32 spell_id)
     pet->GetCharmInfo()->SetPetNumber(sObjectMgr->GeneratePetNumber(), true);
     // this enables pet details window (Shift+P)
     pet->InitPetCreateSpells();
+
+    // Classic 1.60: a freshly tamed beast is unhappy until it is fed
+    if (pet->HasHappiness())
+    {
+        pet->SetMaxPower(POWER_HAPPINESS, Pet::HAPPINESS_MAX);
+        pet->SetPower(POWER_HAPPINESS, Pet::HAPPINESS_TAMED);
+    }
     //pet->InitLevelupSpellsForLevel();
     pet->SetFullHealth();
 
