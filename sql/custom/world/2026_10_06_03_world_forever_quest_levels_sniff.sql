@@ -456,6 +456,8 @@ INSERT INTO `quest_template_classic_level` (`ID`,`LevelType`,`QuestLevel`) VALUE
 (91209,2,4),
 (91282,2,11),
 (91285,2,11),
+(91294,2,11),
+(91316,2,11),
 (91317,2,12),
 (91723,2,10),
 (91725,2,10),
@@ -705,6 +707,7 @@ INSERT INTO `quest_template_classic_level` (`ID`,`LevelType`,`QuestLevel`) VALUE
 (99141,2,6),
 (99142,2,11),
 (99143,2,7),
+(99144,2,7),
 (99156,2,13),
 (99196,0,60)
 ON DUPLICATE KEY UPDATE `LevelType` = VALUES(`LevelType`), `QuestLevel` = VALUES(`QuestLevel`);
@@ -1164,6 +1167,8 @@ INSERT INTO `quest_classic_level` (`ID`,`QuestLevel`,`MinLevel`,`MaxLevel`) VALU
 (91209,4,4,0),
 (91282,11,8,0),
 (91285,11,7,0),
+(91294,11,8,0),
+(91316,11,8,0),
 (91317,12,9,0),
 (91723,10,7,0),
 (91725,10,7,0),
@@ -1413,6 +1418,7 @@ INSERT INTO `quest_classic_level` (`ID`,`QuestLevel`,`MinLevel`,`MaxLevel`) VALU
 (99141,6,4,0),
 (99142,11,5,0),
 (99143,7,4,0),
+(99144,7,5,0),
 (99156,13,6,0),
 (99196,60,12,0)
 ON DUPLICATE KEY UPDATE `QuestLevel` = VALUES(`QuestLevel`), `MinLevel` = VALUES(`MinLevel`);
