@@ -25,6 +25,7 @@
 #include <string_view>
 
 struct ItemTemplate;
+class SpellInfo;
 
 class UnitTestDataLoader
 {
@@ -64,6 +65,7 @@ class UnitTestDataLoader
                 DB2Storage<T>& _store;
         };
 
+        static void InitializeSpellSpecificInfo(SpellInfo& spellInfo);
         static void LoadAchievementTemplates();
         static void LoadItemTemplates();
 
