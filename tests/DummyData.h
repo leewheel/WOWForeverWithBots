@@ -65,6 +65,7 @@ class UnitTestDataLoader
                 DB2Storage<T>& _store;
         };
 
+        static void InitializeSpellSpecificInfo(SpellInfo& spellInfo);
         static void LoadAchievementTemplates();
         static void LoadItemTemplates();
         static void LoadSpellImmunities(SpellInfo& spellInfo);
