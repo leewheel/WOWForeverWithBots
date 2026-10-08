@@ -25,6 +25,7 @@
 #include "Log.h"
 #include "Map.h"
 #include "ObjectMgr.h"
+#include "PetFollowPosition.h"
 #include "PetPackets.h"
 #include "PhasingHandler.h"
 #include "Player.h"
@@ -1862,6 +1863,11 @@ void Pet::SynchronizeLevelWithOwner()
 Player* Pet::GetOwner() const
 {
     return Minion::GetOwner()->ToPlayer();
+}
+
+float Pet::GetFollowAngle() const
+{
+    return PetFollowPosition::FollowAngle(getPetType(), Guardian::GetFollowAngle());
 }
 
 float Pet::GetNativeObjectScale() const
