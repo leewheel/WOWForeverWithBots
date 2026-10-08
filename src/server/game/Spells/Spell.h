@@ -530,6 +530,7 @@ class TC_GAME_API Spell
         SpellCastResult CheckRange(bool strict) const;
         SpellCastResult CheckPower() const;
         SpellCastResult CheckRuneCost() const;
+        static bool ApplyShadowburnDeathAura(Unit& target, SpellInfo const& spell, Aura* hitAura, uint32 hitMask);
         SpellCastResult CheckCasterAuras(int32* param1) const;
         SpellCastResult CheckArenaAndRatedBattlegroundCastRules();
         SpellCastResult CheckMovement() const;
