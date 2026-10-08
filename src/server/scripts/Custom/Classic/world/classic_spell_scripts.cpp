@@ -467,8 +467,34 @@ class classic_spell_hun_taming_rod : public AuraScript
     }
 };
 
+// 348, 707, 1094, 2941, 11665, 11667, 11668, 25309 - Immolate: Classic 1.60 added a script effect (EFFECT_2) that puts the hidden
+// Immolate aura 1282590 on the target (sniff: both auras on the target, same caster). Every Conflagrate rank needs it
+// (SpellAuraRestrictions TargetAuraSpell 1282590), so without it Conflagrate could never be cast.
+class classic_spell_warl_immolate : public SpellScript
+{
+    static constexpr uint32 SPELL_IMMOLATE_CONFLAGRATE_MARKER = 1282590;
+
+    bool Validate(SpellInfo const* spellInfo) override
+    {
+        return ValidateSpellInfo({ SPELL_IMMOLATE_CONFLAGRATE_MARKER }) && ValidateSpellEffect({ { spellInfo->Id, EFFECT_2 } });
+    }
+
+    void HandleScript(SpellEffIndex /*effIndex*/)
+    {
+        // the marker targets its caster, so the target casts it on itself for the warlock
+        Unit* target = GetHitUnit();
+        target->CastSpell(target, SPELL_IMMOLATE_CONFLAGRATE_MARKER, CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetOriginalCaster(GetCaster()->GetGUID()));
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(classic_spell_warl_immolate::HandleScript, EFFECT_2, SPELL_EFFECT_SCRIPT_EFFECT);
+    }
+};
+
 void AddSC_classic_spell_scripts()
 {
+    RegisterSpellScript(classic_spell_warl_immolate);
     RegisterSpellScript(classic_spell_hun_taming_rod);
     RegisterSpellScript(classic_spell_hun_tame_beast_channel);
     RegisterSpellScript(classic_spell_pal_holy_shock);
