@@ -16,6 +16,7 @@
  */
 
 #include "Player.h"
+#include "CombatEnchantProc.h"
 #include "DeathRecap.h"
 #include "AreaTrigger.h"
 #include "Account.h"
@@ -9114,15 +9115,7 @@ void Player::CastItemCombatSpell(DamageInfo const& damageInfo, Item* item, ItemT
             if (FindCurrentSpellBySpellId(5938) && e_slot == TEMP_ENCHANTMENT_SLOT)
                 chance = 100.0f;
 
-            if (roll_chance(chance))
-            {
-                if (spellInfo->IsPositive())
-                    CastSpell(this, spellInfo->Id, item);
-                else
-                    CastSpell(damageInfo.GetVictim(), spellInfo->Id, item);
-            }
-
-            if (roll_chance(chance))
+            CombatEnchantProc::Dispatch(chance, [](float procChance) { return roll_chance(procChance); }, [&]
             {
                 Unit* target = spellInfo->IsPositive() ? this : damageInfo.GetVictim();
 
@@ -9140,7 +9133,7 @@ void Player::CastItemCombatSpell(DamageInfo const& damageInfo, Item* item, ItemT
                             args.AddSpellMod(static_cast<SpellValueModFloat>(SPELLVALUE_BASE_POINT0 + AsUnderlyingType(spellEffectInfo.EffectIndex)), CalculatePct(spellEffectInfo.CalcValue(this), effectPct));
                 }
                 CastSpell(target, spellInfo->Id, args);
-            }
+            });
         }
     }
 }
