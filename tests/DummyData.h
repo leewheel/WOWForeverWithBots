@@ -25,6 +25,7 @@
 #include <string_view>
 
 struct ItemTemplate;
+class SpellInfo;
 
 class UnitTestDataLoader
 {
@@ -66,6 +67,7 @@ class UnitTestDataLoader
 
         static void LoadAchievementTemplates();
         static void LoadItemTemplates();
+        static void LoadSpellImmunities(SpellInfo& spellInfo);
 
     private:
         static ItemTemplate& GetItemTemplate(uint32 id, std::string_view name);
