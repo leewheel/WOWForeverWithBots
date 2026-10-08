@@ -3874,7 +3874,7 @@ bool SpellInfo::CanSpellProvideImmunityAgainstAura(SpellInfo const* auraSpellInf
                 return true;
 
         if (uint32 dispelImmunity = immuneInfo->DispelImmuneMask)
-            if (auraSpellInfo->Dispel == dispelImmunity)
+            if ((auraSpellInfo->GetDispelMask() & dispelImmunity) != 0)
                 return true;
 
         bool immuneToAllEffects = true;
@@ -3934,7 +3934,7 @@ bool SpellInfo::CanSpellEffectProvideImmunityAgainstAuraEffect(SpellEffectInfo c
     }
 
     if (uint32 dispelImmunity = immuneInfo->DispelImmuneMask)
-        if (auraSpellInfo->Dispel == dispelImmunity)
+        if ((auraSpellInfo->GetDispelMask() & dispelImmunity) != 0)
             return true;
 
     if (immuneInfo->AuraTypeImmune.find(auraEffectInfo.ApplyAuraName) != immuneInfo->AuraTypeImmune.end())
