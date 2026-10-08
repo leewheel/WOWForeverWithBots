@@ -427,7 +427,8 @@ class classic_spell_hun_tame_beast_channel : public AuraScript
     }
 };
 
-// 1280003, 1280046, 1271103 - Taming Rod (Skyborne hunter quests Taming the Beast 94978, 94979, 94013): a 20 second channel with a
+// 1280003, 1280046, 1271103 - Taming Rod (Skyborne hunter quests Taming the Beast 94978, 94979, 94013), and 1277794, 1278028,
+// 1278029 (human hunter quests 94792, 94863, 94864, not sniffed yet): a 20 second channel with a
 // dummy aura on the beast; when it runs out the rod's tame spell charms the beast for 12 sec and completes the quest (sniff of the
 // official beta: channel 20000 ms, then 1280004 / 1280044 / 1271102)
 class classic_spell_hun_taming_rod : public AuraScript
@@ -439,6 +440,9 @@ class classic_spell_hun_taming_rod : public AuraScript
             case 1280003: return 1280004;   // Windsong Crawler (94978)
             case 1280046: return 1280044;   // Ornery Galestrider (94979)
             case 1271103: return 1271102;   // Vuldren Alpha (94013)
+            case 1277794: return 1277851;   // Rockhide Boar (94792, human)
+            case 1278028: return 1278060;   // Gray Forest Wolf (94863, human)
+            case 1278029: return 1278061;   // Young Forest Bear (94864, human)
             default:      return 0;
         }
     }
