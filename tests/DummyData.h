@@ -24,12 +24,15 @@
 
 #include <string_view>
 
+class Item;
 struct ItemTemplate;
 class SpellInfo;
 
 class UnitTestDataLoader
 {
     public:
+        static uint16 ResolveItemVisual(Item const& item, uint32 visibleEnchantmentId);
+
         template <typename T, uint32 T::*ID>
         class DB2
         {
