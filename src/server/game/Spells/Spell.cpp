@@ -2825,6 +2825,36 @@ void Spell::TargetInfo::DoTargetSpellHit(Spell* spell, SpellEffectInfo const& sp
     Healing = spell->m_healing;
 }
 
+bool Spell::ApplyShadowburnDeathAura(Unit& target, SpellInfo const& spell, Aura* hitAura, uint32 hitMask)
+{
+    if (!hitAura || hitAura->IsRemoved() || !(hitMask & 1)
+        || !spell.HasAttribute(SPELL_ATTR15_UNK13) || spell.SpellFamilyName != SPELLFAMILY_WARLOCK
+        || hitAura->GetSpellInfo()->Id != spell.Id)
+        return false;
+
+    switch (spell.Id)
+    {
+        case 17877: case 18867: case 18868: case 18869: case 18870: case 18871:
+            break;
+        default:
+            return false;
+    }
+
+    SpellEffectInfo const& deathItem = spell.GetEffect(EFFECT_0);
+    if (!deathItem.IsAura(SPELL_AURA_CHANNEL_DEATH_ITEM) || deathItem.ItemType != 6265)
+        return false;
+
+    AuraApplication* application = hitAura->GetApplicationOfTarget(target.GetGUID());
+    if (!application || application->GetRemoveMode() != AURA_REMOVE_NONE
+        || !(application->GetEffectsToApply() & 1) || application->HasEffect(EFFECT_0))
+        return false;
+
+    // Generic death-item removal retains its XP/honor, tap and inventory checks.
+    // Arm only this native effect before damage so a killing blow can remove it.
+    target._ApplyAura(application, 1);
+    return true;
+}
+
 void Spell::TargetInfo::DoDamageAndTriggers(Spell* spell)
 {
     Unit* unit = spell->m_caster->GetGUID() == TargetGUID ? spell->m_caster->ToUnit() : ObjectAccessor::GetUnit(*spell->m_caster, TargetGUID);
@@ -2845,6 +2875,9 @@ void Spell::TargetInfo::DoDamageAndTriggers(Spell* spell)
     Unit* caster = spell->m_originalCaster ? spell->m_originalCaster : spell->m_caster->ToUnit();
     if (caster)
     {
+        if (_spellHitTarget && caster->IsPlayer())
+            Spell::ApplyShadowburnDeathAura(*_spellHitTarget, *spell->m_spellInfo, HitAura, EffectMask);
+
         // Fill base trigger info
         ProcFlagsInit procAttacker = spell->m_procAttacker;
         ProcFlagsInit procVictim = spell->m_procVictim;
