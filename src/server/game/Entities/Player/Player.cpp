@@ -12204,6 +12204,20 @@ void Player::QuickEquipItem(uint16 pos, Item* pItem)
     }
 }
 
+void Player::RefreshVisibleItemEnchantment(Item const* item, bool temporary)
+{
+    if (!item || !item->IsEquipped() || item->GetSlot() >= m_playerData->VisibleItems.size())
+        return;
+
+    // An outfit illusion is resolved by SetVisibleItemSlot and must not be
+    // overwritten when an imbue changes or expires.
+    if (temporary && m_playerData->VisibleItems[item->GetSlot()].HasIllusion)
+        return;
+
+    SetUpdateFieldValue(m_values.ModifyValue(&Player::m_playerData).ModifyValue(&UF::PlayerData::VisibleItems, item->GetSlot())
+        .ModifyValue(&UF::VisibleItem::ItemVisual), item->GetVisibleItemVisual(this));
+}
+
 void Player::SetVisibleItemSlot(uint8 slot, Item const* item)
 {
     auto setVisibleItemSlot = [this](uint32 slot, int32 itemId, int32 secondaryItemModifiedAppearanceId, int32 conditionalItemAppearanceId,
@@ -14204,8 +14218,8 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
     }
 
     // visualize enchantment at player and equipped items
-    if (slot == PERM_ENCHANTMENT_SLOT && item->GetSlot() < m_playerData->VisibleItems.size())
-        SetUpdateFieldValue(m_values.ModifyValue(&Player::m_playerData).ModifyValue(&UF::PlayerData::VisibleItems, item->GetSlot()).ModifyValue(&UF::VisibleItem::ItemVisual), item->GetVisibleItemVisual(this));
+    if (slot == PERM_ENCHANTMENT_SLOT)
+        RefreshVisibleItemEnchantment(item, false);
 
     if (apply_dur)
     {
