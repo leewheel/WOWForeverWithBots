@@ -46,6 +46,7 @@
 #include "Config.h"
 #include "ChatPackets.h"
 #include "ChatTextBuilder.h"
+#include "ClassicOpcodes.h"
 #include "CinematicMgr.h"
 #include "ClubUtils.h"
 #include "CombatLogPackets.h"
@@ -3623,7 +3624,10 @@ void Player::BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* target) c
             if (item)
                 item->BuildCreateUpdateBlockForPlayer(data, target);
 
-        GetSession()->GetBattlenetAccount().BuildCreateUpdateBlockForPlayer(data, target);
+        // the bnet account object (type 18, retail housing storage) is gone from client 70291: the official server never sends it
+        // and its create misaligned everything after it (the client read past the end of the login update object and crashed)
+        if (!ClassicOpcodes::IsBuild70291OrLater())
+            GetSession()->GetBattlenetAccount().BuildCreateUpdateBlockForPlayer(data, target);
     }
 
     Unit::BuildCreateUpdateBlockForPlayer(data, target);
