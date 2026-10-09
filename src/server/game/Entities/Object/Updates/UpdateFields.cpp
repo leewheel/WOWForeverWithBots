@@ -4730,7 +4730,11 @@ void StablePetInfo::WriteCreate(ByteBuffer& data, Player const* receiver, Player
     data << uint32(DisplayID);
     data << uint32(ExperienceLevel);
     data << uint8(PetFlags);
-    data << uint32(Specialization);
+    data << uint8(LoyaltyLevel);
+    data << uint32(LoyaltyPoints);
+    data << uint32(Happiness);
+    data << uint32(Experience);
+    data << uint32(NextLevelExperience);
     data.WriteBits(Name->size(), 8);
     data.FlushBits();
     data << WorldPackets::SizedString::Data(*Name);
@@ -4742,7 +4746,7 @@ void StablePetInfo::WriteUpdate(bool ignoreChangesMask, ByteBuffer& data, Player
     if (ignoreChangesMask)
         changesMask.SetAll();
 
-    data.WriteBits(changesMask.GetBlock(0), 9);
+    data.WriteBits(changesMask.GetBlock(0), 13);
 
     data.FlushBits();
     if (changesMask[0])
@@ -4773,7 +4777,23 @@ void StablePetInfo::WriteUpdate(bool ignoreChangesMask, ByteBuffer& data, Player
         }
         if (changesMask[8])
         {
-            data << uint32(Specialization);
+            data << uint8(LoyaltyLevel);
+        }
+        if (changesMask[9])
+        {
+            data << uint32(LoyaltyPoints);
+        }
+        if (changesMask[10])
+        {
+            data << uint32(Happiness);
+        }
+        if (changesMask[11])
+        {
+            data << uint32(Experience);
+        }
+        if (changesMask[12])
+        {
+            data << uint32(NextLevelExperience);
         }
         if (changesMask[6])
         {
@@ -4799,7 +4819,11 @@ void StablePetInfo::ClearChangesMask()
     Base::ClearChangesMask(ExperienceLevel);
     Base::ClearChangesMask(Name);
     Base::ClearChangesMask(PetFlags);
-    Base::ClearChangesMask(Specialization);
+    Base::ClearChangesMask(LoyaltyLevel);
+    Base::ClearChangesMask(LoyaltyPoints);
+    Base::ClearChangesMask(Happiness);
+    Base::ClearChangesMask(Experience);
+    Base::ClearChangesMask(NextLevelExperience);
     _changesMask.ResetAll();
 }
 
@@ -5516,7 +5540,7 @@ void ActivePlayerData::WriteCreate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
     data << int32(ItemUpgradeHighTrinketItemID);
     data << float(ItemUpgradeHighTrinketWatermark);
     data << uint64(LootHistoryInstanceID);
-    data << uint8(0);                           // Classic 1.60.1.70009: unknown uint8 (client ActivePlayerData +0x1EA0)
+    data << uint8(NumStableSlots);              // Classic 1.60 (client ActivePlayerData +0x1EA0, bit 159): stable slots bought
     data << uint32(TrackedCollectableSources.size());
     data << uint8(RequiredMountCapabilityFlags);
     WriteMapFieldCreate(DelveData, data, receiver, owner);
@@ -5732,12 +5756,14 @@ void ActivePlayerData::WriteUpdate(EnumFlag<UpdateFieldFlag> fieldVisibilityFlag
 
 // Classic 1.60.1.70009 ActivePlayerData changes-mask bit numbering (client update reader rva 0xA91D90, 14 blocks, classic_re/upd_bits.py):
 // - group bits 0, 32, 70, 102, 134 like retail; new fields 108 (uint32 after PvpMedals), 111 (float after YesterdayHonorableKills),
-//   120 (float before HomeRealmTimeOffset), 151 (uint8 after ActiveCombatTraitConfigID), 158 (uint8 after LootHistoryInstanceID);
+//   120 (float before HomeRealmTimeOffset), 151 (uint8 after ActiveCombatTraitConfigID), 159 (uint8 stable slots, our NumStableSlots
+//   TC 401; read after LootHistoryInstanceID, PetStable 158 is read later with the optional fields: official 70291 stable sniff);
 //   PetSpellPower (TC 116) removed, so NumBankSlots/NumCharacterBankTabs (TC 132/133) move into group 134
 // - TransmogMetadata has its own group: bit 166 (group) + 167 (client rva 0xA9BFF2 reads it only when both are set)
 // - InvSlots has 145 entries (group 168, entries 169..313), every array after it is shifted by 45
 static uint32 ClassicActivePlayerDataBit(uint32 bit)
 {
+    if (bit == 401) return 159;         // NumStableSlots
     if (bit <= 107) return bit;
     if (bit <= 109) return bit + 1;
     if (bit <= 115) return bit + 2;
@@ -5750,7 +5776,8 @@ static uint32 ClassicActivePlayerDataBit(uint32 bit)
     if (bit == 135) return 137;         // NumAccountBankTabs
     if (bit <= 148) return bit + 2;
     if (bit <= 154) return bit + 3;
-    if (bit <= 161) return bit + 4;     // ..., ViewedOutfit (165)
+    if (bit == 155) return 158;         // PetStable
+    if (bit <= 161) return bit + 4;     // RequiredMountCapabilityFlags (160), ..., ViewedOutfit (165)
     if (bit <= 271) return bit + 5;     // TransmogMetadata (167), InvSlots group (168) + InvSlots[0..107] (169..276)
     return bit + 42;                    // arrays after InvSlots (TC InvSlots has 108 of the client's 145)
 }
@@ -7009,6 +7036,10 @@ void ActivePlayerData::WriteUpdate(Mask const& changesMask, ByteBuffer& data, Pl
         {
             data << uint64(LootHistoryInstanceID);
         }
+        if (changesMask[401])
+        {
+            data << uint8(NumStableSlots);
+        }
         if (changesMask[156])
         {
             data << uint8(RequiredMountCapabilityFlags);
@@ -7337,6 +7368,7 @@ void ActivePlayerData::ClearChangesMask()
     Base::ClearChangesMask(ItemUpgradeHighTrinketItemID);
     Base::ClearChangesMask(ItemUpgradeHighTrinketWatermark);
     Base::ClearChangesMask(LootHistoryInstanceID);
+    Base::ClearChangesMask(NumStableSlots);
     Base::ClearChangesMask(PetStable);
     Base::ClearChangesMask(RequiredMountCapabilityFlags);
     Base::ClearChangesMask(WalkInData);

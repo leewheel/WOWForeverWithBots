@@ -4493,6 +4493,13 @@ Classic.OpcodeGroupShift = -1
 
 Classic.MainGroupInsertIndex = 147
 
+#    Classic.ClientMainGroupInsertIndex
+#        Description: Client 70291+: 70291 index (decimal) of the message added to the main client group; the client messages
+#                     after it are one lower in 70245 numbering. The sniffs narrow it to 315..336 (0x13B..0x150).
+#        Default:     315
+
+Classic.ClientMainGroupInsertIndex = 315
+
 #    Classic.OfficialFeatureFlags
 #        Description: Send the client feature flags exactly as the official server does (sniffs 70205/70235).
 #                     0 goes back to the older hand-picked flags.
