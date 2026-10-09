@@ -109,10 +109,18 @@ bool ClassicOpcodes::IsBuild70291OrLater()
 
 uint32 ClassicOpcodes::TranslateClientOpcode(uint32 classicOpcode)
 {
-    // client: only the connection group (70245 0x45) moved, to 0x46
     if (uint32 shift = ExtraGroupShift())
+    {
+        // client: the connection group (70245 0x45) moved to 0x46
         if (OpcodeGroup(classicOpcode) == ClassicClientConnectionGroup + shift)
             classicOpcode = WithOpcodeGroup(classicOpcode, ClassicClientConnectionGroup);
+        // and the main client group 0x44 got one more message between 70245 index 0x13A and 0x150 (sniffs 2026-10-09: 0x13A
+        // BATTLE_PAY_OPEN_CHECKOUT unchanged, 0x150 -> 0x151; RECENT_ALLY_REQUEST_DATA, ACCEPT_SOCIAL_CONTRACT, club finder are
+        // above it). Classic.ClientMainGroupInsertIndex = the 70291 index of the new message, everything after it is one lower.
+        static uint32 const clientInsertIndex = uint32(sConfigMgr->GetIntDefault("Classic.ClientMainGroupInsertIndex", 0x13B));
+        if (OpcodeGroup(classicOpcode) == ClassicClientConnectionGroup - 1 && (classicOpcode & 0xFFFF) > clientInsertIndex)
+            --classicOpcode;
+    }
 
     return TranslateClientOpcode70245(classicOpcode);
 }

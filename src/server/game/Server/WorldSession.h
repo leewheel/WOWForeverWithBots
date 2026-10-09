@@ -573,6 +573,7 @@ namespace WorldPackets
         class TabardVendorActivate;
         class TrainerBuySpell;
         class RequestStabledPets;
+        class BuyStableSlot;
         class SetPetSlot;
     }
 
@@ -1500,6 +1501,7 @@ class TC_GAME_API WorldSession
         void HandleBinderActivateOpcode(WorldPackets::NPC::Hello& packet);
         void HandleRequestStabledPets(WorldPackets::NPC::RequestStabledPets& packet);
         void HandleSetPetSlot(WorldPackets::NPC::SetPetSlot& setPetSlot);
+        void HandleBuyStableSlot(WorldPackets::NPC::BuyStableSlot& buyStableSlot);
 
         void HandleCanDuel(WorldPackets::Duel::CanDuel& packet);
         void HandleDuelResponseOpcode(WorldPackets::Duel::DuelResponse& duelResponse);
@@ -2058,6 +2060,7 @@ class TC_GAME_API WorldSession
         rbac::RBACData* _RBACData;
         uint32 expireTime;
         bool forceExit;
+        bool _motdPending = false;          // MOTD due once the client's loading screen after the login is gone
 
         std::unique_ptr<boost::circular_buffer<std::pair<int64, uint32>>> _timeSyncClockDeltaQueue; // first member: clockDelta. Second member: latency of the packet exchange that was used to compute that clockDelta.
         int64 _timeSyncClockDelta;
