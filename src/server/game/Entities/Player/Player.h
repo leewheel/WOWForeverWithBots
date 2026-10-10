@@ -2426,6 +2426,11 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         void UpdateClassicLegacyUnlock();
         void UpdateClassicProfessionTitles();
         static bool IsClassicCertificationSkill(uint32 skillId);
+        // Classic 1.60 Legacy perks (Legacy trait trees 1187 Professions, 1188 Adventure, 1189 Progression)
+        int32 GetClassicLegacyPerkAmount(uint32 spellId, SpellEffIndex effIndex) const;
+        uint64 ApplyClassicLegacyPriceMod(uint64 price, int32 priceType) const;
+        void SetClassicFreeHelpfulSpellsUntil(TimePoint until) { _classicFreeHelpfulSpellsUntil = until; }
+        bool HasClassicFreeHelpfulSpells() const;
         void GrantClassicFreeBankTab();
         bool HasSkill(uint32 skill) const;
         void LearnSkillRewardedSpells(uint32 skillId, uint32 skillValue, Races race);
@@ -3314,6 +3319,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         int32 m_spellPenetrationItemMod;
         std::array<int32, 140 - 83> m_classicItemMods = { };   // ItemModType 83 .. 139 (ITEM_MOD_CLASSIC_*), from equipped items
         int32 m_classicBlockValueBonus = 0;                    // ITEM_MOD_BLOCK_VALUE of equipped items
+        mutable TimePoint _classicFreeHelpfulSpellsUntil;            // Legacy perk The Quick and the Dead: free helpful spells after resurrection
 
         SpellModContainer m_spellMods;
 
