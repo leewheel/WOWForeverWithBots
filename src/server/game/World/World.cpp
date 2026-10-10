@@ -109,6 +109,7 @@
 #include "WorldSession.h"
 #include "WorldStateMgr.h"
 #include <zlib.h>
+#include <filesystem>
 
 TC_GAME_API std::atomic<bool> World::m_stopEvent(false);
 TC_GAME_API uint8 World::m_ExitCode = SHUTDOWN_EXIT_CODE;
@@ -1183,6 +1184,26 @@ void World::LoadConfigSettings(bool reload)
     }
 
     TC_LOG_INFO("server.loading", "WORLD: MMap data directory is: {}mmaps", m_dataPath);
+
+    ///- DBC.Locale has to match the data extracted from the client (a French client gives only dbc/frFR): when the configured
+    ///  locale was not extracted, use one that was, so nobody has to edit the config for their client language
+    {
+        std::filesystem::path dbcPath = std::filesystem::path(m_dataPath) / "dbc";
+        std::error_code error;
+        if (std::filesystem::is_directory(dbcPath, error) && !std::filesystem::is_directory(dbcPath / localeNames[m_defaultDbcLocale], error))
+        {
+            for (uint8 locale = 0; locale < TOTAL_LOCALES; ++locale)
+            {
+                if (locale == LOCALE_none || !std::filesystem::is_directory(dbcPath / localeNames[locale], error))
+                    continue;
+
+                TC_LOG_WARN("server.loading", "DBC.Locale {} was not extracted ({} has no {} folder): using the extracted {} data instead.",
+                    localeNames[m_defaultDbcLocale], dbcPath.generic_string(), localeNames[m_defaultDbcLocale], localeNames[locale]);
+                m_defaultDbcLocale = LocaleConstant(locale);
+                break;
+            }
+        }
+    }
 
     bool enableLOS = sConfigMgr->GetBoolDefault("vmap.enableLOS"sv, true);
     bool enableHeight = sConfigMgr->GetBoolDefault("vmap.enableHeight"sv, true);
