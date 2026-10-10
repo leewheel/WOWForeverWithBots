@@ -2424,6 +2424,8 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         static uint32 GetClassicProfessionSkill(uint32 skill);
         void SyncClassicProfessionChildSkills(uint32 skill);
         void UpdateClassicLegacyUnlock();
+        void UpdateClassicProfessionTitles();
+        static bool IsClassicCertificationSkill(uint32 skillId);
         void GrantClassicFreeBankTab();
         bool HasSkill(uint32 skill) const;
         void LearnSkillRewardedSpells(uint32 skillId, uint32 skillValue, Races race);

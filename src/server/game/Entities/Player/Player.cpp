@@ -2368,12 +2368,76 @@ void Player::UpdateClassicLegacyUnlock()
     if (earnedLegacyPoints > renown)
         ModifyCurrency(LegacyRenownCurrencyID, earnedLegacyPoints - renown);
 
+    // Legacy reward track (RenownRewards group 48): reaching a reward's level puts its "Legacy Reward" quest in the log, complete;
+    // it is turned in at Innkeeper Wiley in Ratchet (official 70338: the quest was ready at Wiley, the reward says "Visit Innkeeper
+    // Wiley in Ratchet to claim your reward"). Wiley also offers it again if it was abandoned (world 2026_10_10_05).
+    static constexpr std::pair<int32, uint32> LegacyRewardQuests[] =
+    {
+        { 15, 96339 },  // Replica Ironforge Air Rifle
+        { 25, 96340 },  // Spectral Bear Cub
+        { 40, 96341 },  // Spectral Bear Tabard
+        { 55, 96342 },  // Reins of the Spectral Bear
+    };
+    for (auto const& [points, questId] : LegacyRewardQuests)
+    {
+        if (earnedLegacyPoints < points || GetQuestStatus(questId) != QUEST_STATUS_NONE)
+            continue;
+
+        if (Quest const* quest = sObjectMgr->GetQuestTemplate(questId))
+            if (CanAddQuest(quest, false))
+                AddQuestAndCheckCompletion(quest, nullptr);
+    }
+
     if (!earnedLegacyPoints && GetLevel() < LegacyUnlockLevel)
         return;
 
     // the reward track shows the progress towards the next renown level from the faction's reputation, so the client must know it
     if (FactionEntry const* legacyFaction = sFactionStore.LookupEntry(LegacyRewardTrackFactionID))
         GetReputationMgr().SetVisible(legacyFaction);
+}
+
+// Classic 1.60: the profession certifications of the trade company vendors (1000 Merchant Favor, spells 1289195-1289200) unlock the
+// profession title for every character of the account (table account_classic_certification, spell script
+// classic_spell_profession_certification); a character shows it once it has 300 skill in that profession.
+namespace
+{
+struct ClassicCertification { uint32 SkillId; uint32 TitleId; };
+constexpr ClassicCertification ClassicCertifications[] =
+{
+    { SKILL_ALCHEMY,        1224 },     // the Alchemist
+    { SKILL_BLACKSMITHING,  1225 },     // the Blacksmith
+    { SKILL_ENCHANTING,     1227 },     // the Enchanter
+    { SKILL_ENGINEERING,    1228 },     // the Engineer
+    { SKILL_LEATHERWORKING, 1229 },     // the Leatherworker
+    { SKILL_TAILORING,      1230 },     // the Tailor
+};
+constexpr uint16 ClassicCertificationSkill = 300;
+}
+
+bool Player::IsClassicCertificationSkill(uint32 skillId)
+{
+    return std::ranges::any_of(ClassicCertifications, [skillId](ClassicCertification const& c) { return c.SkillId == skillId; });
+}
+
+void Player::UpdateClassicProfessionTitles()
+{
+    QueryResult result = CharacterDatabase.PQuery("SELECT skill FROM account_classic_certification WHERE account = {}", GetSession()->GetAccountId());
+    if (!result)
+        return;
+
+    do
+    {
+        uint32 skillId = (*result)[0].GetUInt32();
+        for (ClassicCertification const& certification : ClassicCertifications)
+        {
+            if (certification.SkillId != skillId || GetPureSkillValue(skillId) < ClassicCertificationSkill)
+                continue;
+
+            if (CharTitlesEntry const* title = sCharTitlesStore.LookupEntry(certification.TitleId))
+                if (!HasTitle(title))
+                    SetTitle(title);
+        }
+    } while (result->NextRow());
 }
 
 bool Player::IsMaxLevel() const
@@ -5784,6 +5848,10 @@ bool Player::UpdateSkillPro(uint16 skillId, int32 chance, uint32 step)
 
     SyncClassicProfessionChildSkills(skillId);
 
+    // Classic 1.60: a certified profession shows its title from 300 skill on
+    if (value < 300 && new_value >= 300 && IsClassicCertificationSkill(skillId))
+        UpdateClassicProfessionTitles();
+
     for (uint32 bsl : bonusSkillLevels)
     {
         if (value < bsl && new_value >= bsl)
@@ -5900,6 +5968,10 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
     {
         if (!classicProfessionChild)
             player->SyncClassicProfessionChildSkills(id);
+
+        // Classic 1.60: a certified profession shows its title from 300 skill on (.setskill, learning a higher rank)
+        if (IsClassicCertificationSkill(id) && player->GetPureSkillValue(id) >= 300 && !player->GetSession()->PlayerLoading())
+            player->UpdateClassicProfessionTitles();
     });
 
     uint16 currVal;

@@ -21,6 +21,7 @@
 #include "AreaTrigger.h"
 #include "CellImpl.h"
 #include "Creature.h"
+#include "DatabaseEnv.h"
 #include "GameObject.h"
 #include "GridNotifiersImpl.h"
 #include "Item.h"
@@ -32,6 +33,7 @@
 #include "SpellInfo.h"
 #include "SpellScript.h"
 #include "Unit.h"
+#include "WorldSession.h"
 
 /*######
 ## classic_spell_ground_area_damage
@@ -496,35 +498,43 @@ class classic_spell_warl_immolate : public SpellScript
     }
 };
 
-// 1259705 - Read Ley Line (Skyborne racial): the spell only triggers the 15 sec Energized (1270842). At a ley line (gameobjects
-// Ley Line 602735 / 613248, spell focus 2246) the official server also gives the 15 min Energized (1259691); sniff of the
-// Alliance Skyborne hunter: the cast away from a ley line got only 1270842, every cast at one got both. The 15 min buff also
-// completes "Reading the Ley Lines" (92597).
-class classic_spell_skyborne_read_ley_line : public SpellScript
+// 1259705 - Read Ley Line, 1259686 - Skysight (Skyborne racials): the spell only triggers a 30 sec buff (Energized 1270842 /
+// Elemental Blessing 1259688). Next to its spell focus object (Ley Line 602735 / 613248, focus 2246 / Elemental Convergence
+// 616992, focus 2271) the official server casts the 15 min version first (Energized 1259691 / Elemental Blessing 1270893); the
+// 30 sec trigger still shows a SPELL_GO there but adds no aura (sniffs: Alliance Skyborne hunter at ley lines, Windshaper at
+// convergences, every cast away from one got only the 30 sec aura). Energized 1259691 also completes "Reading the Ley Lines" (92597).
+class classic_spell_skyborne_racial_focus : public SpellScript
 {
-    static constexpr uint32 SPELL_FOCUS_LEY_LINE = 2246;
-    static constexpr uint32 SPELL_ENERGIZED_LEY_LINE = 1259691;
+public:
+    explicit classic_spell_skyborne_racial_focus(uint32 spellFocus, uint32 longBuffSpell) : _spellFocus(spellFocus), _longBuffSpell(longBuffSpell) { }
 
-    bool Validate(SpellInfo const* /*spellInfo*/) override
+private:
+    bool Validate(SpellInfo const* spellInfo) override
     {
-        return ValidateSpellInfo({ SPELL_ENERGIZED_LEY_LINE });
+        return ValidateSpellInfo({ _longBuffSpell }) && ValidateSpellEffect({ { spellInfo->Id, EFFECT_0 } });
     }
 
-    void HandleAfterCast()
+    void HandleTrigger(SpellEffIndex effIndex)
     {
         Unit* caster = GetCaster();
-        GameObject* leyLine = nullptr;
-        Trinity::GameObjectFocusCheck check(caster, SPELL_FOCUS_LEY_LINE);
-        Trinity::GameObjectSearcher searcher(caster, leyLine, check);
-        Cell::VisitGridObjects(caster, searcher, 50.0f); // focus radius of the ley lines is 25
-        if (leyLine)
-            caster->CastSpell(caster, SPELL_ENERGIZED_LEY_LINE, CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetTriggeringSpell(GetSpell()));
+        GameObject* focus = nullptr;
+        Trinity::GameObjectFocusCheck check(caster, _spellFocus);
+        Trinity::GameObjectSearcher searcher(caster, focus, check);
+        Cell::VisitGridObjects(caster, searcher, 50.0f); // focus radius of both objects is 25
+        if (!focus)
+            return;
+
+        PreventHitDefaultEffect(effIndex);
+        caster->CastSpell(caster, _longBuffSpell, CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetTriggeringSpell(GetSpell()));
     }
 
     void Register() override
     {
-        AfterCast += SpellCastFn(classic_spell_skyborne_read_ley_line::HandleAfterCast);
+        OnEffectLaunchTarget += SpellEffectFn(classic_spell_skyborne_racial_focus::HandleTrigger, EFFECT_0, SPELL_EFFECT_TRIGGER_SPELL);
     }
+
+    uint32 _spellFocus;
+    uint32 _longBuffSpell;
 };
 
 // 1319421 - Motivated (Executor's Motivator, undead quest Discipline 99134): a dummy aura on a Tirisfal Deathguard. The official
@@ -564,10 +574,51 @@ class classic_spell_executors_motivator : public AuraScript
     }
 };
 
+// 1289195-1289200 - Alchemy / Blacksmithing / Enchanting / Engineering / Leatherworking / Tailoring Certification (items 271621-271627,
+// 1000 Merchant Favor at the trade company vendors): "unlocks the <profession> title for all characters on your account; to display
+// it they must have 300 skill". The spell completes a hidden quest (95944-95949, not in our data); the account unlock is kept in
+// account_classic_certification and Player::UpdateClassicProfessionTitles gives the title to characters with 300 skill.
+class classic_spell_profession_certification : public SpellScript
+{
+    static uint32 SkillOf(uint32 spellId)
+    {
+        switch (spellId)
+        {
+            case 1289195: return SKILL_ALCHEMY;
+            case 1289196: return SKILL_BLACKSMITHING;
+            case 1289197: return SKILL_ENCHANTING;
+            case 1289198: return SKILL_ENGINEERING;
+            case 1289199: return SKILL_LEATHERWORKING;
+            case 1289200: return SKILL_TAILORING;
+            default: return 0;
+        }
+    }
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster()->ToPlayer();
+        uint32 skillId = SkillOf(GetSpellInfo()->Id);
+        if (!player || !skillId)
+            return;
+
+        // written directly: UpdateClassicProfessionTitles reads it right away
+        CharacterDatabase.DirectPExecute("REPLACE INTO account_classic_certification (account, skill) VALUES ({}, {})",
+            player->GetSession()->GetAccountId(), skillId);
+        player->UpdateClassicProfessionTitles();
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(classic_spell_profession_certification::HandleAfterCast);
+    }
+};
+
 void AddSC_classic_spell_scripts()
 {
+    RegisterSpellScript(classic_spell_profession_certification);
     RegisterSpellScript(classic_spell_executors_motivator);
-    RegisterSpellScript(classic_spell_skyborne_read_ley_line);
+    RegisterSpellScriptWithArgs(classic_spell_skyborne_racial_focus, "classic_spell_skyborne_read_ley_line", 2246, 1259691);
+    RegisterSpellScriptWithArgs(classic_spell_skyborne_racial_focus, "classic_spell_skyborne_skysight", 2271, 1270893);
     RegisterSpellScript(classic_spell_warl_immolate);
     RegisterSpellScript(classic_spell_hun_taming_rod);
     RegisterSpellScript(classic_spell_hun_tame_beast_channel);
