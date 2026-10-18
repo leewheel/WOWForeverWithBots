@@ -416,6 +416,8 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                     InitializeCombatResurrections(1, resInterval);
                     SendClassicEncounterStart(bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID()));
                     SendEncounterStart(1, 9, resInterval, resInterval);
+                    // Vanilla: a dead player can always release, boss fight or not.
+                    instance->SendToPlayers(WorldPackets::Instance::InstanceEncounterAllowReleaseInProgress().Write());
 
                     instance->DoOnPlayers([](Player* player)
                     {
