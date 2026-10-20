@@ -423,6 +423,13 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                     });
                     break;
                 }
+                case NOT_STARTED:
+                    // The classic boss scripts leave a fight by Reset() -> NOT_STARTED, never FAIL: without this the client was sent
+                    // the encounter start and never the end, stayed "in an encounter" and greyed out Release Spirit
+                    // ("A member of your group is in combat" after a wipe).
+                    if (bossInfo->state != IN_PROGRESS)
+                        break;
+                    [[fallthrough]];
                 case FAIL:
                 {
                     ResetCombatResurrections();
