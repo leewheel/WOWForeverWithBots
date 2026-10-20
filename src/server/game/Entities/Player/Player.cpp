@@ -271,6 +271,7 @@ Player::Player(WorldSession* session) : Unit(true), m_sceneMgr(this)
     m_titanGripPenaltySpellId = 0;
 
     m_temporaryUnsummonedPetNumber = 0;
+    m_petResummonDelay = 0;
     //cache for CreatedBySpell to allow
     //returning reagents for temporarily removed pets
     //when dying/logging out
@@ -955,6 +956,19 @@ void Player::Update(uint32 p_time)
     SetCanDelayTeleport(true);
     Unit::Update(p_time);
     SetCanDelayTeleport(false);
+
+    // The pet remembered at login comes back a moment after the player is in the world, as a summon during play does. Created while the
+    // Classic 1.60 client is still on its loading screen, the client froze on the pet (a warlock's demon out at logout).
+    if (m_petResummonDelay)
+    {
+        if (p_time >= m_petResummonDelay)
+        {
+            m_petResummonDelay = 0;
+            ResummonPetTemporaryUnSummonedIfAny();
+        }
+        else
+            m_petResummonDelay -= p_time;
+    }
 
     DeathRecap::RecordFrame(this, p_time);
     DeathRecap::UpdateViewer(this);
