@@ -10178,6 +10178,16 @@ bool Player::NeedsAmmo() const
     }
 }
 
+uint32 Player::GetAmmoDisplayId(ItemTemplate const* proto)
+{
+    if (!proto)
+        return 0;
+    if (ItemModifiedAppearanceEntry const* modifiedAppearance = TransmogMgr::GetItemModifiedAppearance(proto->GetId(), 0))
+        if (ItemAppearanceEntry const* itemAppearance = sItemAppearanceStore.LookupEntry(modifiedAppearance->ItemAppearanceID))
+            return itemAppearance->ItemDisplayInfoID;
+    return 0;
+}
+
 // Arrows for bows and crossbows, bullets for guns; without a ranged weapon any ammo can be chosen.
 bool Player::IsAmmoUsableWithRangedWeapon(ItemTemplate const* proto) const
 {
@@ -10206,21 +10216,32 @@ bool Player::SetAmmo(uint32 itemId)
 
 void Player::AutoSelectAmmo()
 {
+    // A bot has no client to choose its ammo: it takes a stack that is drawn with a model, not the generic white-box display.
+    bool const preferDrawable = GetSession() && GetSession()->IsBot();
     if (uint32 current = GetAmmoId())
-        if (HasItemCount(current) && IsAmmoUsableWithRangedWeapon(sObjectMgr->GetItemTemplate(current)))
+        if (HasItemCount(current) && IsAmmoUsableWithRangedWeapon(sObjectMgr->GetItemTemplate(current)) &&
+            (!preferDrawable || HasDrawableAmmoDisplay(sObjectMgr->GetItemTemplate(current))))
             return;
 
     uint32 found = 0;
+    uint32 foundDrawable = 0;
     ForEachItem(ItemSearchLocation::Inventory, [&](Item* item)
     {
         ItemTemplate const* proto = item->GetTemplate();
         if (proto->GetClass() == ITEM_CLASS_PROJECTILE && IsAmmoUsableWithRangedWeapon(proto) && CanUseItem(proto) == EQUIP_ERR_OK)
         {
-            found = item->GetEntry();
-            return ItemSearchCallbackResult::Stop;
+            if (!found)
+                found = item->GetEntry();
+            if (!preferDrawable || HasDrawableAmmoDisplay(proto))
+            {
+                foundDrawable = item->GetEntry();
+                return ItemSearchCallbackResult::Stop;
+            }
         }
         return ItemSearchCallbackResult::Continue;
     });
+    if (foundDrawable)
+        found = foundDrawable;
     SetAmmo(found);
 }
 
