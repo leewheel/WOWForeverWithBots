@@ -19984,7 +19984,11 @@ void Player::_LoadInventory(PreparedQueryResult result, PreparedQueryResult arti
     //NOTE2: the "order by `slot`" is needed because mainhand weapons are (wrongly?)
     //expected to be equipped before offhand items (@todo fixme)
 
-    UpdateInventorySlotCount();
+    // The saved slot count was set from the character row. The +4 account-secured slots are only granted at the end of the login
+    // (WorldSession::HandlePlayerLogin, SetAccountSecured), so recomputing here would drop a secured character to 16 slots and
+    // mail every item stored in the extra slots; SetAccountSecured(false) takes the slots away later if the account lost them.
+    if (GetInventorySlotCount() < INVENTORY_DEFAULT_SIZE)
+        UpdateInventorySlotCount();
 
     std::unordered_map<ObjectGuid::LowType, ItemAdditionalLoadInfo> additionalData;
     ItemAdditionalLoadInfo::Init(&additionalData, artifactsResult, azeriteResult, azeriteItemMilestonePowersResult,

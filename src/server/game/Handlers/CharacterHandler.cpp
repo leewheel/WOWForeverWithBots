@@ -1739,10 +1739,13 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
     // Battle.net account with an authenticator (support site account page): "account secured", +4 backpack slots and no
     // "attach an Authenticator" prompts. Removing it takes the slots away again (items in them are mailed).
     {
-        bool secured = false;
-        if (QueryResult result = LoginDatabase.PQuery("SELECT COUNT(*) FROM battlenet_accounts WHERE id = {} AND authenticator_secret IS NOT NULL "
-            "AND authenticator_secret <> ''", GetBattlenetAccountId()))
-            secured = (*result)[0].GetUInt64() != 0;
+        bool secured = sWorld->getBoolConfig(CONFIG_CLASSIC_SECURED_BAG_SLOTS_FOR_ALL);
+        if (!secured)
+        {
+            if (QueryResult result = LoginDatabase.PQuery("SELECT COUNT(*) FROM battlenet_accounts WHERE id = {} AND authenticator_secret IS NOT NULL "
+                "AND authenticator_secret <> ''", GetBattlenetAccountId()))
+                secured = (*result)[0].GetUInt64() != 0;
+        }
 
         if (secured)
             pCurrChar->SetAccountSecured(true);
