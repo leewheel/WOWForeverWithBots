@@ -70,6 +70,7 @@ void Battlenet::GameAccountInfo::LoadResult(Field const* fields)
 }
 
 constexpr std::size_t PacketHeaderLengthSize = sizeof(uint16);
+constexpr std::size_t MaxPacketDataSize = 0x100000; // client messages are small; only a broken or hostile client asks for more
 
 Battlenet::Session::Session(Trinity::Net::IoContextTcpSocket&& socket) : _socket(CreateSocket(std::move(socket))),
     _packetReadState(PacketReadState::HeaderLength), _packetBuffer(PacketHeaderLengthSize),
@@ -314,6 +315,13 @@ bool Battlenet::Session::ReadHeaderHandler()
         return false;
 
     _packetBuffer.ReadCompleted(_packetBuffer.GetActiveSize());
+
+    // the size is the client's own number: refuse anything a real message never needs instead of allocating it
+    if (header.size() > MaxPacketDataSize)
+    {
+        TC_LOG_ERROR("session", "{} sent a packet header with size {}, closing the connection", GetClientInfo(), header.size());
+        return false;
+    }
 
     _packetReadState = PacketReadState::Data;
     _packetBuffer.Resize(_packetBuffer.GetBufferSize() + header.size());

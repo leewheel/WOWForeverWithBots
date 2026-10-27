@@ -343,6 +343,13 @@ bool WorldSocket::ReadHeaderHandler()
     IncomingPacketHeader* header = reinterpret_cast<IncomingPacketHeader*>(_headerBuffer.GetReadPointer());
     uint32 encryptedOpcode = header->EncryptedOpcode;
 
+    // the size covers the opcode that is written into the buffer below
+    if (header->Size < sizeof(encryptedOpcode))
+    {
+        TC_LOG_ERROR("network", "WorldSocket::ReadHeaderHandler(): client {} sent malformed packet (size: {})", GetRemoteIpAddress(), header->Size);
+        return false;
+    }
+
     if (!header->IsValidSize())
     {
         _authCrypt.PeekDecryptRecv(reinterpret_cast<uint8*>(&header->EncryptedOpcode), sizeof(encryptedOpcode));
