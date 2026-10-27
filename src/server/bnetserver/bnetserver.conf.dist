@@ -149,6 +149,31 @@ ProcessPriority = 0
 RealmsStateUpdateDelay = 10
 
 #
+#    Network.ConnectionsPerIp
+#        Description: Open Battle.net connections allowed from one address. Connections from this PC (127.0.0.1) are never
+#                     limited. Raise it when many players share one internet address (LAN party, one household).
+#        Default:     16
+#                     0 - (No limit)
+
+Network.ConnectionsPerIp = 16
+
+#
+#    Network.HandshakeTimeout
+#        Description: Seconds a new connection has to finish the TLS handshake before it is closed.
+#        Default:     30
+#                     0 - (No limit)
+
+Network.HandshakeTimeout = 30
+
+#
+#    Network.LoginTimeout
+#        Description: Seconds a connection has to log in before it is closed.
+#        Default:     600
+#                     0 - (No limit)
+
+Network.LoginTimeout = 600
+
+#
 #    WrongPass.MaxCount
 #        Description: Number of login attempts with wrong password before the account or IP will be
 #                     banned.
