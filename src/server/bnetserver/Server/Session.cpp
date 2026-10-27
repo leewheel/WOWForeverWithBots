@@ -17,6 +17,7 @@
 
 #include "Session.h"
 #include "ByteConverter.h"
+#include "Config.h"
 #include "DatabaseEnv.h"
 #include "Errors.h"
 #include "IpBanCheckConnectionInitializer.h"
@@ -76,7 +77,8 @@ Battlenet::Session::Session(Trinity::Net::IoContextTcpSocket&& socket) : _socket
     _packetReadState(PacketReadState::HeaderLength), _packetBuffer(PacketHeaderLengthSize),
     _sessionId(++sSessionMgr.SessionIdGenerator), _creationTime(SystemTimePoint::clock::now()),
     _accountInfo(new AccountInfo()), _gameAccountInfo(nullptr), _locale(),
-    _os(), _build(0), _buildVariant(), _timezoneOffset(0min), _ipCountry(), _clientSecret(), _authed(false), _requestToken(0)
+    _os(), _build(0), _buildVariant(), _timezoneOffset(0min), _ipCountry(), _clientSecret(), _authed(false), _handshakeDone(false), _handshakeDeadline(TimePoint::max()),
+    _loginDeadline(TimePoint::max()), _requestToken(0)
 {
 }
 
@@ -87,15 +89,57 @@ std::shared_ptr<Battlenet::Session::Socket> Battlenet::Session::CreateSocket(Tri
     return std::make_shared<Socket>(std::move(socket), SslContext::instance());
 }
 
+namespace
+{
+Trinity::Net::IpConnectionLimit BattlenetConnectionLimit;
+
+// runs once the TLS handshake is done
+struct HandshakeDoneConnectionInitializer final : Trinity::Net::SocketConnectionInitializer
+{
+    explicit HandshakeDoneConnectionInitializer(std::weak_ptr<Battlenet::Session> session) : _session(std::move(session)) { }
+
+    void Start() override
+    {
+        if (std::shared_ptr<Battlenet::Session> session = _session.lock())
+            session->SetHandshakeDone();
+        InvokeNext();
+    }
+
+private:
+    std::weak_ptr<Battlenet::Session> _session;
+};
+
+TimePoint DeadlineFromConfig(char const* name, int32 defaultSeconds)
+{
+    int32 const seconds = sConfigMgr->GetIntDefault(name, defaultSeconds);
+    return seconds > 0 ? TimePoint::clock::now() + Seconds(seconds) : TimePoint::max();
+}
+}
+
 void Battlenet::Session::Start()
 {
     TC_LOG_TRACE("session", "{} Accepted connection", GetClientInfo());
 
+    // connections per address; the server's own PC is never limited
+    boost::asio::ip::address const& address = _socket->GetRemoteIpAddress();
+    _ipConnectionSlot = BattlenetConnectionLimit.TryAcquire(address.to_string(), address.is_loopback(),
+        uint32(std::max(sConfigMgr->GetIntDefault("Network.ConnectionsPerIp", 16), 0)));
+    if (!_ipConnectionSlot)
+    {
+        TC_LOG_ERROR("session", "{} already has Network.ConnectionsPerIp open connections, refusing another", GetClientInfo());
+        _socket->CloseSocket();
+        return;
+    }
+
+    _handshakeDeadline = DeadlineFromConfig("Network.HandshakeTimeout", 30);
+    _loginDeadline = DeadlineFromConfig("Network.LoginTimeout", 600);
+
     // build initializer chain
-    std::array<std::shared_ptr<Trinity::Net::SocketConnectionInitializer>, 3> initializers =
+    std::array<std::shared_ptr<Trinity::Net::SocketConnectionInitializer>, 4> initializers =
     { {
         std::make_shared<Trinity::Net::IpBanCheckConnectionInitializer<Session>>(this),
         std::make_shared<Trinity::Net::SslHandshakeConnectionInitializer<Socket>>(_socket.get()),
+        std::make_shared<HandshakeDoneConnectionInitializer>(weak_from_this()),
         std::make_shared<Trinity::Net::ReadConnectionInitializer<Socket, Session>>(_socket.get(), this),
     } };
 
@@ -106,6 +150,14 @@ bool Battlenet::Session::Update()
 {
     if (!_socket->Update())
         return false;
+
+    TimePoint const now = TimePoint::clock::now();
+    if ((!_handshakeDone && now > _handshakeDeadline) || (!_authed && now > _loginDeadline))
+    {
+        TC_LOG_DEBUG("session", "{} did not finish the {} in time, closing", GetClientInfo(), _handshakeDone ? "login" : "TLS handshake");
+        _socket->CloseSocket();
+        return false;
+    }
 
     _queryProcessor.ProcessReadyCallbacks();
 
