@@ -2803,6 +2803,12 @@ void GameObject::Use(Unit* user, bool ignoreCastInProgress /*= false*/)
                 AddUniqueUse(player);
             }
 
+            // Classic: a chest someone else opened first still shows its remaining items, and the quest items this player needs,
+            // to the next player who opens it. The loot was filled for the first opener only, so later players got an empty window
+            // (Discord 2026-10-27: quest objects and treasure chests sometimes give nothing).
+            if (m_loot && !m_loot->HasAllowedLooter(player->GetGUID()))
+                m_loot->FillNotNormalLootFor(player);
+
             if (getLootState() != GO_ACTIVATED)
                 SetLootState(GO_ACTIVATED, player);
 
