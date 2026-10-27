@@ -324,7 +324,8 @@ bool Battlenet::Session::ReadDataHandler()
 {
     bgs::protocol::Header header;
     bool parseSuccess = header.ParseFromArray(_packetBuffer.GetBasePointer() + PacketHeaderLengthSize, _packetBuffer.GetReadPointer() - _packetBuffer.GetBasePointer() - PacketHeaderLengthSize);
-    ASSERT(parseSuccess);
+    if (!parseSuccess)  // malformed or empty request (seen at logout): close the connection instead of taking the server down
+        return false;
 
     if (header.service_id() != 0xFE)
     {
