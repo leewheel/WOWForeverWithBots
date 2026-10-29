@@ -15,7 +15,7 @@ set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Set projectname (must be done AFTER setting configurationtypes)
-project(TrinityCore)
+project(WoWForever)
 
 if(POLICY CMP0144)
   cmake_policy(SET CMP0144 NEW) # find_package() uses upper-case <PACKAGENAME>_ROOT variables
@@ -24,6 +24,29 @@ endif()
 if(POLICY CMP0153)
   cmake_policy(SET CMP0153 NEW) # The exec_program() command should not be called
 endif()
+
+# ---------------------------------------------------------------------------
+# Forever local customization (leewheel, 2026-10-01) -- Simplified Chinese / UTF-8 support
+# Built with Visual Studio 2026 on a Chinese (codepage 936 / GBK) system.
+# Core targets already receive /utf-8 via trinity-compile-option-interface, but the
+# third-party libraries under dep/ and the .rc resource compiler do NOT.  On a GBK
+# system any UTF-8 Simplified Chinese comment or string literal in those files is
+# misread as GBK, producing C4819 warnings or garbled literals.  Apply UTF-8
+# globally so every target (dep included) treats sources as UTF-8.
+if(MSVC)
+  # /utf-8: source charset AND execution charset are both UTF-8 (implies /validate-charset)
+  add_compile_options(/utf-8)
+  # rc.exe (resource compiler): interpret resource scripts as UTF-8 (codepage 65001)
+  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} /c65001")
+  # /Zm200: raise MSVC's compiler memory-allocation limit. A full (post-clean) rebuild compiles
+  # scripts/game/PlayerbotV2 in parallel, and each cl.exe loads the huge scriptPCH; the default
+  # heap then trips "C3859: could not create virtual memory for PCH" / "C1076: compiler limit:
+  # internal heap limit reached". Incremental builds were unaffected, so this only bites on a
+  # clean rebuild of the whole tree.
+  add_compile_options(/Zm200)
+  message(STATUS "Forever: /utf-8 enabled globally - Simplified Chinese comments/strings safe in ALL targets (incl. dep/ and .rc)")
+endif()
+# ---------------------------------------------------------------------------
 
 # Set RPATH-handing (CMake parameters)
 set(CMAKE_SKIP_BUILD_RPATH 0)
@@ -82,23 +105,6 @@ add_subdirectory(dep)
 
 # add core sources
 add_subdirectory(src)
-
-# Module system: isolated per-module build discovery (doc/module-system/05-phase3-build-discovery-design.md).
-# A broken module's configure/build failure is logged as a warning and skipped -- never fails this target.
-set(MODULES_SOURCE_DIR "${CMAKE_SOURCE_DIR}/modules")
-set(MODULES_BUILD_DIR "${CMAKE_BINARY_DIR}/modules")
-if(NOT DEFINED MODULES_RUNTIME_DIR)
-  set(MODULES_RUNTIME_DIR "${CMAKE_BINARY_DIR}/modules_runtime")
-endif()
-
-add_custom_target(build_modules ALL
-    COMMAND ${CMAKE_COMMAND}
-        -DMODULES_SOURCE_DIR=${MODULES_SOURCE_DIR}
-        -DMODULES_BUILD_DIR=${MODULES_BUILD_DIR}
-        -DMODULES_RUNTIME_DIR=${MODULES_RUNTIME_DIR}
-        -P ${CMAKE_SOURCE_DIR}/cmake/modules/BuildModules.cmake
-    COMMENT "Module system: discovering and building modules/*"
-)
 
 include(CTest)
 if(BUILD_TESTING)
