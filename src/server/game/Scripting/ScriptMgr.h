@@ -833,6 +833,10 @@ class TC_GAME_API PlayerScript : public ScriptObject
         // Called when a looted item was stored in the player's bags (map thread)
         virtual void OnLootItem(Player* player, Item* item);
 
+        //By leewheel 20261029 移植到 WoWForeverWithBots：玩家自身 Update 全部完成后的钩子（AutoFish tick / JunkToGold 延迟售物）
+        virtual void OnPlayerAfterUpdate(Player* player, uint32 diff);
+        //End By leewheel
+
         // Called after a player (alone or as group leader) joined a battleground queue
         virtual void OnBattlegroundQueueJoin(Player* player, uint32 bgTypeId, uint8 bracketId);
 
@@ -1318,6 +1322,9 @@ class TC_GAME_API ScriptMgr
         void OnPlayerRepop(Player* player);
         void OnMovieComplete(Player* player, uint32 movieId);
         void OnPlayerLootItem(Player* player, Item* item);
+        //By leewheel 20261029 移植到 WoWForeverWithBots：Player::Update 末尾广播给所有 PlayerScript
+        void OnPlayerAfterUpdate(Player* player, uint32 diff);
+        //End By leewheel
         void OnPlayerBattlegroundQueueJoin(Player* player, uint32 bgTypeId, uint8 bracketId);
         void OnPlayerBattlegroundInvite(Player* player, uint32 instanceId, uint32 bgTypeId);
         void OnPlayerBattlegroundPortFailed(Player* player, uint8 reason, uint32 instanceId);

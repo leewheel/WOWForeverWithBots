@@ -2293,6 +2293,13 @@ void ScriptMgr::OnPlayerLootItem(Player* player, Item* item)
     FOREACH_SCRIPT(PlayerScript)->OnLootItem(player, item);
 }
 
+//By leewheel 20261029 移植到 WoWForeverWithBots：在 Player::Update 末尾广播给所有 PlayerScript
+void ScriptMgr::OnPlayerAfterUpdate(Player* player, uint32 diff)
+{
+    FOREACH_SCRIPT(PlayerScript)->OnPlayerAfterUpdate(player, diff);
+}
+//End By leewheel
+
 void ScriptMgr::OnPlayerBattlegroundQueueJoin(Player* player, uint32 bgTypeId, uint8 bracketId)
 {
     FOREACH_SCRIPT(PlayerScript)->OnBattlegroundQueueJoin(player, bgTypeId, bracketId);
@@ -3274,6 +3281,12 @@ void PlayerScript::OnMovieComplete(Player* /*player*/, uint32 /*movieId*/)
 void PlayerScript::OnLootItem(Player* /*player*/, Item* /*item*/)
 {
 }
+
+//By leewheel 20261029 移植到 WoWForeverWithBots：默认空实现
+void PlayerScript::OnPlayerAfterUpdate(Player* /*player*/, uint32 /*diff*/)
+{
+}
+//End By leewheel
 
 void PlayerScript::OnBattlegroundQueueJoin(Player* /*player*/, uint32 /*bgTypeId*/, uint8 /*bracketId*/)
 {

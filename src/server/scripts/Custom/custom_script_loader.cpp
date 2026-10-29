@@ -18,9 +18,19 @@
 // This is where scripts' loading functions should be declared:
 void AddClassicScripts();
 
+//By leewheel 20261029 移植：自动钓鱼 + 灰色物品自动出售（源：SourceAndBuild/TrinityCoreForever）
+void AddSC_AutoFish();                      // AutoFish 自动钓鱼（.autofish / .自动钓鱼）
+void Addmod_junk_to_goldScripts();          // junk-to-gold 灰色物品拾取自动出售
+//End By leewheel
+
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
 void AddCustomScripts()
 {
     AddClassicScripts();
+
+    //By leewheel 20261029 移植：自动钓鱼 + 灰色物品自动出售
+    AddSC_AutoFish();
+    Addmod_junk_to_goldScripts();
+    //End By leewheel
 }

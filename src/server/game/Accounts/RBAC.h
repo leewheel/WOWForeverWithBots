@@ -761,6 +761,10 @@ enum RBACPermissions
     // RBAC row must be seeded separately via SQL (see doc/module-system/12-initial-core-changes-scope.md),
     // not included in this pass.
     RBAC_PERM_COMMAND_MODULE                                 = 1001,
+    //By leewheel 20261029 移植到 WoWForeverWithBots：AutoFish 自动钓鱼开关命令权限（auth 库 rbac_linked_permissions 链到 199 "Role: Player Commands"，
+    //见 sql/custom/auth/2026_10_29_00_auth_autofish_rbac.sql；与 TrinityCoreForever / WOWSimulator 保持同号 1003）
+    RBAC_PERM_COMMAND_AUTO_FISH                              = 1003,
+    //End By leewheel
     RBAC_PERM_MAX
 };
 

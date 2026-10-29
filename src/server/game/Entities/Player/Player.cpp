@@ -1163,6 +1163,11 @@ void Player::Update(uint32 p_time)
         SetTeleportState(TeleportState::NotTeleporting); // skip state check inside TeleportTo
         TeleportTo(m_teleport_dest, m_teleport_options, m_teleportSpellId);
     }
+
+    //By leewheel 20261029 移植到 WoWForeverWithBots：玩家自身更新全部完成后的脚本钩子
+    //（AutoFish 状态机 tick、JunkToGold 延迟售物队列等依赖此调用点）
+    sScriptMgr->OnPlayerAfterUpdate(this, p_time);
+    //End By leewheel
 }
 
 void Player::Heartbeat()
